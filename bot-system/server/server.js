@@ -25,8 +25,18 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const DB_PATH = path.join(__dirname, 'db.json');
 
 function lerDB() {
-  if (!fs.existsSync(DB_PATH)) return { usuarios: [], estrategias: [] };
-  return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+  try {
+    if (!fs.existsSync(DB_PATH)) {
+      console.log('⚠️ db.json não encontrado, criando um novo...');
+      const defaultDB = { usuarios: [], estrategias: [] };
+      fs.writeFileSync(DB_PATH, JSON.stringify(defaultDB, null, 2));
+      return defaultDB;
+    }
+    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+  } catch (e) {
+    console.error('❌ Erro ao ler db.json:', e.message);
+    return { usuarios: [], estrategias: [] };
+  }
 }
 
 function salvarDB(db) {
