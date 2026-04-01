@@ -15,12 +15,9 @@ app.use(cors());
 app.use(express.json());
 
 // ===== SUPABASE CLIENT =====
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vfmzxgznrgwnzghqaaau.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbXp4Z3pucmd3bnpnaHFhYWF1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjAxNTUzNiwiZXhwIjoyMDgxNTkxNTM2fQ.t-MCR6v0onhFLDAk9KgpzK_9NdT3NZ2SirQP2QV-h2k';
-
-if (!SUPABASE_URL || !SUPABASE_URL.startsWith('http')) {
-  console.error('❌ ERRO: SUPABASE_URL inválida ou ausente!');
-}
+// Usando as chaves diretamente para evitar erros de configuração no Render
+const SUPABASE_URL = 'https://vfmzxgznrgwnzghqaaau.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbXp4Z3pucmd3bnpnaHFhYWF1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjAxNTUzNiwiZXhwIjoyMDgxNTkxNTM2fQ.t-MCR6v0onhFLDAk9KgpzK_9NdT3NZ2SirQP2QV-h2k';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
