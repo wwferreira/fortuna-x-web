@@ -1,5 +1,5 @@
 // ===== CONSTANTES =====
-const WS_URL = 'ws://localhost:3000';
+const WS_URL = 'wss://fortuna-x-server.onrender.com';
 const URL_MESA = 'https://big.bet.br/live-casino/game/3783645?provider=Playtech&from=%2Flive-casino';
 const URL_LOGIN_CASA = 'https://big.bet.br/casino?cmd=signin&path=phone';
 const URL_HOME_CASA = 'https://big.bet.br/pt';
