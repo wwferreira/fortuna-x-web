@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rei dos Bots — Configuração</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .screen { width: 100%; max-width: 480px; padding: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #333; border-radius: 14px; padding: 24px; margin-bottom: 14px; }
+  #loginScreen .card { max-width: 500px; margin: 0 auto; }
+  .logo { text-align: center; margin-bottom: 20px; }
+  .logo h1 { color: #FFD700; font-size: 22px; }
+  .logo p { color: #666; font-size: 13px; margin-top: 4px; }
+  .video-container { margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid #000000; box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); max-width: 300px; margin-left: auto; margin-right: auto; }
+  .video-container video { width: 100%; display: block; }
+  input, select { width: 100%; padding: 12px 14px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 14px; margin-bottom: 14px; }
+  input:focus, select:focus { outline: none; border-color: #000000; }
+  label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #000000, #1a1a1a); color: white; }
+  .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+  .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; display: none; }
+  .msg-ok  { background: rgba(34,197,94,.15);  border: 1px solid #22c55e; color: #22c55e; }
+  .msg-err { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .section-title { font-size: 12px; color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 12px; border-top: 1px solid #2a2a3e; padding-top: 14px; }
+  .status-ws { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; margin-bottom: 16px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #555; flex-shrink: 0; }
+  .dot.on { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .user-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .user-email { font-size: 13px; color: #ffffff; }
+  .btn-sair { background: none; border: 1px solid #444; color: #888; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .estrategia-desc { font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 14px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .stat-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .stat-label { font-size: 11px; color: #666; margin-bottom: 6px; }
+  .stat-val { font-size: 22px; font-weight: 800; }
+  .stat-green { color: #22c55e; }
+  .stat-red   { color: #ef4444; }
+  .stat-blue  { color: #60a5fa; }
+  .saldo-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .saldo-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+  .saldo-val { font-size: 18px; font-weight: 800; }
+  .btn-toggle { width: 100%; padding: 16px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 800; letter-spacing: 1px; transition: all .2s; margin-top: 12px; }
+  .btn-toggle:active { transform: scale(.97); }
+  .btn-toggle.ligar    { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+  .btn-toggle.desligar { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; }
+  .status-banner { display: none; padding: 16px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 700; margin-top: 12px; animation: pulse 1.5s infinite; }
+  .status-banner.inicializando { background: rgba(255,255,255,.15); border: 1px solid #ffffff; color: #ffffff; }
+  .status-banner.desligando    { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+  #loginScreen  { display: block; }
+  #configScreen { display: none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen" id="loginScreen">
+  <div class="card">
+    <div class="logo">
+      <h1>🤖 Rei dos Bots</h1>
+      <p>Faça login para configurar seu bot</p>
+    </div>
+    
+    <!-- GIF DA EXTENSÃO -->
+    <div class="video-container">
+      <img src="fortuna-x.gif" alt="Fortuna X Bot" style="width: 100%; display: block; border-radius: 8px;">
+    </div>
+    
+    <div class="msg msg-err" id="loginErr"></div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" id="loginSenha" placeholder="••••••••">
+    <button class="btn btn-primary" id="btnLogin">Entrar</button>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div class="screen" id="configScreen">
+
+  <!-- CABEÇALHO -->
+  <div class="card">
+    <div class="user-info">
+      <div>
+        <div style="font-size:11px;color:#666">Logado como</div>
+        <div class="user-email" id="userEmailDisplay"></div>
+      </div>
+      <button class="btn-sair" id="btnSair">Sair</button>
+    </div>
+    <div class="status-ws">
+      <div class="dot" id="wsDot"></div>
+      <span id="wsStatus">Verificando servidor...</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="card">
+    <div style="font-size:12px;color:#ffffff;font-weight:700;margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+      <span>📊 Desempenho em Tempo Real</span>
+      <button onclick="resetarPlacar()" style="background:transparent;border:1px solid #444;color:#888;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:10px;">🔄 Resetar Placar</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Greens</div>
+        <div class="stat-val stat-green" id="statGreens">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Reds</div>
+        <div class="stat-val stat-red" id="statReds">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Assertiv.</div>
+        <div class="stat-val stat-blue" id="statAssert">—</div>
+      </div>
+    </div>
+    <div class="saldo-box">
+      <div>
+        <div class="saldo-label">Saldo Atual</div>
+        <div class="saldo-val" id="statSaldo">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="saldo-label">Lucro / Perda</div>
+        <div class="saldo-val" id="statLucro" style="font-size:15px">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURAÇÃO -->
+  <div class="card">
+    <div class="msg msg-ok" id="msgSalvo">✅ Configuração salva!</div>
+    <div class="msg msg-err" id="msgErro"></div>
+
+    <div class="section-title">🏠 Credenciais da Casa de Aposta</div>
+    <label>URL da Casa</label>
+    <input type="url" id="casaUrl" placeholder="https://www.bet365.com.br">
+    <div class="form-row">
+      <div>
+        <label>Email/Usuário da Casa</label>
+        <input type="text" id="casaEmail" placeholder="seu@email.com">
+      </div>
+      <div>
+        <label>Senha da Casa</label>
+        <input type="password" id="casaSenha" placeholder="••••••••">
+      </div>
+    </div>
+
+    <div class="section-title">🎯 Configuração do Bot</div>
+    <label>Estratégia de Aposta</label>
+    <select id="selectEstrategia" onchange="toggleCamposEspeciais()"></select>
+    <div class="estrategia-desc" id="descEstrategia"></div>
+
+    <!-- CAMPOS DINÂMICOS ESTRATÉGIA -->
+    <div id="camposEspeciais" style="display:none; background: rgba(0, 0, 0, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #000000;">
+      <div id="campoHot" style="display:none; margin-bottom:10px">
+          <label style="font-size:12px;color:#ffffff">Quantidade de Números Quentes</label>
+          <input type="number" id="configQtdHot" value="5" min="1" max="37">
+      </div>
+      <div id="campoCold" style="display:none; margin-bottom:10px">
+          <label style="font-size:12px;color:#ffffff">Quantidade de Números Frios</label>
+          <input type="number" id="configQtdCold" value="5" min="1" max="37">
+      </div>
+      <div id="campoVizinhos">
+          <label style="font-size:12px;color:#ffffff">Vizinhos da Racetrack (para cada nº)</label>
+          <input type="number" id="configVizinhos" value="1" min="0" max="10">
+      </div>
+
+      <div style="margin-top:15px; border-top: 1px solid #2a2a3e; padding-top:15px">
+          <label style="font-size:12px;color:#ffffff; display:block; margin-bottom:10px">
+              🔍 Analisar histórico das últimas <span id="valAnalise" style="font-weight:800; color:#fff">100</span> rodadas
+          </label>
+          <input type="range" id="configQtdAnalise" min="50" max="500" step="10" value="100" style="margin-bottom:5px" oninput="document.getElementById('valAnalise').textContent = this.value">
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:#555">
+              <span>50</span>
+              <span>500</span>
+          </div>
+      </div>
+    </div>
+
+    <div id="camposGaleGeral" style="margin-top:20px; border-top: 1px solid #2a2a3e; padding-top:15px;">
+      <div class="section-title">💰 Gestão de Banca (Gales)</div>
+      <div class="form-row">
+        <div>
+          <label style="color:#ffffff">Gales (0 = sem gale)</label>
+          <input type="number" id="gales" placeholder="0" min="0" max="2" onchange="toggleCamposGale()">
+        </div>
+        <div>
+          <label style="color:#ffffff">Ficha Base (R$)</label>
+          <input type="number" id="valorFicha" placeholder="1.00" min="0.5" step="0.5">
+        </div>
+      </div>
+
+      <!-- CAMPOS DINÂMICOS GALE (G1/G2) -->
+      <div id="camposGale" style="display:none; border-top: 1px solid #2a2a3e; padding-top: 10px; margin-bottom:15px">
+        <div id="divGale1" style="display:none; margin-bottom:10px">
+            <label style="font-size:12px;color:#ffffff">Ficha Gale 1 (R$)</label>
+            <input type="number" id="configFichaG1" value="2.00" step="0.5">
+        </div>
+        <div id="divGale2" style="display:none">
+            <label style="font-size:12px;color:#ffffff">Ficha Gale 2 (R$)</label>
+            <input type="number" id="configFichaG2" value="4.00" step="0.5">
+        </div>
+      </div>
+    </div>
+
+
+    <div class="form-row">
+      <div>
+        <label>Stop Win (R$)</label>
+        <input type="number" id="stopWin" placeholder="50.00" min="0">
+      </div>
+      <div>
+        <label>Stop Loss (R$)</label>
+        <input type="number" id="stopLoss" placeholder="30.00" min="0">
+      </div>
+    </div>
+
+    <button class="btn btn-success" id="btnSalvar">💾 Salvar e Enviar para Extensão</button>
+    
+    <!-- BOTÃO VER ESTRATÉGIAS -->
+    <button class="btn" style="background: #1a1a1a; color: #ffffff; border: 1px solid #ffffff; margin-top: 10px;" id="btnVerEstrategias">
+      🎯 Ver Todas as Estratégias Disponíveis
+    </button>
+    
+    <button class="btn-toggle ligar" id="btnToggleBot">▶️ LIGAR BOT</button>
+    
+    <div class="status-banner inicializando" id="bannerInicializando">
+      ⏳ Aguarde. Seu bot está inicializando...
+      <br><span style="font-size: 10px; text-decoration: underline; cursor: pointer;" onclick="forcarParada()">Cancelar</span>
+    </div>
+    <div class="status-banner desligando"    id="bannerDesligando">
+      🔄 Encerrando apostas. Saindo da mesa...
+      <br><span style="font-size: 10px; text-decoration: underline; cursor: pointer;" onclick="forcarParada()">Cancelar</span>
+    </div>
+    <div style="margin-top: 15px; border-top: 1px solid #2a2a3e; padding-top: 15px;">
+      <button class="btn" style="background: #1e1e2e; color: #888; border: 1px solid #333;" id="btnRefresh">🔄 Reiniciar Página da Roleta</button>
+      <p style="font-size: 10px; color: #555; text-align: center; margin-top: 5px;">Dê um F5 na mesa caso o vídeo trave.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL ESTRATÉGIAS -->
+<div id="modalEstrategias" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; overflow-y:auto; padding:20px;">
+  <div style="max-width:600px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="color:#ffffff; font-size:20px;">🎯 Estratégias Disponíveis</h2>
+      <button onclick="fecharModalEstrategias()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:700;">✕ Fechar</button>
+    </div>
+    
+    <div id="listaEstrategiasModal"></div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES ESTRATÉGIA -->
+<div id="modalDetalhesEstrategia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1001; overflow-y:auto; padding:20px;">
+  <div style="max-width:600px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="color:#ffffff; font-size:18px;" id="tituloDetalhes"></h2>
+      <button onclick="fecharModalDetalhes()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:700;">✕ Fechar</button>
+    </div>
+    
+    <div class="card" style="margin-bottom:0;">
+      <div id="conteudoDetalhes"></div>
+      <button class="btn btn-primary" style="margin-top:15px;" id="btnSelecionarEstrategia">✅ Selecionar Esta Estratégia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE CLIENT =====
+const SUPABASE_URL = 'https://vfmzxgznrgwnzghqaaau.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbXp4Z3pucmd3bnpnaHFhYWF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMTU1MzYsImV4cCI6MjA4MTU5MTUzNn0.wqPeHz7fMd8S2erj0KtVYd3BgKqRdi7ymxFkoUae-ck';
+
+class SupabaseClient {
+  constructor(url, key) {
+    this.url = url;
+    this.key = key;
+  }
+
+  async signInWithPassword(email, password) {
+    const response = await fetch(`${this.url}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': this.key
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { data: null, error: data };
+    }
+    return { data, error: null };
+  }
+
+  async signOut() {
+    // Limpar sessão local
+    return { error: null };
+  }
+}
+
+const supabase = new SupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Função global para os banners
+async function forcarParada() {
+  if (!confirm('Deseja cancelar o processo atual?')) return;
+  try {
+    await fetch(`${API}/comando`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, acao: 'desligar' })
+    });
+    botLigado = false;
+    atualizarBotaoToggle();
+    esconderBanners();
+  } catch(e) {}
+}
+
+// Determinar URL da API dinamicamente para funcionar no celular (IP da rede)
+const HOST = window.location.host; // Pega o host atual (ex: 192.168.1.5:3000)
+const API = window.location.protocol + '//' + HOST + '/api';
+
+let emailLogado = null;
+let estrategiasDisponiveis = [];
+let botLigado = false;
+let pollingStatusTimer = null;
+
+// ===== SESSÃO PERSISTENTE =====
+function salvarSessao(email) {
+  localStorage.setItem('rdb_email', email);
+}
+function limparSessao() {
+  localStorage.removeItem('rdb_email');
+  localStorage.removeItem('rdb_botLigado');
+}
+function salvarEstadoBot(ligado) {
+  localStorage.setItem('rdb_botLigado', ligado ? '1' : '0');
+}
+
+// ===== LOGIN =====
+document.getElementById('btnLogin').addEventListener('click', fazerLogin);
+document.getElementById('loginSenha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  
+  try {
+    // Autenticar com Supabase
+    const { data, error } = await supabase.signInWithPassword(email, senha);
+    
+    if (error) {
+      errEl.textContent = 'Email ou senha inválidos';
+      errEl.style.display = 'block';
+      return;
+    }
+    
+    salvarSessao(email);
+    abrirPainel(email);
+  } catch (e) {
+    errEl.textContent = 'Erro ao conectar com o servidor.';
+    errEl.style.display = 'block';
+  }
+}
+
+async function abrirPainel(email) {
+  try {
+    emailLogado = email;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('configScreen').style.display = 'block';
+    document.getElementById('userEmailDisplay').textContent = email;
+
+    // Carregar dados em paralelo para ser mais rápido
+    await Promise.allSettled([
+      carregarEstrategias(),
+      carregarConfig()
+    ]);
+
+    iniciarPollingStats();
+    iniciarPollingStatus();
+    monitorarServidor();
+  } catch (e) {
+    console.error('Erro ao abrir painel:', e);
+  }
+}
+
+document.getElementById('btnSair').addEventListener('click', () => {
+  limparSessao();
+  emailLogado = null;
+  botLigado = false;
+  if (pollingStatusTimer) { clearInterval(pollingStatusTimer); pollingStatusTimer = null; }
+  esconderBanners();
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('configScreen').style.display = 'none';
+});
+
+// ===== BOTÃO LIGAR / DESLIGAR =====
+document.getElementById('btnToggleBot').addEventListener('click', async () => {
+  const acao = botLigado ? 'desligar' : 'ligar';
+  try {
+    const res = await fetch(`${API}/comando`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, acao })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      botLigado = !botLigado;
+      atualizarBotaoToggle();
+      // Mostrar banner de status
+      if (acao === 'ligar') {
+        mostrarBanner('inicializando');
+      } else {
+        mostrarBanner('desligando');
+      }
+      if (!data.enviado) {
+        mostrarMsg('msgErro', '⚠️ Extensão não conectada ao servidor.');
+      }
+    }
+  } catch (e) {
+    mostrarMsg('msgErro', 'Erro ao enviar comando. Servidor offline?');
+  }
+});
+
+function atualizarBotaoToggle() {
+  const btn = document.getElementById('btnToggleBot');
+  if (botLigado) {
+    btn.textContent = '⏹️ DESLIGAR BOT';
+    btn.className = 'btn-toggle desligar';
+  } else {
+    btn.textContent = '▶️ LIGAR BOT';
+    btn.className = 'btn-toggle ligar';
+  }
+}
+
+// ===== ESTRATÉGIAS =====
+async function carregarEstrategias() {
+  try {
+    const res = await fetch(`${API}/estrategias`);
+    if (!res.ok) throw new Error('Falha ao carregar estratégias');
+    estrategiasDisponiveis = await res.json();
+    if (!Array.isArray(estrategiasDisponiveis)) estrategiasDisponiveis = [];
+    
+    const sel = document.getElementById('selectEstrategia');
+    const systemEsts = [
+        { chave: 'QUENTES', nome: '🔥 Números Quentes (Dinamico)' },
+        { chave: 'FRIOS', nome: '❄️ Números Frios (Dinamico)' },
+        { chave: 'AMBOS', nome: '🔥❄️ Quentes e Frios' }
+    ];
+    sel.innerHTML = systemEsts.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('') + 
+                    estrategiasDisponiveis.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('');
+    
+    sel.addEventListener('change', () => {
+        mostrarDescEstrategia();
+        toggleCamposEspeciais();
+    });
+    mostrarDescEstrategia();
+    toggleCamposEspeciais();
+  } catch (e) {
+    console.error('Erro carregarEstrategias:', e);
+    mostrarMsg('msgErro', 'Erro ao carregar estratégias do servidor.');
+  }
+}
+
+function mostrarDescEstrategia() {
+  const chave = document.getElementById('selectEstrategia').value;
+  const est = estrategiasDisponiveis.find(e => e.chave === chave);
+  const desc = document.getElementById('descEstrategia');
+  if (est) desc.textContent = `${est.descricao || ''} — ${(est.numeros || []).length} números`;
+}
+
+async function carregarConfig() {
+  try {
+    const res = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
+    const config = await res.json();
+    
+    if (res.ok) {
+      if (config.estrategia) { 
+        document.getElementById('selectEstrategia').value = config.estrategia; 
+        mostrarDescEstrategia(); 
+      }
+      if (config.valor_ficha) document.getElementById('valorFicha').value = config.valor_ficha;
+      if (config.stop_win)    document.getElementById('stopWin').value = config.stop_win;
+      if (config.stop_loss)   document.getElementById('stopLoss').value = config.stop_loss;
+      if (config.gales !== undefined) document.getElementById('gales').value = config.gales;
+      
+      // Novos campos
+      if (config.qtd_hot !== undefined) document.getElementById('configQtdHot').value = config.qtd_hot;
+      if (config.qtd_cold !== undefined) document.getElementById('configQtdCold').value = config.qtd_cold;
+      if (config.vizinhos !== undefined) document.getElementById('configVizinhos').value = config.vizinhos;
+      if (config.ficha_g1 !== undefined) document.getElementById('configFichaG1').value = config.ficha_g1;
+      if (config.ficha_g2 !== undefined) document.getElementById('configFichaG2').value = config.ficha_g2;
+      
+      if (config.qtd_analise !== undefined) {
+          document.getElementById('configQtdAnalise').value = config.qtd_analise;
+          document.getElementById('valAnalise').textContent = config.qtd_analise;
+      }
+ 
+      toggleCamposEspeciais();
+      toggleCamposGale();
+
+      botLigado = config.botLigado || false;
+    } else {
+      // Usuário novo ou sem config
+      botLigado = false;
+    }
+    
+    // Carregar credenciais da casa (do Supabase user_metadata)
+    const resUser = await fetch(`${API}/user-metadata/${encodeURIComponent(emailLogado)}`);
+    if (resUser.ok) {
+      const userData = await resUser.json();
+      if (userData.casa_url) document.getElementById('casaUrl').value = userData.casa_url;
+      if (userData.casa_email) document.getElementById('casaEmail').value = userData.casa_email;
+      if (userData.casa_senha) document.getElementById('casaSenha').value = userData.casa_senha;
+    }
+    
+    atualizarBotaoToggle();
+  } catch (e) {
+    console.error('Erro carregarConfig:', e);
+  }
+}
+
+function toggleCamposEspeciais() {
+    const est = document.getElementById('selectEstrategia').value;
+    const container = document.getElementById('camposEspeciais');
+    const rowHot = document.getElementById('campoHot');
+    const rowCold = document.getElementById('campoCold');
+    const rowViz = document.getElementById('campoVizinhos');
+
+    // Suportar tanto as chaves automáticas quanto fixas
+    if (est === 'QUENTES' || est === 'FRIOS' || est === 'AMBOS') {
+        container.style.display = 'block';
+        rowHot.style.display = (est === 'QUENTES' || est === 'AMBOS') ? 'block' : 'none';
+        rowCold.style.display = (est === 'FRIOS' || est === 'AMBOS') ? 'block' : 'none';
+        rowViz.style.display = 'block'; 
+    } else {
+        container.style.display = 'none';
+    }
+
+    // Ocultar gales apenas para Vizinhos da C2 se desejado
+    const galesGeral = document.getElementById('camposGaleGeral');
+    if (est === 'vizinhos_da_c2') {
+        galesGeral.style.display = 'none';
+    } else {
+        galesGeral.style.display = 'block';
+    }
+}
+
+function toggleCamposGale() {
+    const gales = parseInt(document.getElementById('gales').value);
+    const container = document.getElementById('camposGale');
+    const divG1 = document.getElementById('divGale1');
+    const divG2 = document.getElementById('divGale2');
+
+    if (gales > 0) {
+        container.style.display = 'block';
+        divG1.style.display = 'block';
+        divG2.style.display = gales >= 2 ? 'block' : 'none';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+document.getElementById('btnSalvar').addEventListener('click', async () => {
+  const estChave = document.getElementById('selectEstrategia').value;
+  
+  // 1. Buscar a estratégia completa no servidor para garantir que os gatilhos existam
+  let estCompleta = estrategiasDisponiveis.find(e => e.chave === estChave);
+  
+  const config = {
+    estrategia: estChave,
+    nome: estCompleta ? estCompleta.nome : estChave,
+    gatilhos: estCompleta ? estCompleta.gatilhos : [],
+    valor_ficha: parseFloat(document.getElementById('valorFicha').value) || 1,
+    stop_win:    parseFloat(document.getElementById('stopWin').value)    || 0,
+    stop_loss:   parseFloat(document.getElementById('stopLoss').value)   || 0,
+    gales:       parseInt(document.getElementById('gales').value)        || 0,
+    // Novos campos
+    qtd_hot:     parseInt(document.getElementById('configQtdHot').value) || 5,
+    qtd_cold:    parseInt(document.getElementById('configQtdCold').value) || 5,
+    vizinhos:    parseInt(document.getElementById('configVizinhos').value) || 0,
+    qtd_analise: parseInt(document.getElementById('configQtdAnalise').value) || 100,
+    ficha_g1:    parseFloat(document.getElementById('configFichaG1').value) || 0,
+    ficha_g2:    parseFloat(document.getElementById('configFichaG2').value) || 0
+  };
+
+  try {
+    // Salvar config do bot
+    const res = await fetch(`${API}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, ...config })
+    });
+    
+    if (!res.ok) throw new Error('Erro ao salvar config');
+    
+    // Salvar credenciais da casa no user_metadata
+    const casaUrl = document.getElementById('casaUrl').value;
+    const casaEmail = document.getElementById('casaEmail').value;
+    const casaSenha = document.getElementById('casaSenha').value;
+    
+    if (casaUrl && casaEmail && casaSenha) {
+      await fetch(`${API}/user-metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailLogado,
+          casa_url: casaUrl,
+          casa_email: casaEmail,
+          casa_senha: casaSenha
+        })
+      });
+    }
+    
+    mostrarMsg('msgSalvo', '✅ Configurações salvas e enviadas para a extensão!');
+  } catch (e) {
+    mostrarMsg('msgErro', '❌ Erro ao salvar configurações.');
+  }
+});
+
+// ===== BANNERS DE STATUS =====
+function mostrarBanner(tipo) {
+  document.getElementById('bannerInicializando').style.display = tipo === 'inicializando' ? 'block' : 'none';
+  document.getElementById('bannerDesligando').style.display    = tipo === 'desligando'    ? 'block' : 'none';
+}
+
+function esconderBanners() {
+  document.getElementById('bannerInicializando').style.display = 'none';
+  document.getElementById('bannerDesligando').style.display    = 'none';
+}
+
+function iniciarPollingStatus() {
+  if (pollingStatusTimer) clearInterval(pollingStatusTimer);
+  pollingStatusTimer = setInterval(verificarStatusBot, 2000);
+}
+
+async function verificarStatusBot() {
+  if (!emailLogado) return;
+  try {
+    const res = await fetch(`${API}/status/${encodeURIComponent(emailLogado)}`);
+    const data = await res.json();
+    const status = data.statusBot;
+    
+    if (status === 'na_mesa' || status === 'deslogado' || !status) {
+      esconderBanners();
+    } else if (status === 'inicializando') {
+      mostrarBanner('inicializando');
+    } else if (status === 'desligando') {
+      mostrarBanner('desligando');
+    } else {
+      // Outros status desconhecidos
+      esconderBanners();
+    }
+  } catch (e) { /* servidor offline */ }
+}
+
+// ===== STATS =====
+function iniciarPollingStats() {
+  atualizarStats();
+  setInterval(atualizarStats, 3000);
+}
+
+async function atualizarStats() {
+  if (!emailLogado) return;
+  try {
+    const res = await fetch(`${API}/stats/${encodeURIComponent(emailLogado)}`);
+    const s = await res.json();
+    document.getElementById('statGreens').textContent = s.greens ?? 0;
+    document.getElementById('statReds').textContent   = s.reds   ?? 0;
+    const total = (s.greens || 0) + (s.reds || 0);
+    document.getElementById('statAssert').textContent = total > 0 ? ((s.greens / total * 100).toFixed(0) + '%') : '—';
+    const saldo = s.saldo !== null && s.saldo !== undefined ? parseFloat(s.saldo) : null;
+    document.getElementById('statSaldo').textContent  = saldo !== null ? `R$ ${saldo.toFixed(2)}` : '—';
+    if (saldo !== null && s.saldoInicial !== null && s.saldoInicial !== undefined) {
+      const lucro = saldo - parseFloat(s.saldoInicial);
+      const el = document.getElementById('statLucro');
+      el.textContent = (lucro >= 0 ? '+' : '') + `R$ ${lucro.toFixed(2)}`;
+      el.style.color = lucro >= 0 ? '#22c55e' : '#ef4444';
+    }
+  } catch (e) { /* servidor offline */ }
+}
+
+async function resetarPlacar() {
+  if (!confirm('Deseja zerar o placar e reiniciar a contagem do lucro a partir do saldo atual?')) return;
+  try {
+    // Zerar visualmente na hora para feedback instantâneo
+    document.getElementById('statGreens').textContent = '0';
+    document.getElementById('statReds').textContent = '0';
+    document.getElementById('statAssert').textContent = '—';
+    document.getElementById('statLucro').textContent = 'R$ 0.00';
+    document.getElementById('statLucro').style.color = '#e0e0e0';
+
+    const res = await fetch(`${API}/reset-stats`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado })
+    });
+    if (res.ok) {
+      mostrarMsg('msgSalvo', '🔄 Placar zerado com sucesso!');
+      setTimeout(atualizarStats, 1000);
+    }
+  } catch (e) {
+    mostrarMsg('msgErro', '❌ Erro ao zerar placar.');
+  }
+}
+
+document.getElementById('btnRefresh')?.addEventListener('click', async () => {
+    if (!confirm('Deseja dar um F5 na página da roleta no seu computador?')) return;
+    const btn = document.getElementById('btnRefresh');
+    const originalText = btn.innerHTML;
+    try {
+        btn.innerHTML = '⏳ Enviando...';
+        btn.disabled = true;
+        
+        await fetch(`${API}/comando`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailLogado, acao: 'refresh' })
+        });
+        
+        mostrarMsg('msgSalvo', '✅ Comando de Refresh enviado!');
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    } catch(e) {
+        mostrarMsg('msgErro', '❌ Erro ao enviar comando.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+// ===== STATUS SERVIDOR =====
+let wsMonitor = null;
+function monitorarServidor() {
+  verificarServidor();
+  setInterval(verificarServidor, 5000);
+}
+
+function verificarServidor() {
+  const dot    = document.getElementById('wsDot');
+  const status = document.getElementById('wsStatus');
+  
+  // Usar uma URL baseada no host atual para ser flexível
+  const wsHost = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.host;
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+  const wsUrl = `${wsProtocol}${wsHost}`;
+
+  if (wsMonitor) {
+    try { wsMonitor.close(); } catch(e) {}
+  }
+
+  wsMonitor = new WebSocket(wsUrl);
+  wsMonitor.onopen  = () => { 
+    dot.classList.add('on'); 
+    status.textContent = 'Servidor online'; 
+    setTimeout(() => { if (wsMonitor) wsMonitor.close(); }, 1000);
+  };
+  wsMonitor.onerror = () => { 
+    dot.classList.remove('on'); 
+    status.textContent = 'Servidor offline'; 
+  };
+}
+
+function mostrarMsg(id, texto) {
+  const el = document.getElementById(id);
+  el.textContent = texto;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// ===== RESTAURAR SESSÃO AO CARREGAR =====
+window.addEventListener('load', () => {
+  const emailSalvo = localStorage.getItem('rdb_email');
+  if (emailSalvo) {
+    abrirPainel(emailSalvo);
+  }
+});
+
+// ===== MODAL ESTRATÉGIAS =====
+document.getElementById('btnVerEstrategias')?.addEventListener('click', abrirModalEstrategias);
+
+let estrategiaDetalhada = null;
+
+async function abrirModalEstrategias() {
+  document.getElementById('modalEstrategias').style.display = 'block';
+  
+  const lista = document.getElementById('listaEstrategiasModal');
+  lista.innerHTML = '<p style="color:#666;text-align:center;">Carregando...</p>';
+  
+  try {
+    const res = await fetch(`${API}/estrategias`);
+    const estrategias = await res.json();
+    
+    // Adicionar estratégias do sistema
+    const sistemEstrategias = [
+      { chave: 'QUENTES', nome: '🔥 Números Quentes', descricao: 'Aposta nos números que mais saíram recentemente', tipo: 'sistema' },
+      { chave: 'FRIOS', nome: '❄️ Números Frios', descricao: 'Aposta nos números que menos saíram recentemente', tipo: 'sistema' },
+      { chave: 'AMBOS', nome: '🔥❄️ Quentes e Frios', descricao: 'Combina números quentes e frios', tipo: 'sistema' }
+    ];
+    
+    const todasEstrategias = [...sistemEstrategias, ...estrategias];
+    
+    if (todasEstrategias.length === 0) {
+      lista.innerHTML = '<p style="color:#666;text-align:center;">Nenhuma estratégia disponível.</p>';
+      return;
+    }
+    
+    lista.innerHTML = todasEstrategias.map(e => `
+      <div class="card" style="cursor:pointer; transition: all .2s;" onclick="abrirDetalhesEstrategia('${e.chave}')">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="color:#ffffff; font-size:16px; font-weight:700; margin-bottom:6px;">${e.nome}</div>
+            <div style="font-size:12px; color:#888;">${e.descricao || 'Estratégia customizada'}</div>
+            ${e.tipo === 'sistema' ? '<span style="display:inline-block; background:#1a1a1a; border:1px solid #ffffff; border-radius:4px; padding:2px 6px; font-size:10px; margin-top:6px; color:#ffffff;">Sistema</span>' : ''}
+          </div>
+          <div style="color:#ffffff; font-size:20px;">→</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    lista.innerHTML = '<p style="color:#ef4444;text-align:center;">Erro ao carregar estratégias.</p>';
+  }
+}
+
+function fecharModalEstrategias() {
+  document.getElementById('modalEstrategias').style.display = 'none';
+}
+
+async function abrirDetalhesEstrategia(chave) {
+  document.getElementById('modalDetalhesEstrategia').style.display = 'block';
+  document.getElementById('tituloDetalhes').textContent = 'Carregando...';
+  document.getElementById('conteudoDetalhes').innerHTML = '<p style="color:#666;">Carregando detalhes...</p>';
+  
+  try {
+    // Estratégias do sistema
+    if (['QUENTES', 'FRIOS', 'AMBOS'].includes(chave)) {
+      const nomes = {
+        'QUENTES': '🔥 Números Quentes',
+        'FRIOS': '❄️ Números Frios',
+        'AMBOS': '🔥❄️ Quentes e Frios'
+      };
+      
+      const descricoes = {
+        'QUENTES': 'Esta estratégia analisa o histórico recente e aposta nos números que mais saíram (números "quentes"). Você pode configurar quantos números quentes deseja cobrir e quantos vizinhos na racetrack.',
+        'FRIOS': 'Esta estratégia analisa o histórico recente e aposta nos números que menos saíram (números "frios"). Você pode configurar quantos números frios deseja cobrir e quantos vizinhos na racetrack.',
+        'AMBOS': 'Esta estratégia combina números quentes e frios, cobrindo tanto os que mais saíram quanto os que menos saíram. Você pode configurar quantos de cada tipo deseja cobrir.'
+      };
+      
+      document.getElementById('tituloDetalhes').textContent = nomes[chave];
+      document.getElementById('conteudoDetalhes').innerHTML = `
+        <div style="margin-bottom:15px;">
+          <div style="font-size:13px; color:#888; line-height:1.6;">${descricoes[chave]}</div>
+        </div>
+        <div style="background:#0f0f1a; border:1px solid #2a2a3e; border-radius:8px; padding:15px; margin-bottom:15px;">
+          <div style="font-size:12px; color:#ffffff; font-weight:700; margin-bottom:10px;">⚙️ Configurações Disponíveis:</div>
+          <ul style="font-size:12px; color:#888; line-height:1.8; padding-left:20px;">
+            ${chave === 'QUENTES' || chave === 'AMBOS' ? '<li>Quantidade de números quentes (1-37)</li>' : ''}
+            ${chave === 'FRIOS' || chave === 'AMBOS' ? '<li>Quantidade de números frios (1-37)</li>' : ''}
+            <li>Vizinhos na racetrack (0-10)</li>
+            <li>Rodadas para análise (50-500)</li>
+            <li>Gales (0-2)</li>
+            <li>Stop Win e Stop Loss</li>
+          </ul>
+        </div>
+        <div style="background:rgba(255,255,255,0.1); border-left:3px solid #ffffff; padding:10px; border-radius:4px;">
+          <div style="font-size:11px; color:#ffffff; font-weight:700; margin-bottom:4px;">💡 Dica:</div>
+          <div style="font-size:11px; color:#888;">Esta é uma estratégia dinâmica que recalcula os números a cada rodada baseado no histórico recente.</div>
+        </div>
+      `;
+      
+      estrategiaDetalhada = { chave, nome: nomes[chave] };
+    } else {
+      // Estratégia customizada
+      const res = await fetch(`${API}/estrategias`);
+      const estrategias = await res.json();
+      const est = estrategias.find(e => e.chave === chave);
+      
+      if (!est) {
+        document.getElementById('conteudoDetalhes').innerHTML = '<p style="color:#ef4444;">Estratégia não encontrada.</p>';
+        return;
+      }
+      
+      document.getElementById('tituloDetalhes').textContent = est.nome;
+      
+      const gatilhos = est.gatilhos || [];
+      
+      document.getElementById('conteudoDetalhes').innerHTML = `
+        <div style="margin-bottom:15px;">
+          <div style="font-size:13px; color:#888; margin-bottom:10px;">${est.descricao || 'Estratégia customizada criada pelo administrador.'}</div>
+          <div style="font-size:12px; color:#666;">
+            <strong style="color:#ffffff;">Números base:</strong> ${(est.numeros || []).length} números
+          </div>
+        </div>
+        
+        ${gatilhos.length > 0 ? `
+          <div style="background:#0f0f1a; border:1px solid #2a2a3e; border-radius:8px; padding:15px; margin-bottom:15px;">
+            <div style="font-size:12px; color:#ffffff; font-weight:700; margin-bottom:10px;">⚡ Gatilhos Configurados:</div>
+            ${gatilhos.map((g, i) => `
+              <div style="background:#1a1a2e; border:1px solid #2a2a4e; border-radius:6px; padding:10px; margin-bottom:8px; font-size:11px;">
+                <div style="color:#ffffff; font-weight:700; margin-bottom:4px;">#${i+1} — ${g.modo === 'NORMAL' ? 'Sequência Fixa' : 'Dinâmico'}</div>
+                <div style="color:#888;">
+                  ${g.modo === 'NORMAL' ? `Gatilho: ${g.legenda || '—'}` : `Tipo: ${g.tipoEspecial || '—'}`}
+                  <br>Aposta em: ${g.aposta || '—'}
+                  ${g.tipoSecundario !== 'NENHUM' ? `<br>${g.tipoSecundario}: ${g.qtdSecundario}x (fichas: ${(g.fichas || []).join(', ')})` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        <div style="background:rgba(255,255,255,0.1); border-left:3px solid #ffffff; padding:10px; border-radius:4px;">
+          <div style="font-size:11px; color:#ffffff; font-weight:700; margin-bottom:4px;">ℹ️ Informação:</div>
+          <div style="font-size:11px; color:#888;">Esta estratégia foi criada pelo administrador e está pronta para uso.</div>
+        </div>
+      `;
+      
+      estrategiaDetalhada = { chave: est.chave, nome: est.nome };
+    }
+  } catch (e) {
+    document.getElementById('conteudoDetalhes').innerHTML = '<p style="color:#ef4444;">Erro ao carregar detalhes.</p>';
+  }
+}
+
+function fecharModalDetalhes() {
+  document.getElementById('modalDetalhesEstrategia').style.display = 'none';
+}
+
+document.getElementById('btnSelecionarEstrategia')?.addEventListener('click', () => {
+  if (!estrategiaDetalhada) return;
+  
+  // Selecionar a estratégia no dropdown
+  document.getElementById('selectEstrategia').value = estrategiaDetalhada.chave;
+  mostrarDescEstrategia();
+  toggleCamposEspeciais();
+  
+  // Fechar modais
+  fecharModalDetalhes();
+  fecharModalEstrategias();
+  
+  // Mostrar mensagem
+  mostrarMsg('msgSalvo', `✅ Estratégia "${estrategiaDetalhada.nome}" selecionada! Não esqueça de salvar.`);
+  
+  // Scroll para o topo
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Não Aprovado - Rei dos Bots</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .failure-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--dark-bg);
+            padding: 20px;
+        }
+        .failure-box {
+            background: rgba(255, 68, 68, 0.1);
+            border: 2px solid #ff4444;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+        }
+        .failure-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .failure-title {
+            color: #ff4444;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        .failure-text {
+            color: #b0b0b0;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn-home, .btn-retry {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #00cc33, #00aa2b);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        .btn-home:hover, .btn-retry:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 204, 51, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="failure-container">
+        <div class="failure-box">
+            <div class="failure-icon">❌</div>
+            <h1 class="failure-title">Pagamento Não Aprovado</h1>
+            <p class="failure-text">
+                Infelizmente seu pagamento não foi aprovado.<br>
+                Isso pode acontecer por diversos motivos:<br><br>
+                • Saldo insuficiente<br>
+                • Dados incorretos<br>
+                • Limite do cartão excedido<br><br>
+                Tente novamente ou entre em contato:<br>
+                WhatsApp: <strong>(55) 99934-4071</strong>
+            </p>
+            <a href="index.html#planos" class="btn-retry">Tentar Novamente</a>
+            <a href="index.html" class="btn-home">Voltar para o Início</a>
+        </div>
+    </div>
+</body>
+</html>

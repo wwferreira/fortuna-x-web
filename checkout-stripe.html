@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - Rei dos Bots</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .payment-container {
+            max-width: 500px;
+            width: 90%;
+            margin: 20px auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid var(--neon-green);
+            border-radius: 10px;
+        }
+        
+        .payment-title {
+            color: var(--neon-green);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .order-summary {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .order-summary h3 {
+            color: var(--neon-green);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 15px;
+        }
+        
+        .order-total {
+            border-top: 2px solid var(--neon-green);
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        #payment-element {
+            margin-bottom: 20px;
+        }
+        
+        .btn-pay {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--neon-green), #39ff14);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 65, 0.5);
+        }
+        
+        .btn-pay:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #error-message {
+            color: #ff4444;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            color: var(--neon-green);
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h2 class="payment-title">💳 Pagamento Seguro</h2>
+        
+        <div class="order-summary">
+            <h3>Resumo do Pedido</h3>
+            <div class="order-item">
+                <span id="orderBot">Bot: -</span>
+            </div>
+            <div class="order-item">
+                <span id="orderPlan">Plano: -</span>
+            </div>
+            <div class="order-item order-total">
+                <span>Total:</span>
+                <span id="orderTotal">R$ 0,00</span>
+            </div>
+        </div>
+        
+        <form id="payment-form">
+            <div id="payment-element"></div>
+            <button type="submit" class="btn-pay" id="submit-button">
+                Pagar Agora
+            </button>
+            <div id="error-message"></div>
+        </form>
+    </div>
+    
+    <script>
+        // Pegar dados da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bot = urlParams.get('bot') || 'Bot';
+        const plan = urlParams.get('plan') || 'Plano';
+        const price = urlParams.get('price') || '0';
+        const nome = urlParams.get('nome') || '';
+        const email = urlParams.get('email') || '';
+        const cpf = urlParams.get('cpf') || '';
+        
+        // Mostrar resumo
+        document.getElementById('orderBot').textContent = `Bot: ${bot}`;
+        document.getElementById('orderPlan').textContent = `Plano: ${plan}`;
+        document.getElementById('orderTotal').textContent = `R$ ${parseFloat(price).toFixed(2).replace('.', ',')}`;
+        
+        // Inicializar Stripe
+        let stripe, elements, clientSecret;
+        
+        async function initialize() {
+            try {
+                // Criar Payment Intent no backend
+                const response = await fetch('criar-payment-intent-stripe.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: price,
+                        bot: bot,
+                        plan: plan,
+                        nome: nome,
+                        email: email,
+                        cpf: cpf
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Erro ao criar pagamento');
+                }
+                
+                clientSecret = data.clientSecret;
+                const publishableKey = data.publishableKey;
+                
+                // Inicializar Stripe
+                stripe = Stripe(publishableKey);
+                
+                const appearance = {
+                    theme: 'night',
+                    variables: {
+                        colorPrimary: '#00ff41',
+                        colorBackground: '#0a0a0a',
+                        colorText: '#ffffff',
+                        colorDanger: '#ff4444',
+                        fontFamily: 'system-ui, sans-serif',
+                        borderRadius: '5px'
+                    }
+                };
+                
+                elements = stripe.elements({ clientSecret, appearance });
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
+        
+        // Processar pagamento
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processando...';
+            
+            try {
+                const { error } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: 'https://admin.hypersecurity.com.br/pagamento-sucesso.html',
+                        receipt_email: email
+                    }
+                });
+                
+                if (error) {
+                    document.getElementById('error-message').textContent = error.message;
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Pagar Agora';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('error-message').textContent = 'Erro ao processar pagamento';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Pagar Agora';
+            }
+        });
+        
+        // Inicializar
+        initialize();
+    </script>
+</body>
+</html>

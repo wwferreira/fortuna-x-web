@@ -1,0 +1,80 @@
+{
+    "manifest_version": 3,
+    "name": "Bot Fortuna X",
+    "description": "O MEDO DE ARRISCAR É O QUE TE IMPEDE DE EVOLUIR",
+    "version": "2.0",
+    "icons": {
+        "16": "assets/icon.png",
+        "48": "assets/icon.png",
+        "128": "assets/icon.png"
+    },
+    "action": {
+        "default_icon": {
+            "16": "assets/icon.png",
+            "24": "assets/icon.png",
+            "32": "assets/icon.png"
+        },
+        "default_title": "Bot Fortuna X"
+    },
+    "side_panel": {
+        "default_path": "sidepanel.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+       "matches": [
+                "https://cachedownload-br.p-content.gambling-malta.com/live/bundles/*",
+                "https://dl-com.c365play.com/live_desktop/bundles/*",
+                "https://cachedownload-swisscur.onegameslink.com/live/html5/desktop/bundles/*",
+                "https://cachedownload-betconstruct.onegameslink.com/live/html5/mobile/bundles/*",
+				"https://cachedownload-aleaplay.onegameslink.com/*",
+				"https://cachedownload-softswisscur3.onegameslink.com/*",
+				"https://atlaslive-br.onegameslink.com/livedistributed/*",
+                "https://cachedownload-goldenmatrixcom.onegameslink.com/livedistributed/*",
+                "https://cachedownload-softswisscur3.onegameslink.com/livedistributed/*",
+                "https://casino.bet365.bet.br/*",
+                "https://cdn-3.launcher.a8r.games/*",
+                 "https://casino.bet365.com.br/*",
+    "https://www.bet365.com.br/*",
+    "https://casino.bet365.net.br/*",
+    "https://worldcasino.bet365.com/*",
+       "https://cachedownload-softswisscur3.onegameslink.com/livedistributed/*",
+                    "*://*.onegameslink.com/*",
+                    "*://*.twogameslink.com/*",
+                    "*://*.content.gambling-malta.com/*",
+                    "*://*.gambling-malta.com/*",
+                    "*://*.c365play.com/*",
+                    "*://*.bfcdl.com/*",
+                "*://*.evolution.com/*",
+                "*://*.evolutiongaming.com/*",
+                "*://*.pragmaticplay.net/*",
+                "*://*.bet365.com/*"
+            ],
+            "all_frames": true,
+            "js": [
+                "content/contentScript.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+   "permissions": [
+        "storage",
+        "downloads",
+        "notifications",
+        "alarms",
+        "tabs",
+        "nativeMessaging",
+        "sidePanel"
+    ],
+    "host_permissions": [
+        "http://162.141.111.167/*",
+        "https://*.supabase.co/*",
+        "https://*.unpkg.com/*",
+        "https://api.telegram.org/*"
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://gqqcfsxzfslykkuhysxg.supabase.co https://*.supabase.co https://api.telegram.org"
+    }
+}

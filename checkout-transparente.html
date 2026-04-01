@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - Rei dos Bots</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        .payment-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 25px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid var(--neon-green);
+            border-radius: 10px;
+        }
+        
+        .payment-title {
+            color: var(--neon-green);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #fff;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--neon-green);
+        }
+        
+        .btn-pay {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--neon-green), #39ff14);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 65, 0.5);
+        }
+        
+        .btn-pay:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .order-summary {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .order-summary h3 {
+            color: var(--neon-green);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .order-total {
+            border-top: 2px solid var(--neon-green);
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        #cardNumber, #securityCode, #expirationDate {
+            background: #fff !important;
+            color: #000 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h2 class="payment-title">💳 Pagamento com Cartão</h2>
+        
+        <div class="order-summary">
+            <h3>Resumo do Pedido</h3>
+            <div class="order-item">
+                <span id="orderBot">Bot: -</span>
+            </div>
+            <div class="order-item">
+                <span id="orderPlan">Plano: -</span>
+            </div>
+            <div class="order-item order-total">
+                <span>Total:</span>
+                <span id="orderTotal">R$ 0,00</span>
+            </div>
+        </div>
+        
+        <form id="form-checkout">
+            <div class="form-group">
+                <label for="cardholderName">Nome no Cartão *</label>
+                <input type="text" id="cardholderName" name="cardholderName" required placeholder="Como está no cartão">
+            </div>
+            
+            <div class="form-group">
+                <label for="cardNumber">Número do Cartão *</label>
+                <div id="cardNumber"></div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="expirationDate">Validade *</label>
+                    <div id="expirationDate"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="securityCode">CVV *</label>
+                    <div id="securityCode"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="installments">Parcelas *</label>
+                <select id="installments" name="installments"></select>
+            </div>
+            
+            <div class="form-group">
+                <label for="cardholderEmail">E-mail *</label>
+                <input type="email" id="cardholderEmail" name="cardholderEmail" required placeholder="seu@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="identificationType">Tipo de Documento *</label>
+                <select id="identificationType" name="identificationType"></select>
+            </div>
+            
+            <div class="form-group">
+                <label for="identificationNumber">CPF *</label>
+                <input type="text" id="identificationNumber" name="identificationNumber" required placeholder="000.000.000-00">
+            </div>
+            
+            <button type="submit" class="btn-pay" id="btnPay">
+                Pagar Agora
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        // Pegar dados da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bot = urlParams.get('bot') || 'Bot';
+        const plan = urlParams.get('plan') || 'Plano';
+        const price = urlParams.get('price') || '0';
+        const nome = urlParams.get('nome') || '';
+        const email = urlParams.get('email') || '';
+        const cpf = urlParams.get('cpf') || '';
+        
+        // Mostrar resumo
+        document.getElementById('orderBot').textContent = `Bot: ${bot}`;
+        document.getElementById('orderPlan').textContent = `Plano: ${plan}`;
+        document.getElementById('orderTotal').textContent = `R$ ${parseFloat(price).toFixed(2).replace('.', ',')}`;
+        
+        // Preencher dados do cliente
+        if (email) document.getElementById('cardholderEmail').value = email;
+        if (cpf) document.getElementById('identificationNumber').value = cpf;
+        
+        // Inicializar Mercado Pago
+        const mp = new MercadoPago('APP_USR-e63d69c2-f021-40fc-bb82-597a9a81a057', {
+            locale: 'pt-BR'
+        });
+        
+        // Criar campos do cartão
+        const cardNumber = mp.fields.create('cardNumber', {
+            placeholder: '0000 0000 0000 0000'
+        }).mount('cardNumber');
+        
+        const expirationDate = mp.fields.create('expirationDate', {
+            placeholder: 'MM/AA'
+        }).mount('expirationDate');
+        
+        const securityCode = mp.fields.create('securityCode', {
+            placeholder: '123'
+        }).mount('securityCode');
+        
+        // Carregar tipos de documento
+        (async function getIdentificationTypes() {
+            try {
+                const identificationTypes = await mp.getIdentificationTypes();
+                const identificationTypeElement = document.getElementById('identificationType');
+                
+                identificationTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.name;
+                    identificationTypeElement.appendChild(option);
+                });
+                
+                // Selecionar CPF por padrão
+                identificationTypeElement.value = 'CPF';
+            } catch (e) {
+                console.error('Erro ao carregar tipos de documento:', e);
+            }
+        })();
+        
+        // Atualizar parcelas quando o cartão mudar
+        cardNumber.on('binChange', async (data) => {
+            try {
+                const { results } = await mp.getInstallments({
+                    amount: price,
+                    bin: data.bin
+                });
+                
+                const installmentsElement = document.getElementById('installments');
+                installmentsElement.innerHTML = '';
+                
+                if (results.length > 0) {
+                    results[0].payer_costs.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option.installments;
+                        opt.textContent = option.recommended_message;
+                        installmentsElement.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error('Erro ao carregar parcelas:', e);
+            }
+        });
+        
+        // Processar pagamento
+        const form = document.getElementById('form-checkout');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btnPay = document.getElementById('btnPay');
+            btnPay.disabled = true;
+            btnPay.textContent = 'Processando...';
+            
+            try {
+                const token = await mp.fields.createCardToken({
+                    cardholderName: document.getElementById('cardholderName').value,
+                    identificationType: document.getElementById('identificationType').value,
+                    identificationNumber: document.getElementById('identificationNumber').value.replace(/\D/g, '')
+                });
+                
+                // Enviar para o backend
+                const response = await fetch('processar-pagamento-transparente.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: token.id,
+                        installments: parseInt(document.getElementById('installments').value),
+                        email: document.getElementById('cardholderEmail').value,
+                        amount: price,
+                        bot: bot,
+                        plan: plan,
+                        nome: nome
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = 'pagamento-sucesso.html';
+                } else {
+                    alert('Erro no pagamento: ' + (result.error || 'Tente novamente'));
+                    btnPay.disabled = false;
+                    btnPay.textContent = 'Pagar Agora';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao processar pagamento. Tente novamente.');
+                btnPay.disabled = false;
+                btnPay.textContent = 'Pagar Agora';
+            }
+        });
+        
+        // Máscara CPF
+        document.getElementById('identificationNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Estratégias - Bot Fortuna X</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #000000, #1a0000, #000000);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            padding: 30px;
+            border: 2px solid #cc0000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-logo {
+            margin-bottom: 20px;
+        }
+
+        .header-logo img {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 15px;
+            border: 2px solid rgba(217, 241, 0, 0.5);
+        }
+
+        h1 {
+            color: #cc0000;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .form-section {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #660000;
+        }
+
+        .form-section h2 {
+            color: #cc0000;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #660000;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: #1e1e1e;
+            color: #fff;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.2);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #660000;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #990000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 0, 0, 0.4);
+        }
+
+        .btn-success {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #ff0000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(204, 0, 0, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.85em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background: #cc0000;
+            border: 2px solid #ff0000;
+        }
+
+        .alert-error {
+            background: #eb3349;
+            border: 2px solid #f45c43;
+        }
+
+        .gatilho-item {
+            background: #1a1a1a;
+            border: 1px solid #660000;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .gatilho-item strong {
+            color: #cc0000;
+        }
+
+        .btn-remover {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .btn-remover:hover {
+            background: #ff6666;
+        }
+
+        .gatilhos-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .estrategias-list {
+            margin-top: 30px;
+        }
+
+        .estrategia-card {
+            background: #2a2a2a;
+            border: 2px solid #660000;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .estrategia-card:hover {
+            border-color: #cc0000;
+            box-shadow: 0 5px 15px rgba(204, 0, 0, 0.3);
+        }
+
+        .estrategia-nome {
+            color: #cc0000;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .estrategia-gatilhos {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: #b0b0b0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #b0b0b0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #660000;
+            border-top: 4px solid #cc0000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Novas regras do dinâmico */
+        .dinamico-row {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+        }
+        .ficha-input-box {
+            display: flex; flex-direction: column; flex: 1; min-width: 60px;
+        }
+        .ficha-input-box label {
+            font-size: 0.75em; color: #cc0000; margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-logo">
+                <img src="assets/Fortuna X.png" alt="Bot Fortuna X">
+            </div>
+            <h1>⚙️ Gerenciar Estratégias</h1>
+        </div>
+
+        <div id="alertBox" class="alert"></div>
+        
+        <div style="margin-bottom: 20px;">
+            <a href="admin.html" class="btn btn-primary" style="text-decoration: none; padding: 8px 15px; font-size: 0.9em;">
+                ⬅️ Voltar ao Painel Admin
+            </a>
+        </div>
+
+        <!-- Criar Estratégia -->
+        <div class="form-section">
+            <h2>📝 Criar Estratégia</h2>
+            
+            <div class="form-group">
+                <label for="nomeEstrategia">Nome da Estratégia</label>
+                <input type="text" id="nomeEstrategia" placeholder="Ex: Vizinhos Da C2">
+            </div>
+
+            <div class="form-group">
+                <label>Configurar Gatilho</label>
+                <div style="display: flex; flex-direction: column; gap: 10px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #440000;">
+                    
+                    <!-- TIPO DE ESTRATEGIA (MODO DO GATILHO) -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                        <select id="modoGatilho" style="flex: 1; padding: 12px 15px; border: 2px solid #660000; border-radius: 8px; background: #1e1e1e; color: #fff; outline: none; font-weight: bold;">
+                            <option value="NORMAL">Tipo: Gatilho Normal (Baseado em Sequência)</option>
+                            <option value="DINAMICA">Tipo: Gatilho Dinâmico (Automático Pela Mesa)</option>
+                        </select>
+                    </div>
+
+                    <!-- LEGENDA DE APOSTA -->
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="apostaGatilho" placeholder="Legenda de Aposta (ex: D1, VIZINHOS DA C2)" style="flex: 1;">
+                    </div>
+
+                    <!-- NUMEROS PARA APOSTAR (GATILHOS) - Apenas NORMAL -->
+                    <div id="linhaNormal" style="display: flex; gap: 10px; flex-direction: column;">
+                        <input type="text" id="legendaGatilho" placeholder="Números para Apostar / Gatilhos (ex: 4 6 9 ou Vizinhos da C2)" style="flex: 1;">
+                        
+                        <!-- REPETIÇÕES -->
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="margin-bottom: 0; white-space: nowrap;">Repetições:</label>
+                            <input type="number" id="repeticoesGatilho" placeholder="Qtd" min="1" value="1" style="width: 80px;">
+                        </div>
+                    </div>
+
+                    <!-- LINHA DINÂMICA (Visível apenas em DINAMICA) -->
+                    <div id="linhaDinamica" style="display: none; gap: 10px; align-items: center;">
+                        <select id="tipoEspecial" style="flex: 1; padding: 12px 15px; border: 2px solid #660000; border-radius: 8px; background: #1e1e1e; color: #fff; outline: none;">
+                            <option value="IA_ENGINE">🧠 IA Engine (Tendência)</option>
+                            <option value="IA_PLENO">🎯 I.A Fortuna X (Straight Up)</option>
+                            <option value="FUNCIONARIO_MES">Funcionário do Mês (Nat)</option>
+                            <option value="QUENTES">Números Quentes</option>
+                            <option value="FRIOS">Números Frios</option>
+                            <option value="AMBOS">Quentes e Frios</option>
+                        </select>
+                    </div>
+
+                    <!-- GALE / CICLO -->
+                    <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center;">
+                        <select id="tipoSecundario" style="flex: 1; padding: 12px 15px; border: 2px solid #660000; border-radius: 8px; background: #1e1e1e; color: #fff; outline: none;">
+                            <option value="NENHUM">Sem Gale/Ciclo</option>
+                            <option value="GALE">Gale</option>
+                            <option value="CICLO">Ciclo</option>
+                        </select>
+                        <input type="number" id="qtdSecundario" placeholder="Qtd. (ex: 3)" min="1" style="flex: 1;">
+                    </div>
+
+
+
+                    <!-- LINHA 4: CONTAINER DINÂMICO PARA FICHAS -->
+                    <div id="containerFichasSecundarias" class="dinamico-row"></div>
+
+                    <!-- BOTÃO ADICIONAR -->
+                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="adicionarGatilho()" style="padding: 10px 20px;">+ ADICIONAR GATILHO</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gatilhos-list" id="gatilhosList"></div>
+
+            <div class="button-group">
+                <button class="btn btn-success" onclick="salvarEstrategia()">✅ Salvar Estratégia</button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
+        </div>
+
+        <!-- Lista de Estratégias -->
+        <div class="estrategias-list">
+            <h2 style="color: #cc0000; margin-bottom: 20px; font-weight: bold;">📊 Estratégias Criadas</h2>
+            <div id="estrategiasList"></div>
+        </div>
+    </div>
+
+    <script src="estrategias.js"></script>
+</body>
+</html>

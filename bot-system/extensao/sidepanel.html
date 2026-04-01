@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fortuna X</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <!-- TELA DE LOGIN -->
+  <div id="telaLogin" class="tela-login" style="display: flex;">
+    <div class="login-box">
+      <img src="assets/icon.png" alt="Fortuna X" class="login-logo">
+      <h2>Fortuna X</h2>
+      <form id="formLogin">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginSenha" placeholder="Senha" required>
+        <button type="submit" class="btn-login">Entrar</button>
+      </form>
+      <div id="loginMensagem" class="mensagem-login"></div>
+      <p class="toggle-registro" style="text-align: center; color: #888; font-size: 12px;">Contate o administrador para criar uma conta</p>
+    </div>
+  </div>
+
+  <div class="container" style="display: none;">
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+      <h1 style="margin: 0; text-align: center;">FORTUNA X</h1>
+      <div style="position: absolute; right: 10px; display: flex; gap: 8px; align-items: center;">
+        <!-- Toggle Simulação -->
+        <label class="switch-sim-header" style="position: relative; display: inline-block; width: 30px; height: 16px;">
+          <input type="checkbox" id="toggleSimulacaoHeader" style="opacity: 0; width: 0; height: 0;">
+          <span class="slider-sim-header" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: 0.4s; border-radius: 16px;"></span>
+        </label>
+        <button id="btnTema" class="tool-btn tema" title="Personalizar Cores" style="width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1px solid var(--text-primary);">
+          <div class="theme-circle"></div>
+        </button>
+        <button id="btnAtualizarDados" title="Atualizar dados do banco" style="background: none; border: none; color: #0088cc; font-size: 16px; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center;">
+          🔃
+        </button>
+      </div>
+    </div>
+    
+    <!-- Vídeo Principal -->
+    <div class="roulette-display">
+      <video id="rouletteVideo" autoplay loop muted>
+        <source src="assets/Fortuna X.mp4" type="video/mp4">
+        Seu navegador não suporta vídeo.
+      </video>
+    </div>
+
+    <!-- Status da Aposta -->
+    <div class="status-bar" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 5px;">
+      <span class="status-item" style="font-size: 11px;">PLACAR:</span>
+      <span class="status-item" style="font-size: 11px;"><strong id="placar">WIN</strong> <strong id="wins">0</strong> X <strong id="losses">0</strong> LOSS</span>
+      <button id="resetBtn" class="reset-btn" style="padding: 2px 8px; font-size: 10px; min-width: 50px; height: 22px;">RESET</button>
+      <button id="btnLogout" class="logout-btn" style="display: none; padding: 2px 8px; font-size: 10px; min-width: 50px; height: 22px;">SAIR</button>
+    </div>
+
+    <!-- Tela Principal com Layout de Duas Colunas (Principal + Lateral de Ferramentas) -->
+    <div id="telaPrincipal" class="tela-content">
+      <div class="main-dashboard-layout">
+        <div class="dashboard-main-content">
+           <!-- INFORMAÇÕES DO REI DOS BOTS (AGORA NO TOPO) -->
+           <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 15px;">
+             <div style="font-size: 16px; font-weight: bold; color: #ff9800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;">
+               Rei dos bots - Fortuna
+             </div>
+             
+             <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 300px;">
+               <div style="display: flex; flex-direction: column; gap: 5px;">
+                 <span style="color: #25d366; font-size: 11px; font-weight: bold; text-transform: uppercase;">💬 Suporte via Whatsapp:</span>
+                 <span style="font-size: 14px; font-family: monospace;">+55 (55) 99934-4071</span>
+               </div>
+               
+               <div style="display: flex; flex-direction: column; gap: 5px;">
+                 <span style="color: #0088cc; font-size: 11px; font-weight: bold; text-transform: uppercase;">✈️ Grupo Telegram:</span>
+                 <span style="font-size: 14px; font-family: monospace;">@ReidosBotsFortuna</span>
+               </div>
+
+               <div style="display: flex; flex-direction: column; gap: 5px;">
+                 <span style="color: #ffc107; font-size: 11px; font-weight: bold; text-transform: uppercase;">🌐 Nosso Site:</span>
+                 <span style="font-size: 14px; font-family: monospace;">www.reidosbots.net.br</span>
+               </div>
+             </div>
+
+             <!-- QR CODE COM LOGO (ABAIXO DO SITE) -->
+             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+               <div style="position: relative; background: white; padding: 12px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                 <!-- QR Code com Error Correction Level HIGH (ecc=H) para suportar o logo no meio -->
+                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.reidosbots.net.br&ecc=H" alt="QR Code" style="width: 130px; height: 130px; display: block;">
+                 <!-- Logo no centro do QR Code - Reduzido um pouco para não atrapalhar a leitura -->
+                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 28px; background: white; border-radius: 4px; padding: 2px; display: flex; align-items: center; justify-content: center;">
+                   <img src="assets/icon.png" alt="Logo" style="width: 100%; height: 100%; border-radius: 2px;">
+                 </div>
+               </div>
+               <span style="font-size: 9px; color: #888; letter-spacing: 1px;">ESCANEIE PARA ACESSAR</span>
+             </div>
+           </div>
+         </div>
+
+         <!-- Barra Lateral Animal (Side Tools) -->
+         <div class="side-tool-column">
+          <button id="btnEstrategias" class="tool-btn estrategias" title="Configurar Estratégias">
+            ⭐
+          </button>
+
+          <button id="btnGestao" class="tool-btn gestao" title="Gestão de Banca">
+            <img src="assets/money.png" alt="Gestão" class="btn-icon-img">
+          </button>
+          
+          <button id="btnAbrirHistorico" class="tool-btn historico" title="Histórico de Rodadas">
+            📋
+          </button>
+          
+          <button id="exportBtn" class="tool-btn help" title="Exportar Configuração">
+            <img src="assets/export.png" alt="Exportar" class="btn-icon-img">
+          </button>
+          <button id="importBtn" class="tool-btn help" title="Importar Configuração">
+            <img src="assets/import.png" alt="Importar" class="btn-icon-img">
+          </button>
+          
+          <button id="btnTelegram" class="tool-btn telegram" title="Configurar Telegram">
+            <img src="assets/telegram.png" alt="Telegram" class="btn-icon-img">
+          </button>
+          
+          <!-- BOTÃO MODO SIMULAÇÃO (DESAFIO) -->
+          <button id="btnSimulacao" class="tool-btn simulacao" title="Modo Simulação">
+            🧪
+          </button>
+
+          <button id="btnHistoricoApostas" class="tool-btn historico-apostas" title="Histórico de Apostas">
+            📈
+          </button>
+
+          <!-- O botão de IA foi removido -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Notificações -->
+  <div id="notificacoes" class="notificacoes"></div>
+
+  <!-- Modal Histórico -->
+  <div id="modalHistorico" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>HISTÓRICO DE RODADAS</h2>
+        <button id="btnFecharModal" class="btn-fechar-modal">✕</button>
+      </div>
+
+      <!-- Slider de Análise do Histórico -->
+      <div style="padding: 15px 20px 0;">
+        <label for="sliderHistorico" style="color: #aaa; font-size: 12px; display: flex; justify-content: space-between;">
+          <span>Analisar últimas rodadas:</span>
+          <strong id="valorSliderHistorico" style="color: #0088cc; font-size: 14px;">500</strong>
+        </label>
+        <input type="range" id="sliderHistorico" min="1" max="500" value="500" style="width: 100%; margin-top: 8px;">
+      </div>
+      
+      <div class="historico-stats">
+        <div class="stat-item">
+          <span>Total de Rodadas:</span>
+          <strong id="totalRodadas">0</strong>
+        </div>
+        <div class="stat-item">
+          <span>Números Únicos:</span>
+          <strong id="numerosUnicos">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-content">
+        <!-- Grades de Análise Avançada (Acima do Histórico) -->
+        <div class="analysis-container">
+          <!-- Linha 1: Dúzias -->
+          <div class="analysis-row">
+            <div class="analysis-cell"><span class="analysis-label">D1</span><span class="analysis-value" id="statD1">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">D2</span><span class="analysis-value" id="statD2">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">D3</span><span class="analysis-value" id="statD3">0%</span></div>
+          </div>
+          <!-- Linha 2: Colunas -->
+          <div class="analysis-row">
+            <div class="analysis-cell"><span class="analysis-label">C1</span><span class="analysis-value" id="statC1">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">C2</span><span class="analysis-value" id="statC2">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">C3</span><span class="analysis-value" id="statC3">0%</span></div>
+          </div>
+          <!-- Linha 3: Cores, Alto/Baixo (V P A B) -->
+          <div class="analysis-row">
+            <div class="analysis-cell red"><span class="analysis-label">V</span><span class="analysis-value" id="statVermelho">0%</span></div>
+            <div class="analysis-cell black"><span class="analysis-label">P</span><span class="analysis-value" id="statPreto">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">A</span><span class="analysis-value" id="statAlto">0%</span></div>
+            <div class="analysis-cell"><span class="analysis-label">B</span><span class="analysis-value" id="statBaixo">0%</span></div>
+          </div>
+        </div>
+        
+        <div id="listaHistorico" class="lista-historico" style="margin-top: 15px;">
+          <p style="text-align: center; color: #888; padding: 20px;">Aguardando números...</p>
+        </div>
+      </div>
+
+      <div class="historico-footer-buttons">
+        <button id="btnCopiarHistorico" class="btn-historico-acao copiar">COPIAR</button>
+        <button id="btnExportarHistorico" class="btn-historico-acao exportar">EXPORTAR</button>
+        <button id="btnLimparHistorico" class="btn-historico-acao limpar">LIMPAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Telegram -->
+  <div id="modalTelegram" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✈️ CONFIGURAR TELEGRAM</h2>
+        <button id="btnFecharModalTelegram" class="btn-fechar-modal">✕</button>
+      </div>
+      
+      <div class="historico-content" style="padding: 15px; display: flex; flex-direction: column;">
+        <label style="color:#aaa; font-size:12px; margin-bottom: 5px;">Bot Token</label>
+        <input type="text" id="telegramTokenInput" placeholder="Ex: 123456:ABC-DEF..." style="width: 100%; padding: 8px; margin-bottom: 15px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; font-size: 13px;">
+        
+        <label style="color:#aaa; font-size:12px; margin-bottom: 5px;">Chat ID</label>
+        <input type="text" id="telegramChatIdInput" placeholder="Ex: -1001234567890" style="width: 100%; padding: 8px; margin-bottom: 15px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; font-size: 13px;">
+        
+        <button id="btnTestarTelegram" class="secondary-btn" style="width: 100%; margin-bottom: 10px; background-color: #0088cc; color: white; border-color: #0088cc;">TESTAR CONEXÃO</button>
+        <button id="btnSalvarTelegram" class="primary-btn" style="width: 100%;">SALVAR CONFIGURAÇÕES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Modo Simulação -->
+  <div id="modalSimulacao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🧪 MODO SIMULAÇÃO</h2>
+        <button id="btnFecharModalSimulacao" class="btn-fechar-modal">✕</button>
+      </div>
+      
+      <div class="historico-content" style="padding: 20px; display: flex; flex-direction: column;">
+        <div style="background: rgba(0, 188, 212, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #00bcd4; text-align: center;">
+            <div style="font-size: 11px; color: #00bcd4; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Status do Modo Simulação</div>
+            <label class="switch-sim-bot" style="display: inline-block; position: relative; width: 60px; height: 30px;">
+                <input type="checkbox" id="toggleSimulacaoBot" style="opacity: 0; width: 0; height: 0;">
+                <span class="slider-sim-bot" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 34px;"></span>
+            </label>
+            <div id="txtStatusSimulacao" style="margin-top: 10px; font-weight: bold; color: #888;">DESATIVADO</div>
+        </div>
+
+        <label style="color:#aaa; font-size:12px; margin-bottom: 5px;">Saldo Fictício (R$)</label>
+        <input type="number" id="saldoSimulacaoInput" placeholder="Ex: 1000.00" step="0.01" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #222; border: 1px solid #444; color: #00ff00; border-radius: 4px; font-size: 16px; font-weight: bold;">
+        
+        <label style="color:#aaa; font-size:12px; margin-bottom: 5px;">Valor da Ficha (R$)</label>
+        <input type="number" id="fichaSimulacaoInput" placeholder="Ex: 1.00" step="0.50" style="width: 100%; padding: 10px; margin-bottom: 20px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px;">
+        
+        <button id="btnSalvarSimulacao" class="primary-btn" style="width: 100%; background-color: #00bcd4; border-color: #00bcd4;">SALVAR CONFIGURAÇÕES</button>
+        <button id="btnResetPlacarSimulacao" style="margin-top: 10px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">RESETAR PLACAR DE SIMULAÇÃO</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .slider-sim-bot:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider-sim-bot { background-color: #00bcd4; }
+    input:checked + .slider-sim-bot:before { transform: translateX(30px); }
+  </style>
+
+  <!-- Modal Gestão (Stop Win / Stop Loss) -->
+  <div id="modalGestao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ GESTÃO DE BANCA</h2>
+        <button id="btnFecharModalGestao" class="btn-fechar-modal">✕</button>
+      </div>
+      
+      <div class="historico-content" style="padding: 15px; display: flex; flex-direction: column;">
+        <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #555;">
+          <label style="color: #0088cc; font-size: 12px; font-weight: bold; display: block; margin-bottom: 8px;">💰 SALDO ATUAL</label>
+          <div style="font-size: 24px; font-weight: bold; color: #00ff00; text-align: center;" id="saldoAtual">R$ 0,00</div>
+          <div style="text-align: center; margin-top: 6px;">
+            <span style="color: #888; font-size: 11px;">Placar da sessão: </span>
+            <span id="infoPlacarSessao" style="font-size: 13px; font-weight: bold; color: #888;">0 X 0</span>
+          </div>
+        </div>
+
+        <div class="aviso-gestao-container" style="margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <div class="aviso-gestao-header" style="color: #ff9800; font-weight: bold; font-size: 12px; margin-bottom: 10px; text-align: center;">⚠️ AVISO DE GERENCIAMENTO</div>
+          <p style="font-size: 11px; color: #ccc; text-align: center; margin-bottom: 5px;">Utilize gestão de banca para um melhor gerenciamento de suas estratégias.</p>
+          <p style="font-weight: bold; color: #00ff00; margin-top: 5px; font-size: 11px; text-align: center;">Gerenciamento sugerido: 10% ao dia.</p>
+          
+          <button id="btnPlanilhasMain" class="primary-btn" style="width: 100%; margin-top: 15px; background-color: #217346; border-color: #217346; font-size: 11px; padding: 10px;">
+            📊 ABRIR PLANILHA DE GESTÃO
+          </button>
+        </div>
+
+        <div class="stats-grid-gestao">
+          <div class="gestao-item">
+            <label class="gestao-main-label">Quantidade Green</label>
+            <input type="number" id="stopWinInput" placeholder="Ex: 5" min="0" step="1" class="gestao-input">
+          </div>
+          <div class="gestao-item">
+            <label class="gestao-main-label">Quantidade Red</label>
+            <input type="number" id="stopLossInput" placeholder="Ex: 2" min="0" step="1" class="gestao-input">
+          </div>
+        </div>
+
+        <div class="buttons-gestao-container">
+          <button id="btnLimparGestao" class="btn-gestao-acao limpar">Limpar</button>
+          <button id="btnSalvarGestao" class="btn-gestao-acao salvar">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Estratégias -->
+  <div id="modalEstrategias" class="modal" style="display: none;">
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2>⭐ CONFIGURAR ESTRATÉGIAS</h2>
+        <button id="btnFecharModalEstrategias" class="btn-fechar-modal">✕</button>
+      </div>
+      
+      <div class="historico-content" style="padding: 15px; display: flex; flex-direction: column;">
+        <!-- Seleção de Estratégia Única -->
+        <div class="estrategia-selector">
+          <label for="selecaoEstrategia">SELEÇÃO ESTRATÉGIAS</label>
+          <select id="selecaoEstrategia">
+            <option value="">🔴 Desativada</option>
+          </select>
+        </div>
+
+        <!-- Modo I.A Fortuna X (Aparece apenas quando IA Pleno selecionada) -->
+        <div id="containerIAPleno" style="display: none; background: rgba(0, 188, 212, 0.1); border: 1px solid #00bcd4; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+          <label for="modoIAPleno" style="color: #00bcd4; font-size: 11px; font-weight: bold; display: block; margin-bottom: 5px;">MODO I.A FORTUNA X</label>
+          <select id="modoIAPleno" style="width: 100%; background: #252525; color: #fff; border: 1px solid #444; padding: 5px; border-radius: 4px; font-size: 12px;">
+              <option value="moderado">🟢 Moderado</option>
+              <option value="intermediario">🟡 Intermediário</option>
+              <option value="agressivo">🔴 Agressivo</option>
+          </select>
+        </div>
+
+        <!-- Status da IA -->
+        <div id="statusIA" style="display: none; background: rgba(255, 152, 0, 0.1); border: 1px solid #ff9800; color: #ff9800; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; font-weight: bold; text-align: center; cursor: pointer; transition: 0.3s;" title="Clique para análise profunda">
+          🧠 IA Analisando mesa...
+        </div>
+
+        <!-- Legendas -->
+        <div class="config-section" id="configLegendas">
+          <label>LEGENDAS</label>
+          <div class="input-group">
+            <input type="text" id="legenda" placeholder="Nome da legenda (A-Z0-9)">
+            <input type="text" id="numeros" placeholder="Números 0 a 36 separados por espaço">
+            <button id="btnAdicionarLegenda" type="button">ADICIONAR</button>
+          </div>
+          <label id="labellistadeLegenda">LISTA DE LEGENDAS</label>
+          <ul id="listaLegendas"></ul>
+        </div>
+
+        <!-- Gatilhos de Legendas -->
+        <div class="config-section" id="configGatilhos">
+          <label>GATILHOS DE LEGENDAS</label>
+          <div class="input-group">
+            <input type="text" id="gatilhoLegendas" placeholder="Nome da legenda (ex: DZ1)">
+            <input type="text" id="apostaLegendas" placeholder="Aposta em (ex: D1, D2, C1, ou números)">
+            <select id="tipoGatilho" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 8px; font-size: 13px; cursor: pointer; font-weight: bold;">
+              <option value="simples">SIMPLES</option>
+              <option value="gale">GALE</option>
+              <option value="ciclo">CICLO</option>
+            </select>
+          </div>
+
+          <!-- Configuração de Gale/Ciclo -->
+          <div id="configGaleCiclo" style="display: none; background: #333; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <label style="font-size: 12px; color: #fff;">Quantidade: <span id="quantidadeGaleCiclo">1</span></label>
+            <input type="range" id="sliderQuantidade" min="1" max="10" value="1" style="width: 100%; cursor: pointer;">
+            
+            <div id="slidersFichas" style="margin-top: 10px;"></div>
+          </div>
+
+          <button id="btnAdicionarGatilhoLegendas" type="button" style="margin-top: 5px; margin-bottom: 15px;">ADICIONAR GATILHO</button>
+          
+          <label id="labellistadegatilho">LISTA DE GATILHOS</label>
+          <ul id="listaGatilhosLegendas"></ul>
+        </div>
+
+        <!-- Configuração de Números Fixos (Apenas Funcionário do Mês) -->
+        <div class="config-section" id="configNumerosFixos" style="display: none; border-left: 3px solid #ff9800;">
+          <label>🔢 NÚMEROS FIXOS</label>
+          <div class="input-group">
+            <input type="text" id="inputNumerosFixos" placeholder="Ex: 0, 32, 15 (separados por vírgula)" style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; font-size: 13px;">
+            <button id="btnAdicionarNumerosFixos" type="button">SALVAR</button>
+          </div>
+          <small style="color: #888; display: block; margin-top: 5px; margin-bottom: 10px;">Estes números serão apostados em todas as rodadas desta estratégia.</small>
+          <label>NÚMEROS ATIVOS</label>
+          <ul id="listaNumerosFixos"></ul>
+        </div>
+
+        <!-- Configuração Funcionário do Mês (Ciclos) -->
+        <div class="config-section" id="configFuncionarioMes" style="display: none; border-left: 3px solid #ffd700;">
+          <label>👔 CONFIGURAÇÃO FUNCIONÁRIO DO MÊS</label>
+          
+          <label style="margin-top: 15px; display: block;">PROGRESSÃO (GALE/CICLO)</label>
+          <div class="input-group" style="margin-top: 5px;">
+            <select id="tipoProgressaoFM" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 8px; font-size: 13px; cursor: pointer; font-weight: bold; width: 100%;">
+              <option value="simples">SIMPLES (Apenas Entrada)</option>
+              <option value="gale">GALE</option>
+              <option value="ciclo">CICLO</option>
+            </select>
+          </div>
+          
+          <div id="configGaleCicloFM" style="display: none; background: #333; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <label style="font-size: 12px; color: #fff;">Quantidade: <span id="quantidadeGaleCicloFM">1</span></label>
+            <input type="range" id="sliderQuantidadeFM" min="1" max="10" value="1" style="width: 100%; cursor: pointer;">
+            <div id="slidersFichasFM" style="margin-top: 10px;"></div>
+          </div>
+
+          <button id="btnSalvarFuncionarioMes" type="button" style="margin-top: 15px; width: 100%; padding: 10px; background: #ffd700; color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">💾 SALVAR CONFIGURAÇÃO</button>
+        </div>
+
+        <!-- Configuração Dinâmica Especiais (Quentes/Frios) -->
+        <div class="config-section" id="configQuentesFrios" style="display: none; border-left: 3px solid #ff4444;">
+          <label>🔥❄️ PARÂMETROS DA ESTRATÉGIA</label>
+          <div class="input-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="display: none; flex: 1; min-width: 150px;" id="containerQtdQuentes">
+              <label style="font-size: 12px; margin-bottom: 5px; display: block;">Qtd Quentes</label>
+              <input type="number" id="inputQtdQuentes" placeholder="Ex: 3" min="0" style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; font-size: 11px;">
+            </div>
+            <div style="display: none; flex: 1; min-width: 150px;" id="containerQtdFrios">
+              <label style="font-size: 12px; margin-bottom: 5px; display: block;">Qtd Frios</label>
+              <input type="number" id="inputQtdFrios" placeholder="Ex: 3" min="0" style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; font-size: 11px;">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+              <label style="font-size: 12px; margin-bottom: 5px; display: block;">Qtd Vizinhos</label>
+              <input type="number" id="inputQtdVizinhos" placeholder="Ex: 2" min="0" style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; font-size: 11px;">
+            </div>
+          </div>
+
+          <label style="margin-top: 15px; display: block;">PROGRESSÃO (GALE/CICLO)</label>
+          <div class="input-group" style="margin-top: 5px;">
+            <select id="tipoProgressaoQF" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 8px; font-size: 13px; cursor: pointer; font-weight: bold; width: 100%;">
+              <option value="simples">SIMPLES</option>
+              <option value="gale">GALE</option>
+              <option value="ciclo">CICLO</option>
+            </select>
+          </div>
+          
+          <div id="configGaleCicloQF" style="display: none; background: #333; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <label style="font-size: 12px; color: #fff;">Quantidade: <span id="quantidadeGaleCicloQF">1</span></label>
+            <input type="range" id="sliderQuantidadeQF" min="1" max="10" value="1" style="width: 100%; cursor: pointer;">
+            <div id="slidersFichasQF" style="margin-top: 10px;"></div>
+          </div>
+        </div>
+
+        <!-- Seleção Múltipla de Estratégias Manuais -->
+        <div class="config-section" id="configEstrategiasMultiplas" style="display: none; border-left: 3px solid #00ff00;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="margin: 0;">🎯 ESTRATÉGIAS MANUAIS (Múltipla Seleção)</label>
+            <button id="btnEncolherMultiplas" type="button" style="background: none; border: none; color: #00ff00; font-size: 18px; cursor: pointer; padding: 0; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">
+              ▶
+            </button>
+          </div>
+          <div id="listaEstrategiasMultiplas" style="display: none; background: #333; padding: 10px; border-radius: 4px; max-height: 150px; overflow-y: auto; border: 1px solid #555;">
+            <!-- Checkboxes serão adicionadas aqui dinamicamente -->
+          </div>
+          <small style="color: #888; display: block; margin-top: 5px;">Selecione múltiplas estratégias para rotacionar entre elas</small>
+        </div>
+
+        <!-- PAUSE WIN -->
+        <div class="config-section">
+          <label>⏸️ PAUSE WIN</label>
+          <div class="input-group">
+            <input type="number" id="pauseWin" placeholder="Número de rodadas (ex: 1, 2, 3)" min="0" max="10" value="1" style="width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; font-size: 13px;">
+            <small style="color: #888; display: block; margin-top: 5px;">Aguarda X rodadas após GREEN antes de reiniciar análises</small>
+          </div>
+        </div>
+
+        <!-- Botão Principal de Salvar no Modal -->
+        <button id="saveBtn" class="primary-btn" style="width: 100%; margin-top: 10px;">SALVAR CONFIGURAÇÕES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Arquivos de Gestão (Planilhas) -->
+  <div id="modalArquivosGestao" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 98%; width: 98%; height: 95vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+      <div class="modal-header" style="padding: 10px 15px; border-bottom: 1px solid #333; background: #1a1a1a; flex-shrink: 0;">
+        <div style="display: flex; gap: 8px; align-items: center; flex: 1; overflow: hidden;">
+          <h2 id="tituloModalArquivos" style="font-size: 14px; margin: 0; white-space: nowrap;">📊 GESTÃO</h2>
+          <div style="display: flex; gap: 4px;">
+            <button id="btnVerPlanilha" class="secondary-btn" style="padding: 4px 8px; font-size: 10px; background: #217346; white-space: nowrap;">PLANILHA</button>
+          </div>
+        </div>
+        <button id="btnFecharModalArquivos" class="btn-fechar-modal" style="font-size: 18px; margin-left: 10px;">✕</button>
+      </div>
+      <div id="containerIframeGestao" style="flex: 1; width: 100%; overflow: hidden; background: #0a0a0a;">
+        <iframe id="iframeGestao" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Configuração de Voz (Removido ou desativado conforme pedido) -->
+  <div id="modalConfigVoz" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 300px;">
+      <div class="modal-header">
+        <h2 style="font-size: 14px; margin: 0;">🎙️ ESCOLHER VOZ</h2>
+        <button id="btnFecharModalVoz" class="btn-fechar-modal">✕</button>
+      </div>
+      <div style="padding: 15px;">
+        <label style="color: #888; font-size: 11px; margin-bottom: 8px; display: block;">SELECIONE A VOZ DA FORTUNA:</label>
+        <select id="selectVozIA" style="width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 4px; font-size: 12px; margin-bottom: 15px;">
+          <option value="">Carregando vozes...</option>
+        </select>
+        <button id="btnTestarVoz" class="primary-btn" style="width: 100%; font-size: 12px; padding: 8px;">TESTAR VOZ</button>
+        <button id="btnSolicitarMicrofone" class="secondary-btn" style="width: 100%; font-size: 11px; padding: 6px; margin-top: 10px; border-color: #ff9800; color: #ff9800;">ATIVAR MICROFONE (CHROME)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Histórico de Apostas -->
+  <div id="modalHistoricoApostas" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 95%; width: 95%;">
+      <div class="modal-header">
+        <h2>📈 HISTÓRICO DE APOSTAS</h2>
+        <button id="btnFecharModalApostas" class="btn-fechar-modal">✕</button>
+      </div>
+      
+      <div class="historico-content" style="padding: 10px; max-height: 70vh; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #fff;">
+          <thead>
+            <tr style="border-bottom: 1px solid #444; text-align: left; color: #888;">
+              <th style="padding: 8px;">DATA/HORA</th>
+              <th style="padding: 8px;">GATILHO</th>
+              <th style="padding: 8px;">Nº</th>
+              <th style="padding: 8px;">RESULTADO</th>
+              <th style="padding: 8px;">GALE</th>
+              <th style="padding: 8px;">MODO</th>
+              <th style="padding: 8px;">BANCA ATUAL</th>
+            </tr>
+          </thead>
+          <tbody id="listaHistoricoApostas">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="historico-footer-buttons" style="padding: 10px;">
+        <button id="btnLimparHistoricoApostas" class="btn-historico-acao limpar" style="width: 100%;">LIMPAR HISTÓRICO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Seletor de Tema -->
+  <div id="modalTema" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 320px;">
+      <div class="modal-header">
+        <h2>PERSONALIZAR CORES</h2>
+        <button id="btnFecharModalTema" class="btn-fechar-modal">✕</button>
+      </div>
+      <div style="padding: 20px;">
+        <div class="theme-colors-grid">
+          <button class="theme-color-btn" data-theme="black" title="Preto">
+            <div class="color-circle" style="background: #1a1a1a; border: 2px solid #fff;"></div>
+            <span>Preto</span>
+          </button>
+          <button class="theme-color-btn" data-theme="white" title="Branco">
+            <div class="color-circle" style="background: #f5f5f5; border: 2px solid #333;"></div>
+            <span>Branco</span>
+          </button>
+          <button class="theme-color-btn" data-theme="red" title="Vermelho Escuro">
+            <div class="color-circle" style="background: #3d1f1f; border: 2px solid #fff;"></div>
+            <span>Vermelho</span>
+          </button>
+          <button class="theme-color-btn" data-theme="red-light" title="Vermelho Claro">
+            <div class="color-circle" style="background: #ffcccc; border: 2px solid #cc0000;"></div>
+            <span>Vermelho Claro</span>
+          </button>
+          <button class="theme-color-btn" data-theme="blue" title="Azul Escuro">
+            <div class="color-circle" style="background: #1f2d3d; border: 2px solid #fff;"></div>
+            <span>Azul</span>
+          </button>
+          <button class="theme-color-btn" data-theme="blue-light" title="Azul Claro">
+            <div class="color-circle" style="background: #cce6ff; border: 2px solid #0066cc;"></div>
+            <span>Azul Claro</span>
+          </button>
+          <button class="theme-color-btn" data-theme="green" title="Verde Escuro">
+            <div class="color-circle" style="background: #243d24; border: 2px solid #fff;"></div>
+            <span>Verde</span>
+          </button>
+          <button class="theme-color-btn" data-theme="green-light" title="Verde Claro">
+            <div class="color-circle" style="background: #ccffcc; border: 2px solid #00cc00;"></div>
+            <span>Verde Claro</span>
+          </button>
+          <button class="theme-color-btn" data-theme="pink" title="Rosa Escuro">
+            <div class="color-circle" style="background: #3d2433; border: 2px solid #fff;"></div>
+            <span>Rosa</span>
+          </button>
+          <button class="theme-color-btn" data-theme="pink-light" title="Rosa Claro">
+            <div class="color-circle" style="background: #ffccee; border: 2px solid #cc0099;"></div>
+            <span>Rosa Claro</span>
+          </button>
+          <button class="theme-color-btn" data-theme="purple" title="Roxo Escuro">
+            <div class="color-circle" style="background: #33243d; border: 2px solid #fff;"></div>
+            <span>Roxo</span>
+          </button>
+          <button class="theme-color-btn" data-theme="purple-light" title="Roxo Claro">
+            <div class="color-circle" style="background: #eeccff; border: 2px solid #9900cc;"></div>
+            <span>Roxo Claro</span>
+          </button>
+          <button class="theme-color-btn" data-theme="brown" title="Marrom Escuro">
+            <div class="color-circle" style="background: #3d332a; border: 2px solid #fff;"></div>
+            <span>Marrom</span>
+          </button>
+          <button class="theme-color-btn" data-theme="brown-light" title="Marrom Claro">
+            <div class="color-circle" style="background: #ffe6cc; border: 2px solid #cc6600;"></div>
+            <span>Marrom Claro</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+  <script src="chat_fortuna.js"></script>
+</body>
+</html>

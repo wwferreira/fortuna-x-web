@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vídeos - Fortuna Roulette 2.0 - Rei dos Bots</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <style>
+        .videos-section {
+            padding: 120px 0 80px;
+            background: var(--dark-bg);
+            min-height: 100vh;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--neon-green);
+            text-decoration: none;
+            margin-bottom: 30px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+            transform: translateX(-5px);
+        }
+
+        .videos-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .video-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .video-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 65, 0.3);
+        }
+
+        .video-player {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+        }
+
+        .video-player video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-details {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 18px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .video-desc {
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .videos-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="icon.png" alt="Rei dos Bots" class="logo-img">
+                <h1>Rei dos Bots - <span>Fortuna</span></h1>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Início</a>
+                <a href="/#about" class="nav-link">Sobre</a>
+                <a href="/#bots" class="nav-link">Nossos Bots</a>
+                <a href="/#planos" class="nav-link">Planos</a>
+                <a href="/videos.html" class="nav-link active">Vídeos</a>
+                <a href="/planilha.html" class="nav-link">Gestão de Banca</a>
+                <a href="/#contato" class="nav-link">Contato</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="videos-section">
+        <div class="container">
+            <a href="/videos.html" class="back-link">← Voltar para Vídeos</a>
+            
+            <h2 class="section-title">🎰 Vídeos - Fortuna Roleta</h2>
+            <p class="section-subtitle">Assista aos vídeos demonstrativos do bot</p>
+
+            <div class="videos-list">
+                <!-- Espaço para adicionar vídeos futuramente -->
+            </div>
+
+            <div class="empty-state">
+                <h3>📹 Em breve!</h3>
+                <p>Estamos preparando vídeos incríveis do Fortuna Roulette 2.0 para você.<br>Volte em breve para conferir!</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2026 Rei dos Bots - Fortuna. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

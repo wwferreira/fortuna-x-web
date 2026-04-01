@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste de Login</title>
+<style>
+  body { font-family: Arial; padding: 20px; background: #0f0f1a; color: white; }
+  input, button { display: block; margin: 10px 0; padding: 10px; width: 100%; max-width: 300px; }
+  #log { background: #1a1a2e; padding: 15px; margin-top: 20px; border-radius: 8px; font-size: 12px; }
+  .success { color: #22c55e; }
+  .error { color: #ef4444; }
+</style>
+</head>
+<body>
+<h1>🔐 Teste de Login</h1>
+
+<input type="email" id="email" placeholder="Email" value="admin@reidosbots.com">
+<input type="password" id="senha" placeholder="Senha" value="admin123">
+<button onclick="testarLogin()">Testar Login</button>
+
+<div id="log"></div>
+
+<script>
+const API = window.location.protocol + '//' + window.location.host + '/api';
+
+function log(msg, tipo = 'info') {
+  const logDiv = document.getElementById('log');
+  const timestamp = new Date().toLocaleTimeString();
+  const className = tipo === 'success' ? 'success' : tipo === 'error' ? 'error' : '';
+  logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${msg}</div>`;
+  console.log(msg);
+}
+
+log('🌐 API URL: ' + API);
+log('🌐 Protocol: ' + window.location.protocol);
+log('🌐 Host: ' + window.location.host);
+
+async function testarLogin() {
+  const email = document.getElementById('email').value;
+  const senha = document.getElementById('senha').value;
+  
+  log('🔐 Iniciando teste de login...');
+  log('📧 Email: ' + email);
+  
+  try {
+    log('📤 Enviando requisição para: ' + API + '/login');
+    
+    const res = await fetch(API + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha })
+    });
+    
+    log('📥 Status da resposta: ' + res.status + ' ' + res.statusText);
+    
+    const data = await res.json();
+    log('📦 Dados recebidos: ' + JSON.stringify(data));
+    
+    if (res.ok && data.ok) {
+      log('✅ LOGIN BEM-SUCEDIDO!', 'success');
+      log('👤 Email: ' + data.email, 'success');
+      log('🔑 Token: ' + data.token.substring(0, 20) + '...', 'success');
+      
+      // Testar localStorage
+      localStorage.setItem('test_email', email);
+      const saved = localStorage.getItem('test_email');
+      log('💾 Teste localStorage: ' + (saved === email ? 'OK' : 'FALHOU'), saved === email ? 'success' : 'error');
+    } else {
+      log('❌ ERRO NO LOGIN: ' + (data.erro || 'Erro desconhecido'), 'error');
+    }
+  } catch (e) {
+    log('❌ ERRO DE CONEXÃO: ' + e.message, 'error');
+    log('Stack: ' + e.stack, 'error');
+  }
+}
+
+// Testar conexão ao carregar
+window.addEventListener('load', async () => {
+  log('🔍 Testando conexão com o servidor...');
+  try {
+    const res = await fetch(API + '/estrategias', { method: 'GET' });
+    if (res.ok) {
+      log('✅ Servidor está online e respondendo!', 'success');
+    } else {
+      log('⚠️ Servidor respondeu com status: ' + res.status, 'error');
+    }
+  } catch (e) {
+    log('❌ Não foi possível conectar ao servidor: ' + e.message, 'error');
+  }
+});
+</script>
+</body>
+</html>

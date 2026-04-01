@@ -1,0 +1,539 @@
+// Navegação suave
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Atualizar link ativo na navegação
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section');
+
+window.addEventListener('scroll', () => {
+    let current = '';
+    
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 200) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+
+// Dados dos bots
+const botsData = {
+    bacbo: {
+        title: '🎲 Fortuna Bacbo',
+        video: '../Bacbo/Originais/Bacbo/assets/fortuna_bacbo.mp4',
+        description: 'Extensão Chrome avançada para automação do jogo Bacbo, com sistema de inteligência artificial e gestão inteligente de banca. Compatível com múltiplas casas de apostas incluindo Betano, Stake, Reals Bet, BigBet, Betwinner e Segurobet.',
+        sections: [
+            {
+                title: '🎯 SISTEMA DE GATILHOS',
+                features: [
+                    { name: 'Gatilhos Personalizados', desc: 'Crie múltiplos gatilhos com padrões específicos de sequências' },
+                    { name: 'Gatilho Inteligente', desc: 'Sistema detecta automaticamente padrões favoráveis no histórico' },
+                    { name: 'Múltiplos Gatilhos Simultâneos', desc: 'Adicione e gerencie vários gatilhos ao mesmo tempo' },
+                    { name: 'Configuração de Apostas', desc: 'Defina valores e estratégias para cada gatilho' },
+                    { name: 'Ativação Individual', desc: 'Controle cada gatilho separadamente conforme necessidade' },
+                    { name: 'Prioridade de Gatilhos', desc: 'Organize ordem de execução dos gatilhos' },
+                    { name: 'Importar/Exportar', desc: 'Salve e compartilhe suas estratégias de gatilhos' },
+                    { name: 'Histórico de Gatilhos', desc: 'Acompanhe performance de cada gatilho criado' }
+                ]
+            },
+            {
+                title: '🧠 INTELIGÊNCIA ARTIFICIAL',
+                features: [
+                    { name: 'Análise de Histórico', desc: 'Analisa de 10 a 125 rodadas anteriores para identificar padrões' },
+                    { name: 'IA Mínima', desc: 'Define percentual mínimo de confiança (0-99%) para filtrar entradas' },
+                    { name: 'IA Máxima', desc: 'Define percentual máximo de confiança (1-100%) para entrada' },
+                    { name: 'Análise de Padrões', desc: 'Identifica tendências e sequências em tempo real' },
+                    { name: 'Assertividade Calculada', desc: 'Mostra taxa de acerto baseada em dados históricos' },
+                    { name: 'Predição Inteligente', desc: 'Calcula probabilidades para próximas jogadas' },
+                    { name: 'Aprendizado Contínuo', desc: 'Melhora análises conforme acumula dados' },
+                    { name: 'Filtro de Confiança', desc: 'Entra apenas quando IA atinge níveis configurados' }
+                ]
+            },
+            {
+                title: '💰 GESTÃO DE BANCA AVANÇADA',
+                features: [
+                    { name: 'Stop Gain', desc: 'Define limite de lucro de 1 a 5000 para proteção de ganhos' },
+                    { name: 'Stop Loss', desc: 'Define limite de perda de -1 a 5000 para proteção de banca' },
+                    { name: 'Modo Surf', desc: 'Proteção inteligente de banca com ajustes automáticos' },
+                    { name: 'Gestão Automática de Fichas', desc: '8 níveis de valores de aposta progressivos' },
+                    { name: 'Controle de Ciclos', desc: 'Configure até 10 ciclos de apostas diferentes' },
+                    { name: 'Gales por Ciclo', desc: 'Defina quantidade de gales para cada ciclo' },
+                    { name: 'Proteção de Saldo', desc: 'Sistema evita apostas que comprometam banca' },
+                    { name: 'Ajuste Dinâmico', desc: 'Valores se ajustam conforme saldo disponível' }
+                ]
+            },
+            {
+                title: '🎰 SISTEMA MARTINGALE COMPLETO',
+                features: [
+                    { name: 'Gale Configurável', desc: 'Configure até 10 níveis de martingale progressivo' },
+                    { name: 'Gale Virtual', desc: 'Simula apostas sem arriscar dinheiro (0-11 níveis)' },
+                    { name: 'Gale Alternado', desc: 'Alterna estratégias automaticamente entre 3 modos diferentes' },
+                    { name: 'Contagem Gale Alternado', desc: 'Controle fino de 0-12 repetições antes de alternar' },
+                    { name: 'Repetir Aposta no Gale', desc: 'Mantém mesma aposta por até 11 gales consecutivos' },
+                    { name: 'Gales por Ciclo', desc: 'Configure gales diferentes para cada ciclo de apostas' },
+                    { name: 'Progressão Personalizada', desc: 'Crie sequências únicas de martingale' },
+                    { name: 'Proteção Anti-Loss', desc: 'Sistema inteligente evita perdas excessivas' }
+                ]
+            },
+            {
+                title: '🎨 ANÁLISE DE CORES (PLAYER/BANKER)',
+                features: [
+                    { name: 'Porcentagem Vermelho Máxima', desc: 'Define limite máximo de Banker (0-100%)' },
+                    { name: 'Porcentagem Vermelho Mínima', desc: 'Define limite mínimo de Banker (0-100%)' },
+                    { name: 'Porcentagem Azul Máxima', desc: 'Define limite máximo de Player (0-100%)' },
+                    { name: 'Porcentagem Azul Mínima', desc: 'Define limite mínimo de Player (0-100%)' },
+                    { name: 'Limites de Segurança Vermelho', desc: 'Limites máximo e mínimo ajustáveis para Banker' },
+                    { name: 'Limites de Segurança Azul', desc: 'Limites máximo e mínimo ajustáveis para Player' },
+                    { name: 'Análise em Tempo Real', desc: 'Calcula probabilidades baseadas no histórico atual' },
+                    { name: 'Balanceamento Automático', desc: 'Ajusta apostas conforme distribuição de cores' }
+                ]
+            },
+            {
+                title: '⚖️ SISTEMA DE EMPATE E EVENTOS',
+                features: [
+                    { name: 'Ficha Empate', desc: 'Configure valor de aposta em empate (8 níveis)' },
+                    { name: 'Porcentagem Empate', desc: 'Ajuste probabilidade de aposta em empate (0-100%)' },
+                    { name: 'Aposta Automática TIE', desc: 'Sistema aposta em empate quando detecta padrão favorável' },
+                    { name: 'Evento Mínimo', desc: 'Define quantidade mínima de eventos (0-125) antes de entrar' },
+                    { name: 'Evento Máximo', desc: 'Define quantidade máxima de eventos (1-125) para filtrar' },
+                    { name: 'Contagem Automática', desc: 'Rastreia e conta eventos em tempo real' },
+                    { name: 'Ajuste de Histórico', desc: 'Sistema ajusta análise conforme eventos acumulados' },
+                    { name: 'Filtro de Momento', desc: 'Entra apenas quando quantidade de eventos é ideal' }
+                ]
+            },
+            {
+                title: '🔄 PÓS-LOSS, PÓS-GAIN E TELEGRAM',
+                features: [
+                    { name: 'Pós Loss', desc: 'Aguarda de 0-10 rodadas após perda antes de nova entrada' },
+                    { name: 'Pós Gain', desc: 'Aguarda de 0-10 rodadas após vitória para consolidar lucro' },
+                    { name: 'Proteção Emocional', desc: 'Evita apostas impulsivas após resultados' },
+                    { name: 'Cooldown Inteligente', desc: 'Pausa estratégica para análise de padrões' },
+                    { name: 'Notificações Telegram', desc: 'Receba alertas de entradas, vitórias e perdas' },
+                    { name: 'Token Bot', desc: 'Configure seu bot do Telegram para mensagens' },
+                    { name: 'Chat ID', desc: 'Envie notificações para grupo ou chat privado' },
+                    { name: 'Mensagens Detalhadas', desc: 'Acompanhe tudo pelo celular em tempo real' }
+                ]
+            },
+            {
+                title: '📈 PLACAR, ESTATÍSTICAS E CASAS',
+                features: [
+                    { name: 'Placar em Tempo Real', desc: 'Visualize Wins, Losses e Saldo atualizado constantemente' },
+                    { name: 'Histórico Completo', desc: 'Registra todas as rodadas com detalhes de cada jogada' },
+                    { name: 'Reset de Placar', desc: 'Zere estatísticas quando quiser recomeçar contagem' },
+                    { name: 'Taxa de Assertividade', desc: 'Percentual de acerto calculado automaticamente' },
+                    { name: 'BigBet', desc: 'Suporte completo para plataforma BigBet' },
+                    { name: 'Betwinner', desc: 'Compatível com Betwinner e suas mesas' },
+                    { name: 'Stake', desc: 'Funciona perfeitamente na Stake' },
+                    { name: 'Outras Casas', desc: 'Segurobet, Betano, Reals Bet e plataformas Evolution Gaming' }
+                ]
+            }
+        ],
+        specs: [
+            { label: 'Plataforma', value: 'Chrome Extension' },
+            { label: 'Compatibilidade', value: 'Windows' },
+            { label: 'Provider', value: 'Evolution Gaming' },
+            { label: 'Atualizações', value: 'Automáticas' }
+        ]
+    },
+    fortuna2: {
+        title: '🎰 Fortuna Roulette 2.0',
+        video: '../Fortuna 2.0/Originais/Fortuna 2.0/assets/fortuna_legend.mp4',
+        description: 'Extensão Chrome especializada em automação de roleta ao vivo, com suporte a mais de 50 mesas diferentes incluindo roletas normais e multiplicadoras (Quantum, Mega Fire Blaze). Sistema avançado de IA, gestão de banca e integração com Telegram.',
+        sections: [
+            {
+                title: '🎰 SISTEMA DE MESAS (50+ ROLETAS)',
+                features: [
+                    { name: 'Roleta Brasileira', desc: 'Roleta Brasileira, Speed Roleta Brasileira, Roleta Canarinho e Roleta Brasileira Betano' },
+                    { name: 'Roletas Internacionais', desc: 'Arabic Roulette, Hindi Roulette, Turkish Roulette, Greek Roulette, Deutsches Roulette' },
+                    { name: 'Roletas Premium', desc: 'Elite Roulette, Prestige Roulette, UK Roulette, Brussels Roulette' },
+                    { name: 'Roletas bet365', desc: 'bet365 Roulette, bet365 Dutch Roulette, Roleta Brasileira bet365' },
+                    { name: 'Mesas Quantum', desc: 'Quantum Ruleta España, x1000 Quantum Roulette, Greek Quantum Roulette, Quantum Auto Roulette' },
+                    { name: 'Mesas Mega Fire Blaze', desc: 'Roleta Brasileira Mega Fire Blaze, Mega Fire Blaze Roulette Italiana, Mega Fire Blaze Ruleta España' },
+                    { name: 'Mesas Temáticas', desc: 'Sticky Bandits Roulette, Age Of The Gods Bonus Roulette, Cash Collect Roulette' },
+                    { name: 'Controle de Mesas', desc: 'Seleção múltipla, marcar todas, identificação automática de fichas mínimas R$ 0,50' }
+                ]
+            },
+            {
+                title: '🎯 SISTEMA DE GATILHOS E LEGENDAS',
+                features: [
+                    { name: 'Gatilhos Personalizados', desc: 'Crie padrões específicos de entrada com sequências customizadas' },
+                    { name: 'Apostas por Gatilho', desc: 'Defina números específicos para cada gatilho criado' },
+                    { name: 'Controle Individual', desc: 'Ative ou desative cada gatilho separadamente conforme necessidade' },
+                    { name: 'Ativar Todos', desc: 'Botão para ativar/desativar todos os gatilhos de uma vez' },
+                    { name: 'Legendas Personalizadas', desc: 'Crie nomes customizados para grupos de números' },
+                    { name: 'Associação de Números', desc: 'Vincule múltiplos números a cada legenda criada' },
+                    { name: 'Organização Visual', desc: 'Facilita identificação rápida de padrões e estratégias' },
+                    { name: 'Importar/Exportar', desc: 'Compartilhe estratégias completas com outros usuários' }
+                ]
+            },
+            {
+                title: '🧠 INTELIGÊNCIA ARTIFICIAL',
+                features: [
+                    { name: 'Histórico Extenso', desc: 'Analisa de 10 até 490 rodadas anteriores para identificar padrões' },
+                    { name: 'IA Máxima', desc: 'Define percentual máximo de confiança (1-100%) para entrada' },
+                    { name: 'IA Mínima', desc: 'Define percentual mínimo de confiança (0-99%) para filtrar entradas' },
+                    { name: 'Análise Preditiva', desc: 'Calcula probabilidades em tempo real baseadas em padrões históricos' },
+                    { name: 'Assertividade Dinâmica', desc: 'Taxa de acerto calculada e atualizada automaticamente' },
+                    { name: 'Filtro Inteligente', desc: 'Sistema decide o melhor momento para entrar baseado em dados' },
+                    { name: 'Aprendizado Contínuo', desc: 'Melhora análises conforme acumula mais dados históricos' },
+                    { name: 'Múltiplos Padrões', desc: 'Identifica diversos tipos de sequências e tendências' }
+                ]
+            },
+            {
+                title: '💰 GESTÃO DE BANCA PROFISSIONAL',
+                features: [
+                    { name: '17 Níveis de Fichas', desc: 'Valores progressivos de R$ 0,50 até valores altos' },
+                    { name: 'Stop Gain', desc: 'Define limite de lucro de 1 até 500 para proteção de ganhos' },
+                    { name: 'Stop Loss', desc: 'Define limite de perda de 1 até 500 para proteção de banca' },
+                    { name: 'Loss Virtual', desc: 'Simula perdas sem arriscar dinheiro real (0-10 níveis)' },
+                    { name: 'Pause Win', desc: 'Pausa automática após vitórias (0-10 rodadas) para consolidar lucros' },
+                    { name: 'Controle de Saldo', desc: 'Monitora saldo em tempo real e ajusta estratégias' },
+                    { name: 'Proteção de Banca', desc: 'Sistema inteligente evita perdas excessivas automaticamente' },
+                    { name: 'Gestão Automática', desc: 'Ajusta valores de aposta conforme saldo disponível' }
+                ]
+            },
+            {
+                title: '🎲 MARTINGALE E CICLOS AVANÇADOS',
+                features: [
+                    { name: 'Gale Configurável', desc: 'Configure até 10 níveis de martingale progressivo' },
+                    { name: 'Multiplicador Gale 1-5', desc: 'Defina multiplicador de 1x a 500x para cada um dos 5 primeiros gales' },
+                    { name: 'Multiplicador Gale 6-10', desc: 'Defina multiplicador de 1x a 500x para cada um dos 5 últimos gales' },
+                    { name: 'Progressão Personalizada', desc: 'Crie sequências únicas de martingale conforme sua estratégia' },
+                    { name: 'Ciclos Configuráveis', desc: 'Configure até 10 ciclos diferentes de apostas' },
+                    { name: 'Multiplicador Ciclo 1-5', desc: 'Defina multiplicador de 1x a 500x para cada um dos 5 primeiros ciclos' },
+                    { name: 'Multiplicador Ciclo 6-10', desc: 'Defina multiplicador de 1x a 500x para cada um dos 5 últimos ciclos' },
+                    { name: 'Estratégias Progressivas', desc: 'Combine gales e ciclos para criar estratégias complexas' }
+                ]
+            },
+            {
+                title: '📊 CONTROLE DE EVENTOS E TURNOS',
+                features: [
+                    { name: 'Evento Mínimo', desc: 'Define quantidade mínima de eventos (0-480) antes de entrar' },
+                    { name: 'Evento Máximo', desc: 'Define quantidade máxima de eventos (0-480) para filtrar entradas' },
+                    { name: 'Contagem Automática', desc: 'Rastreia e conta eventos em tempo real automaticamente' },
+                    { name: 'Filtro de Momento', desc: 'Entra apenas quando condições de eventos são ideais' },
+                    { name: 'Sistema de Turnos', desc: 'Configure múltiplos horários de início e fim de operação' },
+                    { name: 'Turnos Ativos', desc: 'Visualize e gerencie todos os turnos configurados' },
+                    { name: 'Automação por Horário', desc: 'Bot opera automaticamente apenas nos horários definidos' },
+                    { name: 'Rotina Flexível', desc: 'Trabalhe, durma ou faça outras atividades enquanto bot opera' }
+                ]
+            },
+            {
+                title: '📱 TELEGRAM E MONITORAMENTO',
+                features: [
+                    { name: 'Notificações em Tempo Real', desc: 'Receba alertas instantâneos de entradas, vitórias e perdas' },
+                    { name: 'Configuração Token', desc: 'Configure seu bot do Telegram para receber mensagens' },
+                    { name: 'Chat ID Personalizado', desc: 'Envie notificações para grupo ou chat privado' },
+                    { name: 'Mensagens Detalhadas', desc: 'Informações completas sobre cada jogada e resultado' },
+                    { name: 'Placar Visual', desc: 'Acompanhe Wins, Losses e Saldo em tempo real' },
+                    { name: 'Histórico Completo', desc: 'Registra até 100 últimas atividades com detalhes' },
+                    { name: 'Reset de Placar', desc: 'Zere estatísticas quando quiser recomeçar contagem' },
+                    { name: 'Acompanhamento Remoto', desc: 'Monitore tudo de qualquer lugar pelo celular' }
+                ]
+            },
+            {
+                title: '💾 BACKUP E CONFIGURAÇÕES',
+                features: [
+                    { name: 'Exportar Configurações', desc: 'Salve todas as configurações em arquivo .json ou .prime' },
+                    { name: 'Importar Configurações', desc: 'Restaure configurações salvas rapidamente' },
+                    { name: 'Backup Completo', desc: 'Inclui gatilhos, legendas, gestão, turnos e todas configurações' },
+                    { name: 'Compartilhamento', desc: 'Envie estratégias completas para outros usuários' },
+                    { name: 'Múltiplos Perfis', desc: 'Mantenha diferentes configurações para diferentes estratégias' },
+                    { name: 'Restauração Rápida', desc: 'Importe e ative configurações com poucos cliques' },
+                    { name: 'Segurança de Dados', desc: 'Suas configurações ficam salvas localmente' },
+                    { name: 'Versionamento', desc: 'Mantenha diferentes versões de suas estratégias' }
+                ]
+            }
+        ],
+        specs: [
+            { label: 'Plataforma', value: 'Chrome Extension' },
+            { label: 'Compatibilidade', value: 'Windows' },
+            { label: 'Mesas Suportadas', value: '50+ Roletas (Normais e Multiplicadoras)' },
+            { label: 'Provider', value: 'Playtech Live Casino' }
+        ]
+    },
+    fortunax: {
+        title: '⚡ Fortuna X',
+        video: '../Fortuna X/Originais/Bot_Fortuna_X/assets/Fortuna X.mp4',
+        description: 'Bot PREMIUM de roleta ao vivo com tecnologia de ponta. Suporta 50+ mesas Playtech (clássicas, automáticas, Betano, bet365, Quantum, Mega Fire Blaze). IA Fodástica com 3 modos de agressividade, Modo Surf revolucionário para alternar entre mesas automaticamente e 15 estratégias profissionais.',
+        sections: [
+            {
+                title: '🎰 SISTEMA DE MESAS E MODO SURF',
+                features: [
+                    { name: '50+ Roletas Playtech', desc: 'Suporte completo: Roleta Brasileira, Speed Roleta Brasileira, Arabic, Hindi, Turkish, Greek, Elite, Prestige, UK, Deutsches, Brussels, Roulette Italiana, Bucharest e muitas outras. Cada mesa com características únicas de velocidade, limites e dealers.' },
+                    { name: 'Roletas Automáticas', desc: 'Mesas sem dealer humano para jogadas ultra-rápidas: Speed Auto Roulette (rodadas em 25 segundos), Auto Roulette (padrão), Auto Roulette 2 (otimizada) e Quantum Auto Roulette (com multiplicadores). Perfeito para alto volume de jogadas e estratégias agressivas.' },
+                    { name: 'Roletas Exclusivas Betano', desc: 'Acesso a mesas VIP Betano: Roleta Brasileira Betano (dealers BR), Ruleta Betano en Español, Betano Bulgarian Roulette, Roleta Brasileira Mega Fire Blaze Betano (multiplicadores até 500x), Mega Fire Blaze Roulette Betano. Limites diferenciados e promoções exclusivas.' },
+                    { name: 'Roletas Exclusivas bet365', desc: 'Mesas exclusivas bet365: bet365 Roulette 1 e 2, bet365 Roulette Ελληνική (grego), bet365 Roulette العربية (árabe), bet365 Dutch Roulette, Ruleta Latinoamérica bet365, Roleta Brasileira bet365, bet365 Boost Roulette Live (boost multiplicadores). Variedade internacional premium.' },
+                    { name: 'Modo Surf Revolucionário', desc: 'EXCLUSIVO: Sistema inteligente que alterna automaticamente entre múltiplas mesas selecionadas. Quando ativado, o bot monitora e opera em várias roletas simultaneamente, trocando de mesa conforme critérios definidos (greens conquistados). Maximiza oportunidades ao surfar nas mesas quentes, evitando sequências negativas. Estratégia profissional para diversificação.' },
+                    { name: 'Greens por Mesa (1-10)', desc: 'Configure quantos greens (vitórias) consecutivos de 1 até 10 o bot deve conquistar em cada mesa antes de alternar automaticamente para a próxima. Exemplo: 2 greens = após 2 vitórias na Mesa A, bot muda para Mesa B. Estratégia para surfar momentum positivo e sair antes de reversões. Proteção inteligente contra sequências negativas.' },
+                    { name: 'Seleção Múltipla Inteligente', desc: 'Interface permite selecionar quantas mesas desejar para circuito de rotação do Modo Surf. Clique nas mesas da lista para adicionar. Visualize todas selecionadas em tempo real com status. Remova com um clique. Sistema mantém lista sincronizada e PROTEGIDA durante operação ativa (não perde dados ao atualizar).' },
+                    { name: 'Controle Multi-Mesa Avançado', desc: 'Sistema rastreia performance individual: conta greens por mesa separadamente, monitora histórico específico de cada roleta, identifica padrões únicos por mesa, protege dados durante alternância. Algoritmo decide estrategicamente quando trocar baseado em performance REAL, não apenas contagem fixa. Inteligência distribuída.' }
+                ]
+            },
+            {
+                title: '🤖 IA FODÁSTICA E ESTRATÉGIAS',
+                features: [
+                    { name: 'IA Fodástica Avançada', desc: 'Sistema de inteligência artificial PROPRIETÁRIO que analisa padrões complexos em tempo real. Utiliza algoritmos de aprendizado para identificar tendências, calcular probabilidades e prever números com maior chance. Processa centenas de rodadas instantaneamente. Considera: frequência, intervalos, setores da roleta, correlações. Tecnologia EXCLUSIVA do Fortuna X.' },
+                    { name: 'Modo Moderado (3-5 números)', desc: 'Estratégia CONSERVADORA: IA seleciona apenas 3 a 5 números com MAIOR probabilidade calculada. Menor cobertura = maior retorno por acerto (até 35:1 em pleno). Ideal para bancas menores ou perfil de risco BAIXO. Assertividade focada em QUALIDADE sobre quantidade. Taxa de acerto menor, mas ROI maior quando acerta.' },
+                    { name: 'Modo Intermediário (6-8 números)', desc: 'Estratégia BALANCEADA: IA seleciona 6 a 8 números estratégicos. Equilíbrio PERFEITO entre cobertura e retorno. RECOMENDADO para maioria dos jogadores. Combina segurança com potencial de lucro. IA otimiza seleção para maximizar taxa de acerto mantendo ROI positivo. Melhor custo-benefício risco/retorno.' },
+                    { name: 'Modo Agressivo (9-12 números)', desc: 'Estratégia OFENSIVA: cobertura ampla de 9 a 12 números. Maior probabilidade de acerto (até 32% da mesa), porém retorno individual menor. Ideal para bancas ROBUSTAS e perfil agressivo. IA distribui números estrategicamente para cobrir setores quentes. Volume de greens compensa retorno menor. Requer gestão rigorosa.' },
+                    { name: 'Vizinhos Configuráveis (0-5)', desc: 'Adicione de 0 até 5 números VIZINHOS (na ordem FÍSICA da roleta) para cada número principal selecionado pela IA. Exemplo: número 32 com 2 vizinhos adiciona 15 e 19 (vizinhos físicos na roda). Aumenta cobertura GEOGRÁFICA da roleta. Estratégia profissional para capturar tendências de SETORES físicos da roda, não apenas números.' },
+                    { name: '15 Estratégias Profissionais', desc: 'Biblioteca COMPLETA: 1)Números Quentes 2)Números Frios 3)Quentes & Frios 4)Linhas Inteligentes 5)Linhas Intermediário 6)Funcionário do Mês 7)Números que se Puxam 8)Duzias e Ruas 9)Duzias/Colunas Inteligente 10)Grupos (H/L/R/B/O/P) 11)Gatilhos de Legendas 12)IA Fodástica 13)Números Quentes Tendência 14)Inversão 12 15)Fortuna. Cada uma com lógica ÚNICA e aplicação específica.' },
+                    { name: 'Funcionário do Mês', desc: 'Estratégia AVANÇADA: identifica o "número funcionário" - aquele com melhor performance recente considerando: frequência de aparição, intervalos entre aparições, consistência temporal, padrões de repetição. Analisa não apenas QUANTIDADE de saídas, mas QUALIDADE temporal. Premia números CONSISTENTES. Algoritmo proprietário de ranking dinâmico que se atualiza a cada rodada.' },
+                    { name: 'Números que se Puxam', desc: 'Estratégia baseada em análise de CORRELAÇÃO: identifica números que tendem a aparecer em sequência ou próximos temporalmente. Exemplo: se 17 saiu, quais números têm MAIOR probabilidade nas próximas 3 rodadas? Sistema mapeia relações históricas entre números. Aposta em números correlacionados. Baseado em padrões estatísticos reais, não superstição.' }
+                ]
+            },
+            {
+                title: '🎯 GATILHOS DE LEGENDAS AVANÇADO',
+                features: [
+                    { name: 'Legendas Personalizadas', desc: 'Crie nomes customizados (letras A-Z, números 0-9) para representar grupos específicos de números. Exemplo: legenda "V" = vizinhos do zero (0,3,12,15,26,32,35), legenda "O" = órfãos (1,6,9,14,17,20,31,34), legenda "T" = tier do cilindro. Sistema permite criar QUANTAS legendas precisar, cada uma com nome único e conjunto próprio.' },
+                    { name: 'Associação Múltipla', desc: 'Vincule múltiplos números da roleta (0 a 36) a cada legenda. Digite números separados por espaço. Exemplo: legenda "T" = "7 11 17 20 32". Uma legenda pode conter de 1 até 37 números. Sistema VALIDA automaticamente, previne duplicatas, mostra erros. Edite ou remova legendas a qualquer momento sem perder outras configurações.' },
+                    { name: 'Gatilhos de Sequência', desc: 'Configure SEQUÊNCIAS de legendas como gatilho de entrada. Formato: nomes separados por espaço. Exemplo: "V O V O" = quando aparecer Vizinhos, depois Órfãos, depois Vizinhos, depois Órfãos novamente, gatilho ATIVA. Crie padrões simples (2 eventos) ou complexos (até 20 eventos). Sistema detecta automaticamente no histórico em tempo real.' },
+                    { name: 'Apostas por Gatilho', desc: 'Defina EXATAMENTE onde apostar quando cada gatilho ativar. Use legendas (D1, D2, D3 para dúzias) ou números diretos (5 17 23). Exemplo: gatilho "V V" aposta em "O" (órfãos). Estratégia: quando padrão X aparecer, aposte em Y. Cada gatilho tem configuração de aposta INDEPENDENTE. Lógica condicional avançada.' },
+                    { name: 'Lista Completa', desc: 'Visualize TODOS os gatilhos configurados em lista organizada. Cada item mostra: nome do gatilho, sequência de legendas que ativa, apostas configuradas, status (ativo/inativo), performance histórica. Interface permite editar, remover, duplicar gatilhos. Sistema SALVA automaticamente. Exporte/importe configurações completas entre dispositivos ou compartilhe com outros usuários.' },
+                    { name: 'Ativação Individual', desc: 'Controle cada gatilho separadamente com toggle on/off. Ative APENAS gatilhos que fazem sentido para momento atual da mesa. Desative temporariamente sem perder configuração. Sistema respeita PRIORIDADE: se múltiplos gatilhos ativarem simultaneamente, usa o PRIMEIRO da lista. Flexibilidade total de gestão em tempo real.' },
+                    { name: 'Padrões Complexos', desc: 'Crie estratégias SOFISTICADAS combinando múltiplas legendas em sequências longas. Exemplo: "A B C A B C D" (padrão de 7 eventos). Sistema suporta gatilhos com até 20 legendas em sequência. Quanto mais ESPECÍFICO o padrão, maior a assertividade quando ativado (menos falsos positivos). Ideal para estratégias profissionais avançadas de padrões raros.' },
+                    { name: 'Organização Visual', desc: 'Interface INTUITIVA com cores e ícones facilita identificação rápida. Legendas com cores distintas, gatilhos agrupados por tipo, status visual claro (verde=ativo, cinza=inativo, amarelo=aguardando). Busca e filtros para encontrar gatilhos rapidamente. Sistema de tags para categorizar estratégias. Experiência otimizada para gestão de MÚLTIPLOS gatilhos simultaneamente.' }
+                ]
+            },
+            {
+                title: '💰 GESTÃO DE BANCA PROFISSIONAL',
+                features: [
+                    { name: '17 Níveis de Fichas', desc: 'Sistema COMPLETO de valores: R$ 0,50 / R$ 1,00 / R$ 2,50 / R$ 5,00 / R$ 10,00 / R$ 15,00 / R$ 20,00 / R$ 25,00 / R$ 50,00 / R$ 100,00 / R$ 125,00 / R$ 500,00 / R$ 2.000 / R$ 2.500 / R$ 5.000 / R$ 25.000. Atende desde INICIANTES (R$ 0,50) até HIGH-ROLLERS (R$ 25k). Sistema detecta automaticamente fichas disponíveis na mesa e ALERTA se ficha configurada não está disponível.' },
+                    { name: 'Modo Real/Percentual', desc: 'Escolha como definir limites: MODO REAL usa valores fixos em reais (ex: Stop Win R$ 500 fixo). MODO PERCENTUAL usa porcentagem da banca (ex: Stop Win 20% da banca inicial). Modo % se ajusta DINAMICAMENTE conforme banca cresce ou diminui. Ideal para gestão proporcional profissional. Alterne entre modos a qualquer momento sem perder configurações.' },
+                    { name: 'Stop Win Inteligente', desc: 'Proteção AUTOMÁTICA de lucros. Configure valor em R$ ou % que ao ser atingido, bot PARA automaticamente e SAI da mesa. Exemplo: Stop Win R$ 1.000 = ao lucrar R$ 1.000, bot encerra sessão protegendo ganho. Evita devolver lucros por ganância. Sistema calcula em tempo real considerando apostas EM ANDAMENTO. Essencial para disciplina.' },
+                    { name: 'Stop Loss Protetor', desc: 'Proteção AUTOMÁTICA contra perdas excessivas. Configure valor máximo de perda em R$ ou %. Ao atingir limite, bot PARA imediatamente e SAI da mesa. Exemplo: Stop Loss R$ 500 ou 10% da banca. FUNDAMENTAL para preservar capital. Sistema considera perdas virtuais E reais. NUNCA opere sem Stop Loss configurado. Proteção psicológica e financeira.' },
+                    { name: 'Loss Virtual 1 (0-30)', desc: 'PRIMEIRO nível de proteção virtual: simula perdas sem apostar dinheiro REAL. Configure de 0 a 30 losses virtuais. Bot analisa e "aposta" mentalmente, contando como loss se errar. Só começa apostas REAIS após completar losses virtuais configurados. Estratégia para entrar apenas após VALIDAR padrão. Economiza banca em fases ruins. Filtro de qualidade de entrada.' },
+                    { name: 'Loss Virtual 2 (0-30)', desc: 'SEGUNDO nível de proteção virtual adicional. Ativa APÓS Loss Virtual 1 ser completado. Configure 0 a 30 losses virtuais extras. DUPLA camada de segurança antes de apostas reais. Exemplo: LV1=5 + LV2=3 = 8 losses virtuais TOTAIS antes de apostar real. Ideal para estratégias ULTRA-conservadoras. Maximiza segurança, minimiza risco. Proteção em camadas.' },
+                    { name: 'Pause Win (0-10)', desc: 'Pausa AUTOMÁTICA após vitórias consecutivas. Configure de 0 a 10 rodadas de pausa após cada green. Exemplo: Pause Win 3 = após vitória, bot AGUARDA 3 rodadas antes de próxima entrada. Estratégia para CONSOLIDAR lucros e evitar devolver ganhos imediatamente. Psicologicamente importante para gestão emocional. Evita overtrading em sequências positivas.' },
+                    { name: 'Aposta Inicial Multiplicada', desc: 'Multiplique valor da PRIMEIRA aposta de cada ciclo. Configure de 0x (sem apostar - modo observação) até 10x. Exemplo: ficha R$ 5 com multiplicador 3x = primeira aposta R$ 15. Útil para recuperação rápida ou estratégias agressivas. 0x permite modo OBSERVAÇÃO pura. Sistema ajusta automaticamente valores de gale proporcionalmente ao multiplicador inicial.' }
+                ]
+            },
+            {
+                title: '🎲 MARTINGALE E CICLOS COMPLETOS',
+                features: [
+                    { name: 'Sistema de Gale (0-10)', desc: 'Martingale COMPLETO configurável até 10 níveis progressivos. Cada nível = tentativa de recuperação após loss. Configure quantos níveis usar (0 a 10). Sistema aplica multiplicadores em cada nível. Após esgotar gales, inicia novo ciclo ou para conforme configuração. FUNDAMENTAL para gestão de recuperação. 0 gales = sem martingale (aposta única).' },
+                    { name: 'Multiplicadores Gale 1-5', desc: 'Configure multiplicador INDIVIDUAL para cada um dos 5 primeiros gales. Valores de 0x até 250x. Exemplo: Gale1=2x, Gale2=3x, Gale3=5x, Gale4=8x, Gale5=13x (progressão Fibonacci). Ou Gale1=2x, Gale2=4x, Gale3=8x, Gale4=16x, Gale5=32x (progressão geométrica). Crie sua própria sequência IDEAL. Flexibilidade TOTAL.' },
+                    { name: 'Multiplicadores Gale 6-10', desc: 'Configure multiplicador INDIVIDUAL para cada um dos 5 últimos gales (6 ao 10). Valores de 0x até 250x. Gales AVANÇADOS para recuperação profunda. Exemplo: Gale6=21x, Gale7=34x, Gale8=55x, Gale9=89x, Gale10=144x (Fibonacci avançado). Use com CAUTELA - requer banca ROBUSTA. Ideal para estratégias agressivas de recuperação total.' },
+                    { name: 'Progressão Personalizada', desc: 'Crie sequências de martingale TOTALMENTE customizadas. NÃO precisa seguir padrões tradicionais (2x, 4x, 8x). Exemplo criativo: 1x, 1x, 2x, 3x, 5x, 8x, 13x (Fibonacci puro). Ou: 1x, 1.5x, 2x, 3x, 5x, 8x (progressão suave). Adapte à sua banca e perfil de risco. Sistema VALIDA e previne configurações impossíveis (ex: multiplicador maior que banca).' },
+                    { name: 'Sistema de Ciclos (0-10)', desc: 'Ciclos representam tentativas COMPLETAS de estratégia. Após esgotar TODOS os gales de um ciclo sem sucesso, inicia ciclo 2 (se configurado). Configure até 10 ciclos. Cada ciclo pode ter multiplicador PRÓPRIO. Exemplo: Ciclo1 normal, Ciclo2 dobrado, Ciclo3 triplicado. Recuperação em MÚLTIPLAS camadas. Estratégia profissional de gestão de risco distribuído.' },
+                    { name: 'Multiplicadores Ciclo 1-5', desc: 'Configure multiplicador BASE para cada um dos 5 primeiros ciclos. Valores de 0x até 250x. Multiplicador do ciclo afeta TODAS as apostas daquele ciclo (incluindo gales). Exemplo: Ciclo1=1x (normal), Ciclo2=2x (dobrado), Ciclo3=3x (triplicado). Estratégia para recuperação progressiva entre ciclos completos. Cada ciclo é uma nova tentativa com base maior.' },
+                    { name: 'Multiplicadores Ciclo 6-10', desc: 'Configure multiplicador BASE para cada um dos 5 últimos ciclos (6 ao 10). Valores de 0x até 250x. Ciclos AVANÇADOS para recuperação extrema. Use com EXTREMA cautela - requer banca MUITO robusta. Exemplo: Ciclo6=5x, Ciclo7=8x, Ciclo8=13x. Apenas para jogadores PROFISSIONAIS com gestão rigorosa. Último recurso de recuperação.' },
+                    { name: 'Estratégias Progressivas', desc: 'Combine gales e ciclos para criar sistemas SOFISTICADOS. Exemplo: 5 gales por ciclo, 3 ciclos totais = 15 tentativas de recuperação. Ou: 3 gales suaves + 5 ciclos = recuperação distribuída. Sistema calcula automaticamente valor TOTAL necessário e ALERTA se banca insuficiente. Simulador integrado para testar estratégias antes de usar real.' }
+                ]
+            },
+            {
+                title: '📊 ANÁLISE E CONFIGURAÇÕES AVANÇADAS',
+                features: [
+                    { name: 'Histórico Extenso (10-500)', desc: 'Analise de 10 até 500 rodadas anteriores da mesa. Quanto MAIOR o histórico, mais dados para IA processar. 50-100 rodadas = ideal para padrões RECENTES. 200-500 rodadas = tendências de LONGO prazo. Sistema processa INSTANTANEAMENTE. Histórico maior = análise mais precisa, mas menos reativa a mudanças. Ajuste conforme estratégia (curto/médio/longo prazo).' },
+                    { name: 'IA Máxima (0-100%)', desc: 'Define percentual MÁXIMO de confiança da IA para entrada. Exemplo: IA Máxima 80% = bot só entra se IA calcular ATÉ 80% de confiança. Valores altos (90-100%) = entradas RARAS mas muito confiáveis. Valores médios (60-80%) = equilíbrio. Combine com IA Mínima para criar JANELA de entrada. Filtro SUPERIOR de qualidade. Evita entradas com confiança excessiva (overfit).' },
+                    { name: 'IA Mínima (0-100%)', desc: 'Define percentual MÍNIMO de confiança da IA para entrada. Exemplo: IA Mínima 40% = bot só entra se IA calcular PELO MENOS 40% de confiança. Valores baixos (20-40%) = mais entradas, menos seletivo. Valores altos (60-80%) = poucas entradas, MUITO seletivo. Filtro INFERIOR de qualidade. Combine com IA Máxima para janela ideal (ex: 40-80% = janela de 40%).' },
+                    { name: 'Evento Mínimo (0-480)', desc: 'Quantidade MÍNIMA de eventos (rodadas) que devem ocorrer antes do bot começar a operar. Exemplo: Evento Mínimo 20 = bot AGUARDA 20 rodadas para coletar dados antes de primeira entrada. Útil para evitar entradas precipitadas. Permite IA acumular dados SUFICIENTES. Valores típicos: 10-30 para início rápido, 50-100 para análise robusta. Paciência = lucro.' },
+                    { name: 'Evento Máximo (0-480)', desc: 'Quantidade MÁXIMA de eventos para considerar na análise. Exemplo: Evento Máximo 100 = após 100 rodadas sem entrada, bot RESETA análise ou muda estratégia. Previne espera INFINITA por padrão perfeito. Força entrada dentro de janela temporal. Valores típicos: 50-150. Combine com Evento Mínimo para janela de operação (ex: Min=20, Max=100 = janela de 80 rodadas).' },
+                    { name: 'Números Quentes', desc: 'Configure análise de números quentes (mais frequentes): QUANTIDADE (0-30) = quantos números quentes considerar. REPETIÇÕES (0-15) = quantas vezes número deve aparecer para ser "quente". Exemplo: Qtd=5, Rep=3 = considera os 5 números que apareceram PELO MENOS 3 vezes. Sistema ranqueia automaticamente. Atualiza em TEMPO REAL a cada rodada.' },
+                    { name: 'Números Frios', desc: 'Configure análise de números frios (menos frequentes): QUANTIDADE (0-30) = quantos números frios considerar. REPETIÇÕES (0-15) = MÁXIMO de aparições para ser "frio". Exemplo: Qtd=8, Rep=1 = considera 8 números que apareceram NO MÁXIMO 1 vez. Estratégia: números frios "devem" sair (regressão à média). Sistema identifica automaticamente.' },
+                    { name: 'Configuração Ruas', desc: 'Análise de ruas (linhas de 3 números): CONFIG RUAS (0-50) = sensibilidade de detecção de padrões em ruas. HIST RUAS (0-100) = quantidade de rodadas para análise de ruas. Exemplo: Config=10, Hist=50 = analisa 50 rodadas buscando padrões em ruas com sensibilidade 10. Sistema identifica ruas quentes/frias automaticamente. Estratégia de cobertura por linhas.' }
+                ]
+            },
+            {
+                title: '🎨 CORES NA MESA E NÚMEROS INÍCIO',
+                features: [
+                    { name: 'Cores na Mesa', desc: 'Sistema visual AVANÇADO que aplica cores na interface da roleta para identificação RÁPIDA de padrões. Números quentes em vermelho/laranja, frios em azul, neutros em cinza. Setores da roleta destacados por cores. Facilita análise visual INSTANTÂNEA. Identifique tendências sem ler números. Profissionais usam cores para decisões rápidas. Mapa de calor em tempo real.' },
+                    { name: 'Limite Se Puxam - Anterior', desc: 'Configure quantas rodadas anteriores (1-10) analisar para identificar números que "se puxam" (aparecem em sequência). Exemplo: Anterior=3 = analisa se número atual tem correlação com números das ÚLTIMAS 3 rodadas. Valor baixo (1-2) = correlação IMEDIATA. Valor alto (5-10) = padrões ESPAÇADOS. Base da análise de correlação temporal entre números.' },
+                    { name: 'Limite Se Puxam - Mínimo', desc: 'Quantidade MÍNIMA de vezes (1-36) que correlação deve ocorrer para ser considerada VÁLIDA. Exemplo: Mínimo=5 = correlação entre números só é válida se ocorreu PELO MENOS 5 vezes no histórico. Filtro de QUALIDADE. Valores baixos (2-5) = mais correlações detectadas. Valores altos (10-20) = apenas correlações FORTES. Evita falsos positivos.' },
+                    { name: 'Limite Se Puxam - Máximo', desc: 'Quantidade MÁXIMA de números correlacionados (1-37) a considerar. Exemplo: Máximo=8 = considera no máximo 8 números que "se puxam" com número atual. Limita cobertura para manter ROI positivo. Valores baixos (3-5) = SELETIVO. Valores altos (10-15) = cobertura ampla. Balanceie com banca disponível. Controle de exposição.' },
+                    { name: 'Números Início', desc: 'Defina números específicos (0-36) para começar análise ou forçar inclusão em apostas. Digite números separados por espaço. Exemplo: "7 17 23 32" = SEMPRE inclui esses números na análise inicial. Útil para números da sorte ou baseado em análise externa. Sistema valida e previne duplicatas. Combine com outras estratégias para híbridos.' },
+                    { name: 'Lista Números Início', desc: 'Visualize TODOS os números de início configurados em lista organizada. Interface permite adicionar novos números, remover existentes, editar conjunto completo. Sistema SALVA automaticamente. Números destacados visualmente na mesa. Exporte/importe listas entre sessões. Mantenha MÚLTIPLAS listas para diferentes estratégias. Gestão completa.' },
+                    { name: 'Análise Visual Real-Time', desc: 'Cores se atualizam AUTOMATICAMENTE a cada rodada. Sistema recalcula padrões e ajusta cores INSTANTANEAMENTE. Números mudam de cor conforme status (quente→frio, frio→quente). Setores da roleta destacados dinamicamente. Animações suaves para transições. Interface responsiva e fluida. Análise profissional sem esforço. Dashboard visual completo.' },
+                    { name: 'Organização Inteligente', desc: 'Interface agrupa informações visualmente para decisões RÁPIDAS: painel de cores com legenda, mapa de calor da roleta, gráficos de distribuição, indicadores de tendência. Tudo atualizado em tempo real. Design otimizado para NÃO sobrecarregar visualmente. Informação certa, no momento certo, no lugar certo. UX profissional.' }
+                ]
+            },
+            {
+                title: '⏱️ TEMPORIZADORES E CROUPIER',
+                features: [
+                    { name: 'Temporizador Geral', desc: 'Configure pausas automáticas de 1 minuto até 9 horas entre sessões de jogo. Opções: 1-10 min (pausas curtas), 30 min, 1-9 horas (pausas longas). Exemplo: Temporizador 2h = após atingir condição (green/loss), bot PAUSA 2h antes de retomar. ESSENCIAL para gestão de tempo e evitar fadiga. Simula comportamento humano NATURAL (casas detectam bots por padrões).' },
+                    { name: 'Sequência Green (1-50)', desc: 'Defina quantidade de vitórias consecutivas (1-50) que ATIVA temporizador. Exemplo: Seq Green 10 + Timer 30min = após 10 greens seguidos, bot pausa 30 minutos. Estratégia para CONSOLIDAR lucros e evitar devolver ganhos. Valores baixos (3-5) = pausas FREQUENTES. Valores altos (20-30) = pausas raras após sequências longas. Proteção de lucros.' },
+                    { name: 'Sequência Loss (1-30)', desc: 'Defina quantidade de perdas consecutivas (1-30) que ATIVA temporizador. Exemplo: Seq Loss 5 + Timer 1h = após 5 losses seguidos, bot pausa 1 hora. Proteção EMOCIONAL e financeira. Evita "tilt" e perseguição de perdas. Valores baixos (2-3) = proteção AGRESSIVA. Valores médios (5-8) = equilíbrio. ESSENCIAL para disciplina. Salva bancas.' },
+                    { name: 'Temporizador Croupier', desc: 'Configure troca automática de croupier (dealer) após tempo definido: 5-60 minutos ou 1 hora. Exemplo: Timer Croupier 20min = a cada 20 minutos, bot SAI da mesa e busca outra com croupier DIFERENTE. Estratégia para evitar dealers "azarados" ou padrões específicos de dealer. Rotação automática de mesas. Diversificação de dealers.' },
+                    { name: 'Lista de Croupiers', desc: 'Adicione nomes de croupiers (dealers) específicos para monitoramento e BLOQUEIO. Digite nome EXATO do croupier. Sistema detecta automaticamente quando croupier da lista assume mesa. Bot SAI imediatamente e busca mesa com croupier diferente. Útil para evitar dealers com histórico negativo. Lista ILIMITADA de croupiers. Blacklist personalizada.' },
+                    { name: 'Bloqueio de Croupier', desc: 'Sistema monitora CONTINUAMENTE nome do croupier atual. Compara com lista de bloqueados em tempo real. Ao detectar match, bot PARA apostas imediatamente, aguarda rodada terminar e SAI da mesa automaticamente. Busca nova mesa com croupier diferente. Proteção automática 24/7. NUNCA jogue com croupiers indesejados. Segurança total.' },
+                    { name: 'Cooldown Estratégico', desc: 'Pausas inteligentes para análise e proteção de banca. Sistema usa temporizadores para: evitar overtrading (excesso de apostas), permitir análise de resultados, simular comportamento humano (casas detectam bots por padrões robóticos), proteger psicologicamente após sequências. Cooldowns são INVESTIMENTO, não perda de tempo. Paciência = lucro consistente.' },
+                    { name: 'Automação Completa 24/7', desc: 'Bot gerencia TUDO automaticamente conforme configurações: inicia/para conforme temporizadores, troca mesas conforme croupiers, respeita sequências green/loss, aplica pausas estratégicas, retoma operação automaticamente após pausas. Você configura UMA VEZ, bot executa PERFEITAMENTE. Opere enquanto dorme, trabalha ou faz outras atividades. LIBERDADE total. Piloto automático profissional.' }
+                ]
+            }
+        ],
+        specs: [
+            { label: 'Plataforma', value: 'Chrome Extension' },
+            { label: 'Compatibilidade', value: 'Windows' },
+            { label: 'Provider', value: 'Playtech Live Casino' }
+        ]
+    }
+};
+
+// Sistema de Modal
+const modal = document.getElementById('botModal');
+const modalBody = document.getElementById('modalBody');
+const modalClose = document.querySelector('.modal-close');
+const modalOverlay = document.querySelector('.modal-overlay');
+
+// Abrir modal ao clicar no bot
+document.querySelectorAll('.bot-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const botId = this.getAttribute('data-bot');
+        const botData = botsData[botId];
+        
+        console.log('Bot clicado:', botId);
+        console.log('Dados do bot:', botData);
+        
+        if (botData) {
+            openModal(botData);
+        } else {
+            console.error('Dados do bot não encontrados para:', botId);
+        }
+    });
+});
+
+function openModal(data) {
+    // Criar seções de funcionalidades em grid
+    let sectionsHTML = '';
+    if (data.sections) {
+        sectionsHTML = data.sections.map(section => `
+            <div class="features-section">
+                <h3 class="features-section-title">${section.title}</h3>
+                <div class="features-grid">
+                    ${section.features.map(f => `
+                        <div class="feature-card">
+                            <div class="feature-card-title">${f.name}</div>
+                            <div class="feature-card-desc">${f.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    } else if (data.features) {
+        // Formato antigo para compatibilidade
+        sectionsHTML = `
+            <div class="features-section">
+                <h3 class="features-section-title">Principais Funcionalidades</h3>
+                <div class="features-grid">
+                    ${data.features.map(f => `
+                        <div class="feature-card">
+                            <div class="feature-card-title">${f.title}</div>
+                            <div class="feature-card-desc">${f.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Criar conteúdo do modal
+    const content = `
+        <div class="modal-video-container">
+            <video autoplay loop muted playsinline class="modal-video">
+                <source src="${data.video}" type="video/mp4">
+            </video>
+        </div>
+        <h3 class="modal-title">${data.title}</h3>
+        <p class="modal-description">${data.description}</p>
+        
+        ${sectionsHTML}
+
+        <div class="bot-specs">
+            ${data.specs.map(s => `
+                <div class="spec-item">
+                    <span class="spec-label">${s.label}:</span>
+                    <span class="spec-value">${s.value}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    modalBody.innerHTML = content;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Fechar modal
+modalClose.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', closeModal);
+
+// Fechar modal com ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Animação de entrada dos elementos
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+// Observa elementos para animação
+document.querySelectorAll('.bot-item, .contact-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'all 0.6s ease';
+    observer.observe(el);
+});
+
+// Header transparente/sólido ao rolar
+const header = document.querySelector('.header');
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+    const currentScroll = window.pageYOffset;
+    
+    if (currentScroll > 100) {
+        header.style.background = 'rgba(10, 10, 10, 0.98)';
+        header.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.5)';
+    } else {
+        header.style.background = 'rgba(10, 10, 10, 0.95)';
+        header.style.boxShadow = 'none';
+    }
+    
+    lastScroll = currentScroll;
+});
+
+// Inicializar vídeos
+document.addEventListener('DOMContentLoaded', () => {
+    // Garantir que o vídeo hero está tocando
+    const heroVideo = document.querySelector('.hero-video');
+    if (heroVideo) {
+        heroVideo.play();
+    }
+});

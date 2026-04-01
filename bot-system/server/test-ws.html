@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste WebSocket</title>
+</head>
+<body>
+    <h1>Teste de Conexão WebSocket</h1>
+    <div id="status">Conectando...</div>
+    <div id="logs"></div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(msg) {
+            console.log(msg);
+            logs.innerHTML += `<p>${msg}</p>`;
+        }
+        
+        log('🔌 Tentando conectar em ws://localhost:3000...');
+        
+        const ws = new WebSocket('ws://localhost:3000');
+        
+        ws.onopen = () => {
+            log('✅ Conectado!');
+            status.textContent = 'Conectado!';
+            status.style.color = 'green';
+            
+            ws.send(JSON.stringify({
+                tipo: 'identificar',
+                email: 'teste@teste.com'
+            }));
+            log('📤 Mensagem enviada');
+        };
+        
+        ws.onmessage = (event) => {
+            log('📨 Mensagem recebida: ' + event.data);
+        };
+        
+        ws.onerror = (error) => {
+            log('❌ Erro: ' + error);
+            status.textContent = 'Erro na conexão';
+            status.style.color = 'red';
+        };
+        
+        ws.onclose = () => {
+            log('🔌 Desconectado');
+            status.textContent = 'Desconectado';
+            status.style.color = 'orange';
+        };
+    </script>
+</body>
+</html>

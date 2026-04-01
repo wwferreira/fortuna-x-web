@@ -1,0 +1,1049 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a1a;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  height: 100vh;
+  overflow-y: scroll;
+}
+
+.container {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100vh;
+  max-width: 380px; /* Reduzi para visualização compacta */
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+h2 {
+  font-size: 16px;
+  color: #fff;
+}
+
+/* Vídeo Principal */
+.roulette-display {
+  width: 100%;
+  height: 250px;
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roulette-display video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Status Bar */
+.status-bar {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+
+.status-item {
+  font-size: 13px;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-item strong {
+  color: #fff;
+}
+
+.reset-btn, .logout-btn {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 11px;
+  transition: background 0.3s;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+.reset-btn:hover, .logout-btn:hover {
+  background: #ff6666;
+}
+
+/* Estratégias Múltiplas - Destaque Verde */
+.estrategia-pronta {
+  background: #1a4d1a !important;
+  border-left: 3px solid #00ff00 !important;
+  padding-left: 5px !important;
+}
+
+.estrategia-pronta label {
+  color: #00ff00 !important;
+  font-weight: bold !important;
+}
+
+.estrategia-pronta::before {
+  content: '🟢 ';
+  margin-right: 5px;
+}
+
+/* Botões de Navegação */
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.nav-btn {
+  flex: 1;
+  background: #333;
+  color: #888;
+  border: 1px solid #555;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  background: #444;
+  color: #fff;
+}
+
+.nav-btn.active {
+  background: #444;
+  color: #fff;
+  border-color: #666;
+}
+
+/* Conteúdo das Telas */
+.tela-content {
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Seleção de Estratégia */
+.estrategia-selector {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px 10px; /* Reduzido padding vertical */
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Reduzido gap interno */
+}
+
+.estrategia-selector label {
+  font-size: 13px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.estrategia-selector select {
+  width: 100%;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Layout de Duas Colunas (Principal + Ferramentas Lateral) */
+.main-dashboard-layout {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.dashboard-main-content {
+  flex: 1; /* Ocupa todo o espaço da esquerda */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.side-tool-column {
+  width: 45px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #333;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+}
+
+.tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #333;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 5px; /* Padding para a imagem não tocar na borda */
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+
+.btn-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* Evita que a imagem interfira no clique */
+}
+
+.tool-btn:hover {
+  transform: scale(1.1);
+  background: #444;
+}
+
+.tool-btn.gestao {
+  background: #222;
+  border-color: #ff9800;
+}
+
+.tool-btn.historico {
+  background: #222;
+  border-color: #9c27b0;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn.estrategias {
+  background: #222;
+  border-color: #ffc107;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn.apostas {
+  background: #222;
+  border-color: #4caf50;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn.telegram {
+  background: #222;
+  border-color: #0088cc;
+}
+
+.tool-btn.simulacao {
+  background: #222;
+  border-color: #00bcd4;
+  font-size: 18px;
+}
+
+.tool-btn.help {
+  background: #222;
+  border-color: #555;
+}
+
+/* Aviso de Gestão */
+.aviso-gestao-container {
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px;
+  text-align: center;
+  color: #eee;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.aviso-gestao-header {
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Botões secundários para o modal de arquivos */
+.secondary-btn {
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.secondary-btn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+
+
+/* Remove estilos antigos não usados mais */
+.selector-controls, .quick-actions-bar, .action-icon {
+  display: none !important;
+}
+
+.action-icon:hover {
+  transform: scale(1.1);
+  background: #444;
+}
+
+.action-icon.gestao {
+  background: #ff9800;
+  border-color: #e68a00;
+}
+
+.action-icon.telegram {
+  background: #0088cc;
+  border-color: #0077b3;
+}
+
+.estrategia-selector select:hover {
+  background: #444;
+}
+
+.estrategia-selector select:focus {
+  outline: none;
+  border-color: #666;
+}
+
+/* Config Sections */
+.config-section {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-section label {
+  font-size: 13px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-group input {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.input-group button {
+  background: #444;
+  color: white;
+  border: 1px solid #555;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  transition: background 0.3s;
+}
+
+.input-group button:hover {
+  background: #555;
+}
+
+.input-group button:active {
+  background: #333;
+}
+
+/* Listas */
+#listaLegendas,
+#listaGatilhosLegendas {
+  list-style: none;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+#listaLegendas li,
+#listaGatilhosLegendas li {
+  padding: 5px;
+  margin: 3px 0;
+  background: #444;
+  border-left: 3px solid #666;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-left 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#listaLegendas li:hover,
+#listaGatilhosLegendas li:hover {
+  background: #555;
+}
+
+/* Estados do Gatilho */
+#listaGatilhosLegendas li.gatilho-inativo {
+  border-left: 3px solid #666;
+  opacity: 0.6;
+}
+
+#listaGatilhosLegendas li.gatilho-ativo {
+  border-left: 4px solid #FFD700;
+  background: #4a4a2a;
+  font-weight: bold;
+}
+
+#listaGatilhosLegendas li.gatilho-apostando {
+  border-left: 4px solid #00FF00;
+  background: #2a4a2a;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+/* Histórico */
+.historico-content {
+  flex: 1;
+  overflow-y: auto;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.lista-historico {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.historico-item {
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  cursor: pointer;
+  transition: filter 0.2s;
+  width: calc(10% - 8px);
+  min-width: 28px;
+}
+
+.historico-item:hover span {
+  filter: brightness(1.5) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.historico-item.destaque span {
+  filter: brightness(1.5) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.historico-stats {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-item span {
+  font-size: 11px;
+  color: #888;
+}
+
+.stat-item strong {
+  font-size: 16px;
+  color: #fff;
+}
+
+.historico-footer-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.btn-historico-acao {
+  flex: 1;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 11px;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.btn-historico-acao.copiar {
+  background: #444;
+}
+
+.btn-historico-acao.exportar {
+  background: #0088cc;
+}
+
+.btn-historico-acao.limpar {
+  background: #ff4444;
+}
+
+.btn-historico-acao:hover {
+  filter: brightness(1.2);
+}
+
+/* Antigo botão limpar removido */
+.btn-limpar-historico {
+  display: none;
+}
+
+/* Antigos Botões Secundários */
+.secondary-buttons {
+  display: none;
+}
+
+/* Botão Principal */
+.primary-btn {
+  width: 100%;
+  background: #444;
+  color: white;
+  border: 1px solid #555;
+  padding: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background 0.3s;
+  margin-top: 5px;
+}
+
+.primary-btn:hover {
+  background: #555;
+}
+
+.primary-btn:active {
+  background: #333;
+}
+
+/* Scrollbar customizado */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #141414; /* Escurecido para combinar com a planilha */
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0; /* Removido padding para o iframe preencher tudo */
+  width: 98%;
+  max-width: 480px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+
+.modal-header {
+  padding: 12px 15px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-size: 14px;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-fechar-modal {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.btn-fechar-modal:hover {
+  color: #fff;
+}
+
+.btn-abrir-historico {
+  background: #444;
+  color: white;
+  border: 1px solid #555;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  transition: background 0.3s;
+  width: 100%;
+}
+
+.btn-abrir-historico:hover {
+  background: #555;
+}
+
+.tool-btn.chat-ia {
+  border-color: #ff9800;
+  font-size: 18px;
+}
+
+/* Estilos Chat IA */
+.message-user {
+  align-self: flex-end;
+  background: #0088cc;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px 12px 2px 12px;
+  max-width: 85%;
+  font-size: 13px;
+}
+
+.message-ai {
+  animation: fadeInChat 0.3s ease-out;
+}
+
+@keyframes fadeInChat {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-suggestion:hover {
+  background: rgba(255,152,0,0.2) !important;
+  border-color: #ff9800 !important;
+}
+.notificacoes {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  pointer-events: none;
+}
+
+.notificacao {
+  background: #333;
+  border-left: 4px solid #666;
+  color: #fff;
+  padding: 12px 15px;
+  border-radius: 4px;
+  font-size: 13px;
+  animation: slideIn 0.3s ease-out;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.notificacao.sucesso {
+  border-left-color: #4caf50;
+  background: #2d5a2d;
+}
+
+.notificacao.erro {
+  border-left-color: #f44336;
+  background: #5a2d2d;
+}
+
+.notificacao.aviso {
+  border-left-color: #ff9800;
+  background: #5a4a2d;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+.notificacao.removendo {
+  animation: slideOut 0.3s ease-out;
+}
+
+
+/* ===== LOGIN ===== */
+.tela-login {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top, #3d0707 0%, #140101 60%, #0b0000 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.login-box {
+  background: rgba(26, 26, 26, 0.96);
+  padding: 28px 24px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 360px;
+  border: 1px solid #5f1414;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.login-logo {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 10px auto;
+  filter: drop-shadow(0 0 12px rgba(255, 80, 80, 0.35));
+}
+
+.login-box h2 {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 24px;
+  color: #f2f2f2;
+  letter-spacing: 0.4px;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-box input {
+  padding: 11px;
+  border: 1px solid #4a4a4a;
+  border-radius: 8px;
+  background: #2f2f2f;
+  color: #fff;
+  font-size: 14px;
+}
+
+.login-box input:focus {
+  outline: none;
+  border-color: #ce4b4b;
+  box-shadow: 0 0 0 2px rgba(206, 75, 75, 0.25);
+}
+
+.btn-login {
+  padding: 11px;
+  background: linear-gradient(135deg, #b90f0f 0%, #7f0808 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.mensagem-login {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 12px;
+  display: none;
+}
+
+.mensagem-login.erro {
+  background: #ff4444;
+  color: white;
+  display: block;
+}
+
+.mensagem-login.sucesso {
+  background: #44ff44;
+  color: #000;
+  display: block;
+}
+
+.toggle-registro {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 12px;
+  color: #b7b7b7;
+}
+
+.toggle-registro a {
+  color: #667eea;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.logout-btn {
+  padding: 5px 10px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #ff6666;
+}
+
+/* Grids de Análise Avançada */
+.analysis-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #444;
+  margin-top: 15px;
+}
+
+.analysis-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.analysis-cell {
+  flex: 1;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.analysis-cell.red { border-bottom: 3px solid #f44336; }
+.analysis-cell.black { border-bottom: 3px solid #222; background: #2a2a2a; }
+.analysis-cell.green { border-bottom: 3px solid #4caf50; }
+
+.analysis-label {
+  font-size: 10px;
+  color: #aaa;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.analysis-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Animação de Rotação */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Gestão de Banca UI */
+.stats-grid-gestao {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.gestao-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.gestao-main-label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+
+
+.gestao-input {
+  width: 100%;
+  padding: 8px;
+  background: #333;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.buttons-gestao-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.btn-gestao-acao {
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  min-width: 90px;
+  text-transform: uppercase;
+}
+
+.btn-gestao-acao.limpar {
+  background-color: #444;
+  color: #ccc;
+}
+
+.btn-gestao-acao.limpar:hover {
+  background-color: #555;
+  color: #fff;
+}
+
+.btn-gestao-acao.salvar {
+  background-color: #0088cc;
+  color: white;
+}
+
+.btn-gestao-acao.salvar:hover {
+  background-color: #0099ee;
+}

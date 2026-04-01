@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rei dos Bots - Fortuna (Mobile)</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <style>
+        /* Estilos específicos para mobile - ajustes finos */
+        body, html {
+            overflow-x: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 15px !important;
+            margin: 0 auto !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header .container {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .nav {
+            display: flex !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            width: 100% !important;
+            margin-top: 5px;
+        }
+        
+        .hero {
+            min-height: 70vh !important;
+            padding-top: 100px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        .hero-logo {
+            height: 160px !important;
+            margin: 0 auto 15px auto !important;
+            display: block !important;
+        }
+        
+        .hero-title {
+            font-size: 22px !important;
+            padding: 0 15px !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="icon.png" alt="Rei dos Bots" class="logo-img">
+                <h1>Rei dos Bots - <span>Fortuna</span></h1>
+            </div>
+            <nav class="nav">
+                <a href="#home" class="nav-link active">Início</a>
+                <a href="#about" class="nav-link">Sobre</a>
+                <a href="#bots" class="nav-link">Bots</a>
+                <a href="#planos" class="nav-link">Planos</a>
+                <a href="videos.html" class="nav-link">Vídeos</a>
+                <a href="planilha.html" class="nav-link">Gestão de Banca</a>
+                <a href="#contato" class="nav-link">Contato</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-overlay"></div>
+        <video autoplay loop muted playsinline class="hero-video">
+            <source src="hero-video.mp4" type="video/mp4">
+        </video>
+        <div class="hero-content">
+            <img src="rei-dos-bots.png" alt="Rei dos Bots" class="hero-logo">
+            <h2 class="hero-title">Bem-vindo ao Rei dos Bots - Fortuna</h2>
+            <p class="hero-subtitle">Soluções automatizadas para seus jogos favoritos</p>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="about-intro">
+                        Os bots Fortuna são ferramentas avançadas de automação desenvolvidas para otimizar 
+                        sua experiência em jogos online. Utilizando algoritmos inteligentes e análise de 
+                        dados em tempo real, nossos bots executam estratégias precisas e consistentes.
+                    </p>
+                    
+                    <div class="about-features-grid">
+                        <div class="about-feature">
+                            <div class="feature-icon">🤖</div>
+                            <h3>Automação Inteligente</h3>
+                            <p>Execução automática de jogadas seguindo estratégias comprovadas.</p>
+                        </div>
+                        
+                        <div class="about-feature">
+                            <div class="feature-icon">📊</div>
+                            <h3>Análise em Tempo Real</h3>
+                            <p>Monitoramento constante de padrões e tendências.</p>
+                        </div>
+                        
+                        <div class="about-feature">
+                            <div class="feature-icon">💰</div>
+                            <h3>Gestão de Banca</h3>
+                            <p>Controle inteligente do seu saldo com proteção contra perdas.</p>
+                        </div>
+                        
+                        <div class="about-feature">
+                            <div class="feature-icon">⚙️</div>
+                            <h3>Totalmente Personalizável</h3>
+                            <p>Configure estratégias de acordo com seu perfil.</p>
+                        </div>
+                        
+                        <div class="about-feature">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Seguro e Confiável</h3>
+                            <p>Tecnologia testada com atualizações constantes.</p>
+                        </div>
+                        
+                        <div class="about-feature">
+                            <div class="feature-icon">📈</div>
+                            <h3>Estatísticas Detalhadas</h3>
+                            <p>Acompanhe seu desempenho com relatórios completos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bots Section -->
+    <section id="bots" class="bots-section">
+        <div class="container">
+            <h2 class="section-title">Nossos Bots</h2>
+            <p class="section-subtitle">Escolha o bot perfeito para você</p>
+
+            <!-- Carrossel de Bots -->
+            <div class="bots-carousel-wrapper">
+                <button class="carousel-btn carousel-btn-prev" id="carouselPrev">&#8592;</button>
+                <div class="bots-carousel" id="botsCarousel">
+                    <div class="bot-item" data-bot="bacbo">
+                        <div class="bot-preview">
+                            <video autoplay loop muted playsinline class="bot-preview-video">
+                                <source src="fortuna_bacbo.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <h3 class="bot-name">🎲 Fortuna Bacbo</h3>
+                        <p class="bot-short-desc">Bot especializado em Bacbo</p>
+                        <button class="btn-details">Ver Detalhes</button>
+                    </div>
+
+                    <div class="bot-item" data-bot="fortuna2">
+                        <div class="bot-preview">
+                            <video autoplay loop muted playsinline class="bot-preview-video">
+                                <source src="fortuna_legend.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <h3 class="bot-name">🎰 Fortuna Roleta</h3>
+                        <p class="bot-short-desc">Bot avançado de roleta</p>
+                        <button class="btn-details">Ver Detalhes</button>
+                    </div>
+
+                    <div class="bot-item" data-bot="fortunax">
+                        <div class="bot-preview">
+                            <video autoplay loop muted playsinline class="bot-preview-video">
+                                <source src="Fortuna X.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <h3 class="bot-name">⚡ Fortuna X</h3>
+                        <p class="bot-short-desc">Bot premium multi-funcional</p>
+                        <button class="btn-details">Ver Detalhes</button>
+                    </div>
+
+                    <div class="bot-item" data-bot="botexterno">
+                        <div class="bot-preview">
+                            <video autoplay loop muted playsinline class="bot-preview-video">
+                                <source src="Video-Externo.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <h3 class="bot-name">🔗 Bot Externo</h3>
+                        <p class="bot-short-desc">Bot externo para automação</p>
+                        <button class="btn-details">Ver Detalhes</button>
+                    </div>
+
+                    <div class="bot-item" data-bot="fortunafree">
+                        <div class="bot-preview">
+                            <video autoplay loop muted playsinline class="bot-preview-video">
+                                <source src="Fortuna Free.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <h3 class="bot-name">🆓 Fortuna Free</h3>
+                        <p class="bot-short-desc">Versão gratuita para testes</p>
+                        <button class="btn-details">Ver Detalhes</button>
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn-next" id="carouselNext">&#8594;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Detalhes Bot -->
+    <div class="modal" id="botModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content" style="max-width: 95%; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close">&times;</button>
+            <div class="modal-body" id="modalBody" style="padding: 15px;"></div>
+        </div>
+    </div>
+    
+    <style>
+        /* Ajustes específicos para modal de detalhes no mobile */
+        #botModal .modal-content {
+            width: 95% !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        #botModal .modal-video-container {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 200px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        #botModal .modal-video {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 200px !important;
+            object-fit: cover !important;
+        }
+        
+        #botModal .modal-title {
+            font-size: 20px !important;
+            margin-bottom: 10px !important;
+            padding: 0 !important;
+        }
+        
+        #botModal .modal-description {
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+            margin-bottom: 20px !important;
+            padding: 0 !important;
+        }
+        
+        #botModal .features-section {
+            margin-bottom: 20px !important;
+        }
+        
+        #botModal .features-section-title {
+            font-size: 16px !important;
+            margin-bottom: 10px !important;
+            padding: 8px 0 !important;
+            border-bottom: 2px solid var(--neon-green) !important;
+        }
+        
+        #botModal .features-grid {
+            display: block !important;
+            grid-template-columns: 1fr !important;
+        }
+        
+        #botModal .feature-card {
+            margin-bottom: 12px !important;
+            padding: 12px !important;
+            background: rgba(0, 255, 65, 0.05) !important;
+            border: 1px solid rgba(0, 255, 65, 0.2) !important;
+            border-radius: 6px !important;
+        }
+        
+        #botModal .feature-card-title {
+            font-size: 14px !important;
+            font-weight: bold !important;
+            color: var(--neon-green) !important;
+            margin-bottom: 5px !important;
+        }
+        
+        #botModal .feature-card-desc {
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+            color: #b0b0b0 !important;
+        }
+        
+        #botModal .bot-specs {
+            margin-top: 20px !important;
+            padding-top: 15px !important;
+            border-top: 1px solid rgba(0, 255, 65, 0.3) !important;
+        }
+        
+        #botModal .spec-item {
+            font-size: 13px !important;
+            padding: 8px 0 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+        }
+        
+        #botModal .spec-label {
+            color: var(--neon-green) !important;
+            font-weight: bold !important;
+        }
+        
+        #botModal .spec-value {
+            color: #fff !important;
+        }
+    </style>
+
+    <!-- Modal Pagamento -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-overlay" id="paymentOverlay"></div>
+        <div class="modal-content payment-modal-content">
+            <button class="modal-close" id="paymentClose">&times;</button>
+            <div class="modal-body">
+                <h2 class="payment-title">Escolha seu Plano</h2>
+                <p class="payment-subtitle" id="planType"></p>
+                
+                <div id="individualContent" style="display: none;">
+                    <p class="payment-description">Escolha qual bot você deseja adquirir:</p>
+                    <div class="bots-payment-grid">
+                        <div class="bot-payment-card">
+                            <h3 class="bot-payment-name">🔗 Bot Externo</h3>
+                            <div class="payment-options">
+                                <button class="payment-btn" data-bot="Bot Externo" data-plan="mensal" data-price="99.90">
+                                    <span class="payment-period">Mensal</span>
+                                    <span class="payment-price">R$ 99,90</span>
+                                </button>
+                                <button class="payment-btn" data-bot="Bot Externo" data-plan="trimestral" data-price="249.90">
+                                    <span class="payment-period">Trimestral</span>
+                                    <span class="payment-price">R$ 249,90</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bot-payment-card">
+                            <h3 class="bot-payment-name">🎲 Fortuna Bacbo</h3>
+                            <div class="payment-options">
+                                <button class="payment-btn" data-bot="Fortuna Bacbo" data-plan="mensal" data-price="99">
+                                    <span class="payment-period">Mensal</span>
+                                    <span class="payment-price">R$ 99,00</span>
+                                </button>
+                                <button class="payment-btn" data-bot="Fortuna Bacbo" data-plan="trimestral" data-price="249">
+                                    <span class="payment-period">Trimestral</span>
+                                    <span class="payment-price">R$ 249,00</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bot-payment-card">
+                            <h3 class="bot-payment-name">🎰 Fortuna Roulette 2.0</h3>
+                            <div class="payment-options">
+                                <button class="payment-btn" data-bot="Fortuna Roulette 2.0" data-plan="mensal" data-price="99">
+                                    <span class="payment-period">Mensal</span>
+                                    <span class="payment-price">R$ 99,00</span>
+                                </button>
+                                <button class="payment-btn" data-bot="Fortuna Roulette 2.0" data-plan="trimestral" data-price="249">
+                                    <span class="payment-period">Trimestral</span>
+                                    <span class="payment-price">R$ 249,00</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bot-payment-card">
+                            <h3 class="bot-payment-name">⚡ Fortuna X</h3>
+                            <div class="payment-options">
+                                <button class="payment-btn" data-bot="Fortuna X" data-plan="mensal" data-price="199.90">
+                                    <span class="payment-period">Mensal</span>
+                                    <span class="payment-price">R$ 199,90</span>
+                                </button>
+                                <button class="payment-btn" data-bot="Fortuna X" data-plan="trimestral" data-price="649.90">
+                                    <span class="payment-period">Trimestral</span>
+                                    <span class="payment-price">R$ 649,90</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="completoContent" style="display: none;">
+                    <p class="payment-description">Acesso completo aos 3 bots!</p>
+                    <div class="completo-payment-options">
+                        <button class="payment-btn-large" data-bot="3 Bots (Completo)" data-plan="mensal" data-price="299">
+                            <div class="payment-btn-content">
+                                <span class="payment-period-large">💰 Plano Mensal</span>
+                                <span class="payment-price-large">R$ 299,00</span>
+                                <span class="payment-info">Acesso aos 3 bots por 1 mês</span>
+                            </div>
+                        </button>
+                        <button class="payment-btn-large" data-bot="3 Bots (Completo)" data-plan="trimestral" data-price="599">
+                            <div class="payment-btn-content">
+                                <span class="payment-period-large">🔥 Plano Trimestral</span>
+                                <span class="payment-price-large">R$ 599,00</span>
+                                <span class="payment-info">Acesso aos 3 bots por 3 meses</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulário -->
+    <div class="modal" id="formModal">
+        <div class="modal-overlay" id="formOverlay"></div>
+        <div class="modal-content form-modal-content">
+            <button class="modal-close" id="formClose">&times;</button>
+            <div class="modal-body">
+                <h2 class="payment-title">Finalize seu Cadastro</h2>
+                <p class="payment-subtitle" id="selectedPlanInfo"></p>
+                
+                <form id="cadastroForm" class="cadastro-form">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo *</label>
+                        <input type="text" id="nome" name="nome" required placeholder="Digite seu nome completo">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-mail *</label>
+                        <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone">Telefone/WhatsApp *</label>
+                        <input type="tel" id="telefone" name="telefone" required placeholder="(00) 00000-0000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cpf">CPF *</label>
+                        <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00">
+                        <span class="cpf-validation" id="cpfValidation"></span>
+                    </div>
+
+                    <div class="form-info">
+                        <p>⚠️ O CPF deve ser o mesmo do comprovante PIX</p>
+                    </div>
+
+                    <div class="form-info" style="margin-top: 20px; padding: 15px; background: rgba(0, 255, 65, 0.1); border: 1px solid var(--neon-green); border-radius: 8px;">
+                        <p style="margin: 0 0 15px 0; font-weight: bold; color: var(--neon-green);">💳 Escolha a forma de pagamento:</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
+                        <div onclick="escolherMetodoPagamento('pix')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            <img src="pix-banco-central-logo.png" alt="PIX" style="width: 100%; height: auto; max-width: 120px; margin: 0 auto; display: block;">
+                        </div>
+                        <div onclick="escolherMetodoPagamento('mercadopago')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            <img src="mercado-livre-logo-2022.png" alt="Mercado Pago" style="width: 100%; height: auto; max-width: 120px; margin: 0 auto; display: block;">
+                        </div>
+                        <div onclick="escolherMetodoPagamento('infinitepay')" style="cursor: pointer; text-align: center; transition: transform 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            <img src="infinitypay.png" alt="InfinitePay" style="width: 100%; height: auto; max-width: 110px; margin: 0 auto; display: block;">
+                        </div>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 10px; font-size: 12px; color: #888;">
+                        PIX: pagamento instantâneo | Mercado Pago: cartão e parcelamento | InfinitePay: cartão e parcelamento
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal PIX -->
+    <div class="modal" id="pixModal">
+        <div class="modal-overlay" id="pixOverlay"></div>
+        <div class="modal-content pix-modal-content">
+            <button class="modal-close" id="pixClose">&times;</button>
+            <div class="modal-body">
+                <h2 class="payment-title">Pagamento via PIX</h2>
+                <p class="payment-subtitle" id="pixPlanInfo"></p>
+                
+                <div class="pix-container">
+                    <div class="pix-qrcode">
+                        <img src="rei-dos-bots.png" alt="Rei dos Bots" class="pix-logo-top">
+                        <p class="qrcode-title">Rei dos Bots - Fortuna</p>
+                        <div class="qrcode-wrapper">
+                            <img id="qrcodeImage" src="" alt="QR Code PIX">
+                        </div>
+                        <p class="qrcode-footer">Escaneie o Código</p>
+                    </div>
+                    
+                    <div class="pix-info">
+                        <div class="pix-value">
+                            <span class="pix-label">Valor a pagar:</span>
+                            <span class="pix-amount" id="pixAmount">R$ 0,00</span>
+                        </div>
+                        
+                        <div class="pix-key-section">
+                            <p class="pix-instruction">Ou copie o código PIX:</p>
+                            <div class="pix-code-box">
+                                <input type="text" id="pixCode" readonly>
+                                <button class="btn-copy-pix" onclick="copiarCodigoPix()">
+                                    📋 Copiar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="pix-steps">
+                            <h3>Como pagar:</h3>
+                            <ol>
+                                <li>Abra o app do seu banco</li>
+                                <li>Escolha pagar com PIX</li>
+                                <li>Escaneie o QR Code ou cole o código</li>
+                                <li>Confirme o pagamento</li>
+                                <li>Envie o comprovante pelo WhatsApp</li>
+                            </ol>
+                        </div>
+                        
+                        <button class="btn-whatsapp" onclick="enviarComprovanteWhatsApp()">
+                            💬 Enviar Comprovante
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="customer-info" id="customerInfo" style="display: none;">
+                    <h3>Seus Dados:</h3>
+                    <p><strong>Nome:</strong> <span id="infoNome"></span></p>
+                    <p><strong>Email:</strong> <span id="infoEmail"></span></p>
+                    <p><strong>Telefone:</strong> <span id="infoTelefone"></span></p>
+                    <p><strong>CPF:</strong> <span id="infoCpf"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planos Section -->
+    <section id="planos" class="planos-section">
+        <div class="container">
+            <h2 class="section-title">Nossos Planos</h2>
+            <p class="section-subtitle">Escolha o plano ideal</p>
+
+            <div class="planos-grid">
+                <div class="plano-card" data-plan-type="individual">
+                    <div class="plano-icon">💰</div>
+                    <h3 class="plano-title">PLANO INDIVIDUAL<br>1 bot Liberado</h3>
+                    
+                    <div class="plano-pricing">
+                        <div class="pricing-item">
+                            <span class="pricing-icon">👉</span>
+                            <div class="pricing-content">
+                                <strong>Mensal a partir de:</strong>
+                                <p class="price">R$ 99,90</p>
+                            </div>
+                        </div>
+                        <div class="pricing-item">
+                            <span class="pricing-icon">👉</span>
+                            <div class="pricing-content">
+                                <strong>Trimestral a partir de:</strong>
+                                <p class="price">R$ 149,90</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-select-plan">Selecionar Plano</button>
+
+                    <div class="plano-alert">
+                        <span class="alert-icon">⚠️</span>
+                        <p class="alert-text">Atenção: não é possível efetuar a troca por bots diferentes.</p>
+                    </div>
+                    <div class="plano-alert" style="margin-top: 8px;">
+                        <span class="alert-icon">🖥️</span>
+                        <p class="alert-text">Licença válida para <strong>1 máquina</strong> apenas. Para acesso em mais de uma, entre em contato com o suporte.</p>
+                    </div>
+                </div>
+
+                <div class="plano-card plano-destaque" data-plan-type="completo">
+                    <div class="plano-badge">🔥 MAIS POPULAR</div>
+                    <div class="plano-icon">🔥</div>
+                    <h3 class="plano-title">PLANO COMPLETO<br>4 Bots Liberados</h3>
+                    
+                    <div class="plano-pricing">
+                        <div class="pricing-item">
+                            <span class="pricing-icon">👉</span>
+                            <div class="pricing-content">
+                                <strong>Mensal:</strong>
+                                <p class="price">R$ 299,00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pricing-item">
+                            <span class="pricing-icon">👉</span>
+                            <div class="pricing-content">
+                                <strong>Trimestral:</strong>
+                                <p class="price">R$ 599,00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-select-plan">Selecionar Plano</button>
+
+                    <div class="plano-alert" style="margin-top: 15px;">
+                        <span class="alert-icon">🖥️</span>
+                        <p class="alert-text">Licença válida para <strong>1 máquina</strong> apenas. Para acesso em mais de uma, entre em contato com o suporte.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contato" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Entre em Contato</h2>
+            
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="contact-icon">📧</span>
+                        <div>
+                            <h4>Email</h4>
+                            <p><a href="mailto:suporte@reidosbots.net.br" style="color: var(--neon-green); text-decoration: none;">suporte@reidosbots.net.br</a></p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-icon">✈️</span>
+                        <div>
+                            <h4>Telegram</h4>
+                            <p><a href="https://t.me/ReidosBotsFortuna" target="_blank" style="color: var(--neon-green); text-decoration: none;">@ReidosBotsFortuna</a></p>
+                        </div>
+                    </div>
+                    <div class="contact-item contact-item-whatsapp">
+                        <span class="contact-icon">
+                            <img src="WHATS.png" alt="WhatsApp" style="width: 50px; height: 50px;">
+                        </span>
+                        <div>
+                            <h4>WhatsApp</h4>
+                            <p style="margin-bottom: 5px;">+55 (55) 99934-4071</p>
+                            <p style="font-size: 13px;"><a href="https://chat.whatsapp.com/LbZMlmkIJS0CjKilxmL0UB?mode=gi_t" target="_blank" style="color: var(--neon-green); text-decoration: none;">📱 Grupo: Rei dos Bots - Fortuna</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Aviso de Responsabilidade -->
+    <section class="warning-section">
+        <div class="container">
+            <div class="warning-box">
+                <p class="warning-text">⚠️ Atenção: Ferramenta de automação não garante ganhos no cassino. Estratégias e configurações são de responsabilidade do usuário. Jogue com responsabilidade.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <!-- Logo e Nome -->
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="icon.png" alt="Rei dos Bots" class="footer-logo-img">
+                        <h1>Rei dos Bots - <span>Fortuna</span></h1>
+                    </div>
+                </div>
+
+                <!-- Selos de Certificação e Pagamentos -->
+                <div class="footer-seals">
+                    <div class="seal-badge">
+                        <div class="seal-badge-icon seal-18">18+</div>
+                        <div class="seal-badge-text">Maiores de idade</div>
+                    </div>
+                    <div class="seal-badge">
+                        <div class="seal-badge-icon">✓</div>
+                        <div class="seal-badge-text">Verificado por<br><strong>ConfiançaAQUI</strong></div>
+                    </div>
+                    <div class="seal-badge">
+                        <div class="seal-badge-icon">🛡️</div>
+                        <div class="seal-badge-text">Autêntico<br><strong>cert.iob.cw</strong></div>
+                    </div>
+                    <img src="pix-banco-central-logo.png" alt="PIX" class="payment-img">
+                    <img src="mercado-livre-logo-2022.png" alt="Mercado Pago" class="payment-img">
+                    <img src="infinitypay.png" alt="InfinitePay" class="payment-img">
+                </div>
+
+                <!-- Social Links -->
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="LinkedIn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="GitHub">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2026 Rei dos Bots - Fortuna. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Rei dos Bots — Roleta",
+  "version": "1.0.0",
+  "description": "Bot automático para Roleta Brasileira na big.bet.br",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://big.bet.br/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "48": "icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://big.bet.br/*",
+        "https://*.onegameslink.com/*",
+        "https://*.twogameslink.com/*",
+        "https://*.gambling-malta.com/*",
+        "https://*.c365play.com/*",
+        "https://*.bfcdl.com/*",
+        "https://*.evolution.com/*",
+        "https://*.evolutiongaming.com/*",
+        "https://*.pragmaticplay.net/*",
+        "https://*.casinolauncher.com/*",
+        "https://*.a8r.games/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "48": "icon.png"
+  }
+}

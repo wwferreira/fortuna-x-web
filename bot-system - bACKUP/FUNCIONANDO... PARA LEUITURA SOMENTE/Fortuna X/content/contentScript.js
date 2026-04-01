@@ -1,0 +1,1460 @@
+console.log('🚀 CONTENT SCRIPT INICIADO!');
+console.log('🌐 URL:', window.location.href);
+console.log('🖼️ É iframe?', window !== window.top);
+console.log('⏰ Timestamp:', new Date().toLocaleTimeString());
+
+let ultimoNumeroEnviado = null;
+let numerosJaApostados = new Set();
+let ultimaApostaTimestamp = 0;
+
+// SISTEMA DE VALIDAÇÃO DE DOMÍNIO
+const DOMINIOS_AUTORIZADOS = [
+    'bet365.com',
+    'bet365.bet.br',
+    'bet365.com.br',
+    'bet365.net.br',
+    'onegameslink.com',
+    'twogameslink.com',
+    'gambling-malta.com',
+    'c365play.com',
+    'bfcdl.com'
+];
+
+function isPaginaAutorizada() {
+    const hostname = window.location.hostname;
+    return DOMINIOS_AUTORIZADOS.some(dominio => hostname.includes(dominio));
+}
+
+// LIMPEZA EM NAVEGAÇÃO
+window.addEventListener('popstate', () => {
+    if (alertaAtual) {
+        alertaAtual.remove();
+        alertaAtual = null;
+    }
+});
+
+// Cache do estado de autorização
+const PAGINA_VALIDA = isPaginaAutorizada();
+
+if (!PAGINA_VALIDA) {
+    console.log('🛑 [FORTUNA X] Script carregado em página não autorizada. Funcionalidades de UI desativadas.');
+}
+
+// COLETAR 12 NUMEROS E NOME DA MESA
+setTimeout(function() {
+    // Ao iniciar o script, limpar qualquer alerta residual que possa ter ficado no DOM
+    const alertasAntigos = document.querySelectorAll('div[style*="z-index: 999999"]');
+    alertasAntigos.forEach(a => a.remove());
+
+    const seletores = [
+        '.history-item-value__text--H6oCX',
+        '.history-item-value__text--n5cYB',
+        '[class*="history-item-value__text"]'
+    ];
+
+    let elementos = [];
+    for (const seletor of seletores) {
+        const achados = document.querySelectorAll(seletor);
+        if (achados.length > 0) {
+            elementos = achados;
+            break;
+        }
+    }
+    
+    // Se não achou no principal, tentar em iframes
+    if (elementos.length === 0) {
+        const iframes = document.querySelectorAll('iframe');
+        for (const iframe of iframes) {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                for (const seletor of seletores) {
+                    const achados = iframeDoc.querySelectorAll(seletor);
+                    if (achados.length > 0) {
+                        elementos = achados;
+                        break;
+                    }
+                }
+                if (elementos.length > 0) break;
+            } catch (e) {}
+        }
+    }
+
+    var numeros = [];
+    for (var i = 0; i < Math.min(12, elementos.length); i++) {
+        var num = parseInt(elementos[i].textContent.trim());
+        if (!isNaN(num) && num >= 0 && num <= 36) {
+            numeros.push(num);
+        }
+    }
+    
+    // Pegar nome da mesa
+    var nomeMesaElement = document.querySelector('.table-info__name--supqO');
+    var nomeMesa = nomeMesaElement ? nomeMesaElement.textContent.trim() : 'Roleta';
+    
+    if (numeros.length > 0 && chrome.runtime && chrome.runtime.id) {
+        chrome.runtime.sendMessage({
+            tipo: 'historico_12',
+            numeros: numeros
+        });
+    }
+    
+    // Enviar nome da mesa
+    if (chrome.runtime && chrome.runtime.id) {
+        chrome.runtime.sendMessage({
+            tipo: 'nome_mesa',
+            nome: nomeMesa
+        });
+    }
+}, 10000);
+
+// ===== FUNÇÕES AUXILIARES =====
+
+let alertaAtual = null;
+
+function mostrarAlertaNaPagina(mensagem, cor = '#4CAF50', duracao = 3000) {
+    // 🛑 Bloquear se não for página autorizada
+    if (!PAGINA_VALIDA) return;
+
+    // Remover alerta anterior se existir
+    if (alertaAtual) {
+        alertaAtual.remove();
+        alertaAtual = null;
+    }
+
+    const alerta = document.createElement('div');
+    alerta.style.cssText = `
+        position: fixed;
+        top: 3%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, ${cor} 0%, #1a1a1a 100%);
+        color: white;
+        padding: 16px 32px;
+        border-radius: 15px;
+        font-size: 26px;
+        font-weight: 900;
+        z-index: 999999;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        opacity: 0;
+        max-width: 90%;
+        width: auto;
+        min-width: 300px;
+        word-wrap: break-word;
+        text-align: center;
+        border: 2px solid #ffd700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    `;
+    alerta.textContent = mensagem;
+    document.body.appendChild(alerta);
+
+    // Animação de entrada
+    setTimeout(() => {
+        alerta.style.opacity = '1';
+        alerta.style.top = '5%';
+    }, 10);
+
+    alertaAtual = alerta;
+
+    setTimeout(() => {
+        if (alerta.parentNode) {
+            alerta.remove();
+        }
+        if (alertaAtual === alerta) {
+            alertaAtual = null;
+        }
+    }, duracao);
+}
+
+// ===== SISTEMA DE CLIQUES =====
+
+function simularClick(x, y) {
+    const elemento = document.elementFromPoint(x, y);
+    if (!elemento) return false;
+
+    const eventos = ['mousedown', 'mouseup', 'click'];
+    eventos.forEach(tipoEvento => {
+        const evento = new MouseEvent(tipoEvento, {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y
+        });
+        elemento.dispatchEvent(evento);
+    });
+
+    return true;
+}
+
+function clicarNumero(numero) {
+    try {
+        console.log(`🎯 Tentando clicar no número: ${numero}`);
+        const seletor = `[data-automation-locator="betPlace.straight-${numero}"]`;
+        const elemento = document.querySelector(seletor);
+
+        if (elemento) {
+            console.log(`✅ Elemento encontrado para ${numero}, clicando...`);
+            const rect = elemento.getBoundingClientRect();
+            const x = Math.trunc(rect.x + rect.width / 2);
+            const y = Math.trunc(rect.y + rect.height / 2);
+            const resultado = simularClick(x, y);
+            console.log(`${resultado ? '✅' : '❌'} Clique no número ${numero}: ${resultado ? 'sucesso' : 'falhou'}`);
+            return resultado;
+        }
+
+        console.log(`⚠️ Elemento não encontrado com seletor, tentando busca por texto...`);
+        const todosGs = document.querySelectorAll('g[class*="table-cell"]');
+        for (let g of todosGs) {
+            const textElement = g.querySelector('text');
+            if (textElement && textElement.textContent.trim() === numero.toString()) {
+                console.log(`✅ Encontrado por texto para ${numero}, clicando...`);
+                const rect = g.getBoundingClientRect();
+                const x = Math.trunc(rect.x + rect.width / 2);
+                const y = Math.trunc(rect.y + rect.height / 2);
+                const resultado = simularClick(x, y);
+                console.log(`${resultado ? '✅' : '❌'} Clique no número ${numero}: ${resultado ? 'sucesso' : 'falhou'}`);
+                return resultado;
+            }
+        }
+
+        console.log(`❌ Número ${numero} não encontrado na mesa`);
+        return false;
+    } catch (error) {
+        console.log(`❌ Erro ao clicar no número ${numero}:`, error);
+        return false;
+    }
+}
+
+// Função para clicar em áreas externas (Dúzias e Colunas)
+function clicarAreaExterna(sigla) {
+    return new Promise((resolve) => {
+        const tentarClicar = (tentativa = 0) => {
+            try {
+                // Mapeamento para diferentes tipos de roleta
+                const mapeamento = {
+                    // Immersive Roulette
+                    'D1': ['betPlace.dozen-1st12', 'betPlace.dozen-1', 'dozen-1st12'],
+                    'D2': ['betPlace.dozen-2nd12', 'betPlace.dozen-2', 'dozen-2nd12'],
+                    'D3': ['betPlace.dozen-3rd12', 'betPlace.dozen-3', 'dozen-3rd12'],
+                    'C1': ['betPlace.column-1', 'betPlace.column2to1-1', 'column-1'],
+                    'C2': ['betPlace.column-2', 'betPlace.column2to1-2', 'column-2'],
+                    'C3': ['betPlace.column-3', 'betPlace.column2to1-3', 'column-3']
+                };
+
+                const siglaUpper = String(sigla).toUpperCase();
+                const locators = mapeamento[siglaUpper];
+                
+                if (!locators) {
+                    resolve(false);
+                    return;
+                }
+
+                // Tentar todos os seletores possíveis
+                let elemento = null;
+                
+                for (const locator of locators) {
+                    const seletor = `[data-automation-locator="${locator}"]`;
+                    elemento = document.querySelector(seletor);
+                    if (elemento) break;
+                }
+                
+                // Se não encontrou, tentar buscar em iframes
+                if (!elemento) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (const iframe of iframes) {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            for (const locator of locators) {
+                                const seletor = `[data-automation-locator="${locator}"]`;
+                                elemento = iframeDoc.querySelector(seletor);
+                                if (elemento) break;
+                            }
+                            if (elemento) break;
+                        } catch (e) {
+                            // Ignorar erros de cross-origin
+                        }
+                    }
+                }
+
+                if (elemento) {
+                    const rect = elemento.getBoundingClientRect();
+                    const x = Math.trunc(rect.x + rect.width / 2);
+                    const y = Math.trunc(rect.y + rect.height / 2);
+                    simularClick(x, y);
+                    resolve(true);
+                } else {
+                    // Tentar novamente até 3 vezes com delay (SILENCIOSO)
+                    if (tentativa < 2) {
+                        setTimeout(() => {
+                            tentarClicar(tentativa + 1);
+                        }, 200);
+                    } else {
+                        // Falhou mas não mostra erro (pode ter apostado antes)
+                        resolve(true); // Retorna true para não bloquear
+                    }
+                }
+            } catch (error) {
+                resolve(false);
+            }
+        };
+        
+        tentarClicar();
+    });
+}
+
+function clicarNosNumeros(numeros, multiplicador = 1) {
+    console.log('🔧 clicarNosNumeros chamada com:', numeros, 'multiplicador:', multiplicador);
+    
+    if (!Array.isArray(numeros) || numeros.length === 0) {
+        console.error('❌ Números inválidos ou vazios');
+        return;
+    }
+
+    // Remover duplicados APENAS de números diretos (0-36)
+    // Áreas externas (D1, D2, D3, C1, C2, C3) podem ser repetidas
+    const numerosProcessados = [];
+    const numerosDirectosUnicos = new Set();
+    
+    numeros.forEach(item => {
+        const isAreaExterna = typeof item === 'string' && /^[DC][123]$/i.test(item);
+        
+        if (isAreaExterna) {
+            // Áreas externas: permitir repetição
+            numerosProcessados.push(item);
+        } else {
+            // Números diretos ou formato "PLENO X": extrair o número
+            let numInt = NaN;
+            if (typeof item === 'string' && item.toUpperCase().startsWith('PLENO ')) {
+                numInt = parseInt(item.split(' ')[1]);
+            } else {
+                numInt = parseInt(item);
+            }
+
+            if (!isNaN(numInt) && numInt >= 0 && numInt <= 36) {
+                if (!numerosDirectosUnicos.has(numInt)) {
+                    numerosDirectosUnicos.add(numInt);
+                    numerosProcessados.push(numInt); // Salvar apenas o número puro
+                }
+            }
+        }
+    });
+    
+    console.log('📋 Números processados:', numerosProcessados);
+
+    // Filtrar apenas números diretos que já foram apostados
+    // Áreas externas (D1, D2, D3, C1, C2, C3) podem ser repetidas
+    const numerosParaApostar = numerosProcessados.filter(num => {
+        const isAreaExterna = typeof num === 'string' && /^[DC][123]$/i.test(num);
+        if (isAreaExterna) {
+            return true; // Permitir áreas externas mesmo que já apostadas
+        }
+        
+        // EXCEÇÃO IA PLENO: Permitir apostar no mesmo número se for uma nova rodada (timestamp mudou)
+        // O numerosJaApostados serve para evitar cliques duplicados NA MESMA RODADA (ao clicar 3x para fazer gale)
+        return !numerosJaApostados.has(num); 
+    });
+    
+    console.log('✅ Números para apostar (após filtro):', numerosParaApostar);
+    console.log('📝 Números já apostados:', Array.from(numerosJaApostados));
+
+    if (numerosParaApostar.length === 0) {
+        console.log('⚠️ Todos os números já foram apostados');
+        mostrarAlertaNaPagina('Todos os números já foram apostados', '#FF9800');
+        return;
+    }
+
+    console.log(`🎯 Apostando em ${numerosParaApostar.length} itens:`, numerosParaApostar);
+    console.log(`💰 Multiplicador: ${multiplicador}x`);
+
+    // Obter nome da estratégia para o aviso
+    if (chrome.runtime && chrome.runtime.id) {
+        chrome.storage.local.get(['nomeEstrategiaParaAviso'], (res) => {
+            if (!chrome.runtime || !chrome.runtime.id) return;
+            const nomeEst = res.nomeEstrategiaParaAviso || 'Estratégia';
+            
+            // Se a mensagem já contiver "GALE", não precisamos adicionar "Apostando Xx"
+            let mensagem = nomeEst;
+            if (!mensagem.toUpperCase().includes('GALE') && !mensagem.toUpperCase().includes('APOSTANDO')) {
+                mensagem = multiplicador > 1 
+                    ? `GALE ${multiplicador - 1}: ${nomeEst}` 
+                    : `Apostando em: ${nomeEst}`;
+            }
+            mostrarAlertaNaPagina(mensagem, '#2196F3', 40000); // 40 segundos - duração da rodada
+        });
+    }
+
+    numerosParaApostar.forEach((item, index) => {
+        setTimeout(() => {
+            const isAreaExterna = typeof item === 'string' && /^[DC][123]$/i.test(item);
+            
+            // Verificar novamente se já foi apostado (apenas para números diretos)
+            if (!isAreaExterna && numerosJaApostados.has(item)) {
+                return;
+            }
+
+    // Marcar como apostado ANTES de clicar (apenas números diretos)
+    if (!isAreaExterna) {
+        numerosJaApostados.add(item);
+    }
+    
+    // Clicar múltiplas vezes se multiplicador > 1
+    // Usar loop rápido com timeout mínimo para não travar
+    for (let i = 0; i < multiplicador; i++) {
+        setTimeout(() => {
+            if (isAreaExterna) {
+                clicarAreaExterna(item);
+            } else {
+                clicarNumero(item);
+            }
+        }, i * 30); // 30ms entre cliques no mesmo número
+    }
+}, index * 20); // 20ms entre números diferentes (rápido)
+    });
+}
+
+// ========================================
+// MONITOR DE NÚMEROS EM TEMPO REAL (ROBUSTO)
+// ========================================
+
+function encontrarUltimoNumeroNoDOM(documento) {
+    // Tentar seletores específicos para o ÚLTIMO número (o que acabou de sair)
+    const seletoresUltimo = [
+        '.history-item-value_last--XYoZX .history-item-value__text--n5cYB',
+        '.history-item-value_last--sIPUy .history-item-value__text--H6oCX',
+        '[class*="history-item-value_last"] [class*="history-item-value__text"]',
+        '[data-automation-locator="field.lastHistoryItem"] [class*="history-item-value__text"]',
+        '.roulette-history--YYD3E .history-item-value:first-child .history-item-value__text--n5cYB',
+        '.roulette-history--k1il_ .history-item-value:first-child .history-item-value__text--H6oCX'
+    ];
+
+    for (const seletor of seletoresUltimo) {
+        const el = documento.querySelector(seletor);
+        if (el) {
+            const num = parseInt(el.textContent.trim());
+            if (!isNaN(num) && num >= 0 && num <= 36) return num;
+        }
+    }
+
+    // Tentar seletores genéricos e pegar o primeiro (assumindo que o primeiro é o mais recente)
+    const seletoresGenericos = [
+        '.history-item-value__text--H6oCX',
+        '.history-item-value__text--n5cYB',
+        '[class*="history-item-value__text"]',
+        '.history-item-value:first-child',
+        '[data-test*="history"]:first-child'
+    ];
+
+    for (const seletor of seletoresGenericos) {
+        const elementos = documento.querySelectorAll(seletor);
+        if (elementos.length > 0) {
+            const num = parseInt(elementos[0].textContent.trim());
+            if (!isNaN(num) && num >= 0 && num <= 36) return num;
+        }
+    }
+
+    return null;
+}
+
+function processarDeteccaoNumeros() {
+    try {
+        // 1. Procurar no documento atual
+        let numeroDetectado = encontrarUltimoNumeroNoDOM(document);
+
+        // 2. Se não achou, procurar em todos os iframes acessíveis
+        if (numeroDetectado === null) {
+            const iframes = document.querySelectorAll('iframe');
+            for (const iframe of iframes) {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    numeroDetectado = encontrarUltimoNumeroNoDOM(iframeDoc);
+                    if (numeroDetectado !== null) break;
+                } catch (e) {
+                    // Cross-origin iframe, ignorar
+                }
+            }
+        }
+
+        // 3. Se detectou um número e ele é novo, enviar
+        if (numeroDetectado !== null && numeroDetectado !== ultimoNumeroEnviado) {
+            console.log('🎰 [FORTUNA X] NOVO NÚMERO DETECTADO:', numeroDetectado);
+            
+            ultimoNumeroEnviado = numeroDetectado;
+            
+            if (chrome.runtime && chrome.runtime.id) {
+                // Notificar usuário na página (apenas se autorizado)
+                mostrarAlertaNaPagina(`🎲 Número: ${numeroDetectado}`, '#4CAF50', 3000);
+
+                chrome.runtime.sendMessage({
+                    tipo: 'novoNumero',
+                    numero: numeroDetectado,
+                    timestamp: Date.now(),
+                    source: 'realtime_loop'
+                }).catch(() => {
+                    console.warn('⚠️ [FORTUNA X] Falha ao enviar número (Background pode estar inativo)');
+                });
+            }
+        }
+    } catch (error) {
+        // Silencioso
+    }
+}
+
+// Iniciar loops de detecção
+if (chrome && chrome.runtime && chrome.runtime.id) {
+    setInterval(processarDeteccaoNumeros, 500);
+}
+
+// Observer para reagir a mudanças no DOM (mais rápido que o setInterval)
+const observationObserver = new MutationObserver(() => {
+    processarDeteccaoNumeros();
+});
+
+if (document.body) {
+    observationObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+// ===== VERIFICAR STORAGE PARA APOSTAS =====
+
+// Iniciar com o timestamp atual para ignorar apostas que ficaram no cache do navegador
+let ultimoTimestampProcessado = Date.now();
+let processandoAposta = false;
+let contadorVerificacoes = 0;
+
+function verificarApostasNoStorage() {
+    contadorVerificacoes++;
+    
+    try {
+        if (!chrome || !chrome.storage || !chrome.runtime || !chrome.runtime.id) {
+            return;
+        }
+
+        if (processandoAposta) {
+            console.log('⏳ Já processando uma aposta, aguardando...');
+            return;
+        }
+
+        chrome.storage.local.get(['numerosParaApostar', 'multiplicadorFichas', 'timestamp'], (result) => {
+            if (!chrome.runtime || !chrome.runtime.id) {
+                console.warn('⚠️ Chrome runtime perdido durante get');
+                return;
+            }
+            
+            if (chrome.runtime.lastError) {
+                console.error('❌ Erro ao acessar storage:', chrome.runtime.lastError);
+                return;
+            }
+
+            if (result.numerosParaApostar && result.timestamp) {
+                console.log('📊 Storage check - Timestamp:', result.timestamp, 'Último processado:', ultimoTimestampProcessado);
+                
+                if (result.timestamp > ultimoTimestampProcessado) {
+                    const multiplicador = parseInt(result.multiplicadorFichas) || 1;
+                    console.log(`[STORAGE-DEBUG] Nova aposta detectada! Multiplicador: ${multiplicador}x`);
+                    console.log('📋 Números:', result.numerosParaApostar);
+                    console.log('💰 Multiplicador:', multiplicador + 'x');
+
+                    // Nova aposta - limpar lista de números já apostados
+                    numerosJaApostados.clear();
+
+                    ultimoTimestampProcessado = result.timestamp;
+                    processandoAposta = true;
+
+                    // Executar aposta
+                    try {
+                        clicarNosNumeros(result.numerosParaApostar, multiplicador);
+                        console.log('✅ Cliques iniciados com sucesso');
+                    } catch (clickError) {
+                        console.error('❌ Erro ao clicar nos números:', clickError);
+                    }
+
+                    // Liberar após todos os cliques
+                    const tempoEspera = result.numerosParaApostar.length * 150 + 1000;
+                    setTimeout(() => {
+                        processandoAposta = false;
+                        console.log('✅ Aposta finalizada, liberado para próxima');
+                    }, tempoEspera);
+                }
+            }
+        });
+    } catch (error) {
+        console.error('❌ Erro em verificarApostasNoStorage:', error);
+        processandoAposta = false;
+    }
+}
+
+if (chrome && chrome.runtime && chrome.runtime.id) {
+    console.log('✅ INICIANDO VERIFICAÇÃO DE APOSTAS NO STORAGE');
+    console.log('   Frequência: 300ms');
+    
+    // Verificar a cada 300ms (mais frequente) para não perder apostas
+    setInterval(verificarApostasNoStorage, 300);
+    setTimeout(verificarApostasNoStorage, 500);
+    
+    // Reconectar periodicamente em caso de perda de conexão
+    setInterval(() => {
+        try {
+            if (!chrome.runtime || !chrome.runtime.id) {
+                location.reload();
+            }
+        } catch (e) {
+            // Ignorar erros de acesso ao chrome.runtime
+        }
+    }, 30000); // A cada 30 segundos
+}
+
+console.log('✅ Content script pronto!');
+console.log('🌐 Rodando em:', window.location.href);
+
+// ========================================
+
+// Monitorar a cada 500ms (mais frequente)
+if (typeof processarDeteccaoNumeros === 'function') {
+    setInterval(processarDeteccaoNumeros, 500);
+}
+
+
+// ========================================
+// FUNCIONALIDADE: ABRIR HISTÓRICO E COLETAR 500 NÚMEROS
+// ========================================
+
+function abrirHistoricoAutomaticamente() {
+    // Procurar pelo li com data-automation-locator exato
+    let botao = document.querySelector('li[data-automation-locator="button.extenededHistory"]');
+    
+    if (!botao) {
+        // Procurar em iframes
+        const iframes = document.querySelectorAll('iframe');
+        for (const iframe of iframes) {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                botao = iframeDoc.querySelector('li[data-automation-locator="button.extenededHistory"]');
+                if (botao) {
+                    console.log('✅ Botão encontrado em iframe!');
+                    break;
+                }
+            } catch (e) {}
+        }
+    }
+    
+    if (botao) {
+        console.log('✅ Botão encontrado! Clicando...');
+        botao.click();
+        return true;
+    }
+    
+    return false;
+}
+
+// Tentar abrir após 5 segundos
+setTimeout(() => {
+    console.log('🎰 Tentando abrir histórico...');
+    
+    let tentativas = 0;
+    const intervalo = setInterval(() => {
+        tentativas++;
+        
+        if (abrirHistoricoAutomaticamente()) {
+            clearInterval(intervalo);
+            console.log('🎉 Histórico aberto!');
+            
+            // Coletar após 5 segundos
+            setTimeout(() => {
+                coletarHistorico();
+            }, 5000);
+        } else if (tentativas >= 30) {
+            clearInterval(intervalo);
+            console.log('❌ Não encontrou o botão');
+        }
+    }, 500);
+}, 5000);
+
+// ========================================
+// FUNCIONALIDADE: COLETAR NÚMEROS DO HISTÓRICO
+// ========================================
+
+function coletarHistorico() {
+    console.log('📊 [FORTUNA X] Iniciando coleta profunda do histórico...');
+    
+    let tentativas = 0;
+    const intervalo = setInterval(() => {
+        tentativas++;
+        
+        let elementos = [];
+        const seletores = [
+            '.history-item-value__text--n5cYB',
+            '.history-item-value__text--H6oCX',
+            '[class*="history-item-value__text"]',
+            '.history-item-value',
+            '[data-test*="history-item"]'
+        ];
+
+        // 1. Procurar no documento principal
+        for (const seletor of seletores) {
+            const achados = document.querySelectorAll(seletor);
+            if (achados.length > 20) { // Se achou mais de 20, provavelmente é o histórico completo
+                elementos = achados;
+                break;
+            }
+        }
+        
+        // 2. Se não achou no principal, procurar em iframes
+        if (elementos.length < 20) {
+            const iframes = document.querySelectorAll('iframe');
+            for (const iframe of iframes) {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    for (const seletor of seletores) {
+                        const achados = iframeDoc.querySelectorAll(seletor);
+                        if (achados.length > 20) {
+                            elementos = achados;
+                            break;
+                        }
+                    }
+                    if (elementos.length > 20) break;
+                } catch (e) {}
+            }
+        }
+        
+        console.log(`🔄 [FORTUNA X] Tentativa de coleta ${tentativas}: Encontrados ${elementos.length} elementos`);
+        
+        // Se achou uma quantidade razoável de elementos ou atingiu o limite de tentativas
+        if (elementos.length > 20 || tentativas >= 30) {
+            clearInterval(intervalo);
+            
+            if (elementos.length > 0) {
+                const numeros = [];
+                elementos.forEach(el => {
+                    const num = parseInt(el.textContent.trim());
+                    if (!isNaN(num) && num >= 0 && num <= 36) {
+                        numeros.push(num);
+                    }
+                });
+                
+                if (numeros.length > 0) {
+                    console.log(`✅ [FORTUNA X] ${numeros.length} números coletados com sucesso!`);
+                    
+                    if (chrome.runtime && chrome.runtime.id) {
+                        chrome.runtime.sendMessage({
+                            tipo: 'historico_500',
+                            numeros: numeros,
+                            limpar: true
+                        });
+                        
+                        mostrarAlertaNaPagina(`📊 Histórico de ${numeros.length} rodadas sincronizado!`, '#00bcd4', 4000);
+                    }
+                }
+            } else {
+                console.log('❌ [FORTUNA X] Falha ao coletar histórico após 30 tentativas.');
+            }
+        }
+    }, 2000); // Tentar a cada 2 segundos para dar tempo do modal carregar
+}
+
+
+// ===== LISTENER DE MENSAGENS =====
+// Responder a requisições do sidepanel
+
+// ===== MONITORAMENTO DE SALDO (PUSH ATIVO) =====
+let ultimoSaldoMonitorado = null;
+
+function parseSaldoPagina(texto) {
+    return parseFloat(
+        texto
+          .replace(/R\$/g, '')
+          .replace(/[\u00a0\u200b\s]/g, '') // remove &nbsp; e espaços
+          .replace(/,/g, '.')
+          .trim()
+    );
+}
+
+function lerSaldoDaPagina() {
+    try {
+        // Tentar todos os elementos com a classe do saldo
+        var candidatos = document.querySelectorAll('[class*="fit-container__content"]');
+        for (var i = 0; i < candidatos.length; i++) {
+            var txt = candidatos[i].textContent || '';
+            if (txt.includes('R$')) {
+                var num = parseSaldoPagina(txt);
+                if (!isNaN(num) && num > 0) return num; // Exige > 0 para ignorar zeros momentâneos
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
+function monitorarEEnviarSaldo() {
+    var saldo = lerSaldoDaPagina();
+    // Ignorar null (elemento não encontrado) e 0 (momentâneo durante rodada)
+    if (saldo !== null && saldo > 0 && saldo !== ultimoSaldoMonitorado) {
+        ultimoSaldoMonitorado = saldo;
+        try {
+            if (chrome.runtime && chrome.runtime.id) {
+                chrome.runtime.sendMessage({ tipo: 'atualizar_saldo', saldo: saldo })
+                    .catch(() => {}); // Silenciar erros quando sidepanel não está aberto
+            }
+        } catch (e) {}
+    }
+}
+
+if (chrome && chrome.runtime && chrome.runtime.id) {
+    setInterval(monitorarEEnviarSaldo, 2000);
+    setTimeout(monitorarEEnviarSaldo, 3000);
+}
+
+// ===== PAINEL FLUTUANTE DE STATUS =====
+
+let painelStatus = null;
+let painelQuentes = null;
+let painelFrios = null;
+let statusBotAtivo = false;
+let statusEstrategia = 'Nenhuma';
+let statusPlacar = { wins: 0, losses: 0 };
+let statusBancaAtual = 0;
+let statusBancaInicial = 0;
+let statusStopGain = 0;
+let statusStopLoss = 0;
+let stopWinValor = 0;  // Quanto quer ganhar
+let stopLossValor = 0; // Quanto pode perder
+
+// Variáveis de Simulação
+let modoSimulacaoAtivo = false;
+let saldoSimulacao = 1000.00;
+let valorFichaSimulacao = 1.00;
+let placarSimulacao = { wins: 0, losses: 0 };
+
+function criarPainelStatus() {
+  if (painelStatus) return;
+  if (!chrome.runtime || !chrome.runtime.id) return;
+  
+  // Carregar configurações de simulação e estado real salvas
+  chrome.storage.local.get(['modoSimulacaoAtivo', 'saldoSimulacao', 'valorFichaSimulacao', 'placarSimulacao', 'rouletteState'], (result) => {
+    if (!chrome.runtime || !chrome.runtime.id) return;
+    modoSimulacaoAtivo = result.modoSimulacaoAtivo || false;
+    saldoSimulacao = result.saldoSimulacao !== undefined ? result.saldoSimulacao : 1000.00;
+    valorFichaSimulacao = result.valorFichaSimulacao !== undefined ? result.valorFichaSimulacao : 1.00;
+    placarSimulacao = result.placarSimulacao || { wins: 0, losses: 0 };
+    
+    // Sincronizar com estado real também
+    if (result.rouletteState) {
+      const rs = result.rouletteState;
+      statusBotAtivo = !rs.stopAtivado;
+      statusPlacar = { wins: rs.wins || 0, losses: rs.losses || 0 };
+      stopWinValor = rs.stopWin || 0;
+      stopLossValor = rs.stopLoss || 0;
+      statusEstrategia = rs.nomeEstrategiaSelecionada || 'Manual';
+      statusBancaInicial = rs.saldoInicial || 0;
+      statusBancaAtual = rs.ultimoSaldoPush || 0;
+      
+      // Se for estratégia de Quentes/Frios, pedir dados ao background
+      const nomeEstrat = (statusEstrategia || "").toUpperCase();
+      if (nomeEstrat.includes('QUENTE') || nomeEstrat.includes('FRIO') || nomeEstrat.includes('AMBOS')) {
+          chrome.runtime.sendMessage({ tipo: 'atualizar_paineis_quentes_frios' }).catch(() => {});
+      }
+    }
+    
+    if (painelStatus) atualizarPainelStatus();
+  });
+  
+  // Verificar se está na mesa da roleta
+  const mesaRoleta = document.querySelector('.game-table');
+  if (!mesaRoleta) {
+    console.log('⚠️ Painel não criado - não está na mesa da roleta');
+    return;
+  }
+  
+  painelStatus = document.createElement('div');
+  painelStatus.id = 'painel-status-bot';
+  painelStatus.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 260px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 10px;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    z-index: 10000;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+    font-size: 11px;
+    cursor: move;
+  `;
+  
+  painelStatus.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,215,0,0.3); padding-bottom: 5px;">
+      <div style="font-size: 12px; font-weight: bold; color: #ffd700;">⚙️ STATUS Bot Fortuna X</div>
+    </div>
+    
+    <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+      <div style="color: #ffd700; font-weight: bold; margin-bottom: 3px; font-size: 11px;" id="status-estrategia">👔 Funcionário do Mês</div>
+      <div style="color: #00bcd4; font-weight: bold; margin-bottom: 3px; display: none; font-size: 10px;" id="status-ia-painel">🎯 I.A Fortuna X: Analisando...</div>
+      <div style="color: #ff9800; font-weight: bold; font-size: 11px; margin-top: 3px; margin-bottom: 3px; display: none;" id="status-countdown">⏳ Aguardando...</div>
+      <div style="color: #00ff00; margin-bottom: 3px; font-size: 11px;" id="status-ativo">🟢 Ativo (MODO REAL)</div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+      <div style="text-align: center; flex: 1;">
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px;" id="status-wins">0</div>
+        <div style="color: #aaa; font-size: 9px;">Green</div>
+      </div>
+      <div style="text-align: center; flex: 1;">
+        <div style="color: #ff4444; font-weight: bold; font-size: 14px;" id="status-losses">0</div>
+        <div style="color: #aaa; font-size: 9px;">Red</div>
+      </div>
+    </div>
+    
+    <div style="border-top: 1px solid #ffd700; padding-top: 8px; margin-bottom: 8px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+        <span style="color: #ffd700;" id="label-banca-atual">💰 Banca:</span>
+        <span style="color: #00ff00; font-weight: bold;" id="status-banca-atual">R$ 0.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="container-banca-inicial">
+        <span style="color: #aaa;">💵 Inicial:</span>
+        <span style="color: #fff;" id="status-banca-inicial">R$ 0.00</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="container-stop-gain">
+        <span style="color: #aaa;">🎯 Stop G:</span>
+        <span style="color: #00ff00;" id="status-stop-gain">0 Green(s)</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;" id="container-stop-loss">
+        <span style="color: #aaa;">🛑 Stop L:</span>
+        <span style="color: #ff4444;" id="status-stop-loss">0 Red(s)</span>
+      </div>
+    </div>
+    
+    <button id="btn-atualizar-saldo-painel" style="
+      width: 100%;
+      padding: 6px;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      border: none;
+      border-radius: 6px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.3s;
+    ">
+      🔃 Atualizar Saldo
+    </button>
+  `;
+
+  // Estilos para o switch do modo simulação
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .switch-sim { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch-sim input { opacity: 0; width: 0; height: 0; }
+    .slider-sim { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+    .slider-sim:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider-sim { background-color: #00bcd4; }
+    input:checked + .slider-sim:before { transform: translateX(20px); }
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(painelStatus);
+  
+  // --- EVENTOS DO MODO SIMULAÇÃO ---
+  
+  // Resetar Placar Simulação
+  if (document.getElementById('btn-reset-placar-sim')) {
+    document.getElementById('btn-reset-placar-sim').addEventListener('click', () => {
+      placarSimulacao = { wins: 0, losses: 0 };
+      if (chrome.runtime && chrome.runtime.id) {
+        chrome.storage.local.set({ placarSimulacao });
+      }
+      atualizarPainelStatus();
+    });
+  }
+  
+  // Evento do botão atualizar saldo
+  if (document.getElementById('btn-atualizar-saldo-painel')) {
+    document.getElementById('btn-atualizar-saldo-painel').addEventListener('click', () => {
+      atualizarSaldoInicial();
+    });
+  }
+  
+  // Funcionalidade de arrastar o painel
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  
+  painelStatus.addEventListener('mousedown', (e) => {
+    if (e.target.id === 'btn-atualizar-saldo-painel') return;
+    isDragging = true;
+    offsetX = e.clientX - painelStatus.offsetLeft;
+    offsetY = e.clientY - painelStatus.offsetTop;
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging && painelStatus) {
+      painelStatus.style.left = (e.clientX - offsetX) + 'px';
+      painelStatus.style.top = (e.clientY - offsetY) + 'px';
+      painelStatus.style.right = 'auto';
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+  
+  // Adicionar botão X para fechar
+  const btnFechar = document.createElement('button');
+  btnFechar.textContent = '✕';
+  btnFechar.style.cssText = `
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff4444;
+    border: none;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+  `;
+  btnFechar.addEventListener('click', () => {
+    painelStatus.remove();
+    painelStatus = null;
+  });
+  painelStatus.appendChild(btnFechar);
+}
+
+// Escutar mudanças no storage para sincronizar saldo e placar de simulação
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (!chrome.runtime || !chrome.runtime.id) return;
+  if (areaName === 'local') {
+    if (changes.modoSimulacaoAtivo) {
+      modoSimulacaoAtivo = changes.modoSimulacaoAtivo.newValue;
+      atualizarPainelStatus();
+    }
+    if (changes.saldoSimulacao) {
+      saldoSimulacao = changes.saldoSimulacao.newValue;
+      if (modoSimulacaoAtivo) atualizarPainelStatus();
+    }
+    if (changes.placarSimulacao) {
+      placarSimulacao = changes.placarSimulacao.newValue;
+      if (modoSimulacaoAtivo) atualizarPainelStatus();
+    }
+  }
+});
+
+function atualizarPainelQuentesFrios(quentes, frios, estrategia, maxRodadas) {
+  if (!chrome.runtime || !chrome.runtime.id) return;
+  
+  if (!painelQuentes || !painelFrios) {
+    criarPaineisQuentesFrios();
+  }
+  
+  const nomeEstrat = (estrategia || "").toUpperCase();
+  const mostrarQuentes = nomeEstrat.includes('QUENTE') || nomeEstrat.includes('AMBOS') || nomeEstrat.includes('FIXOS') || nomeEstrat.includes('IA');
+  const mostrarFrios = nomeEstrat.includes('FRIO') || nomeEstrat.includes('AMBOS') || nomeEstrat.includes('IA');
+
+  const labelRodadas = maxRodadas ? ` (${maxRodadas}r)` : '';
+
+  if (painelQuentes) {
+    painelQuentes.style.display = mostrarQuentes ? 'block' : 'none';
+    if (mostrarQuentes) {
+      const header = document.getElementById('header-quentes');
+      if (header) header.textContent = `🔥 Quentes${labelRodadas}`;
+      
+      if (quentes && quentes.length > 0) {
+        const lista = document.getElementById('lista-quentes');
+        if (lista) {
+          lista.innerHTML = quentes.map(n => `
+            <div style="background: #222; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <span style="color: ${obterCorNumero(n.numero)}; font-weight: bold; font-size: 12px;">${n.numero}</span>
+              <span style="color: #00ff00; font-size: 10px; font-weight: bold;">${n.freq}x</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+  }
+
+  if (painelFrios) {
+    painelFrios.style.display = mostrarFrios ? 'block' : 'none';
+    if (mostrarFrios) {
+      const header = document.getElementById('header-frios');
+      if (header) header.textContent = `❄️ Frios${labelRodadas}`;
+      
+      if (frios && frios.length > 0) {
+        const lista = document.getElementById('lista-frios');
+        if (lista) {
+          lista.innerHTML = frios.map(n => `
+            <div style="background: #222; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <span style="color: ${obterCorNumero(n.numero)}; font-weight: bold; font-size: 12px;">${n.numero}</span>
+              <span style="color: #ff4444; font-size: 10px; font-weight: bold;">${n.freq}x</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+  }
+}
+
+function criarPaineisQuentesFrios() {
+  // Remover se já existir por algum motivo
+  if (document.getElementById('painel-quentes')) document.getElementById('painel-quentes').remove();
+  if (document.getElementById('painel-frios')) document.getElementById('painel-frios').remove();
+
+  const estiloBase = `
+    position: fixed;
+    z-index: 2147483647;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    font-family: sans-serif;
+    pointer-events: auto;
+    user-select: none;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 130px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    cursor: move;
+  `;
+
+  // PAINEL QUENTES
+  painelQuentes = document.createElement('div');
+  painelQuentes.id = 'painel-quentes';
+  painelQuentes.style.cssText = estiloBase + 'top: 250px; right: 10px; border: 2px solid #00ff00;';
+  painelQuentes.innerHTML = `
+    <div id="header-quentes" style="color: #00ff00; font-size: 11px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px;">🔥 Quentes</div>
+    <div id="lista-quentes" style="display: flex; flex-direction: column; gap: 4px;"></div>
+  `;
+  document.body.appendChild(painelQuentes);
+  tornarArrastavel(painelQuentes);
+
+  // PAINEL FRIOS
+  painelFrios = document.createElement('div');
+  painelFrios.id = 'painel-frios';
+  painelFrios.style.cssText = estiloBase + 'top: 450px; right: 10px; border: 2px solid #ff4444;';
+  painelFrios.innerHTML = `
+    <div id="header-frios" style="color: #ff4444; font-size: 11px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px;">❄️ Frios</div>
+    <div id="lista-frios" style="display: flex; flex-direction: column; gap: 4px;"></div>
+  `;
+  document.body.appendChild(painelFrios);
+  tornarArrastavel(painelFrios);
+}
+
+function tornarArrastavel(elemento) {
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  elemento.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - elemento.offsetLeft;
+    offsetY = e.clientY - elemento.offsetTop;
+    elemento.style.zIndex = '2147483648'; // Trazer para frente ao arrastar
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      elemento.style.left = (e.clientX - offsetX) + 'px';
+      elemento.style.top = (e.clientY - offsetY) + 'px';
+      elemento.style.right = 'auto';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      elemento.style.zIndex = '2147483647';
+    }
+  });
+}
+
+function obterCorNumero(n) {
+  const vermelhos = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+  if (n === 0) return '#00ff00';
+  return vermelhos.includes(n) ? '#ff4444' : '#ffffff';
+}
+
+function atualizarPainelStatus() {
+  if (!painelStatus) {
+    criarPainelStatus();
+    // Se ainda não criou (ex: não está na mesa), sai para evitar erros
+    if (!painelStatus) return;
+  }
+  
+  // Atualizar status
+  const statusAtivoEl = document.getElementById('status-ativo');
+  const countdownEl = document.getElementById('status-countdown');
+  
+  // Verificação de segurança extra
+  if (!statusAtivoEl) return;
+  
+  if (!statusBotAtivo) {
+    statusAtivoEl.textContent = '🔴 Pausado';
+    statusAtivoEl.style.color = '#ff4444';
+    if (countdownEl) countdownEl.style.display = 'none';
+  } else if (modoSimulacaoAtivo) {
+    statusAtivoEl.textContent = '🔵 Simulando...';
+    statusAtivoEl.style.color = '#00bcd4';
+    
+    // Atualizar Placar e Saldo Simulado
+    const winsEl = document.getElementById('status-wins');
+    const lossesEl = document.getElementById('status-losses');
+    const bancaAtualEl = document.getElementById('status-banca-atual');
+    const labelBancaEl = document.getElementById('label-banca-atual');
+    const btnAtualizarSaldo = document.getElementById('btn-atualizar-saldo-painel');
+    
+    if (winsEl) winsEl.textContent = placarSimulacao.wins;
+    if (lossesEl) lossesEl.textContent = placarSimulacao.losses;
+    if (bancaAtualEl) bancaAtualEl.textContent = `R$ ${saldoSimulacao.toFixed(2)}`;
+    if (labelBancaEl) labelBancaEl.textContent = '🔵 Banca Simulação:';
+    
+    // Esconder campos reais irrelevantes na simulação
+    const contBancaIni = document.getElementById('container-banca-inicial');
+    const contStopG = document.getElementById('container-stop-gain');
+    const contStopL = document.getElementById('container-stop-loss');
+    
+    if (contBancaIni) contBancaIni.style.display = 'none';
+    if (contStopG) contStopG.style.display = 'none';
+    if (contStopL) contStopL.style.display = 'none';
+    if (btnAtualizarSaldo) btnAtualizarSaldo.style.display = 'none';
+    
+  } else {
+    statusAtivoEl.textContent = '🟢 Ativo (MODO REAL)';
+    statusAtivoEl.style.color = '#00ff00';
+    
+    // Atualizar Placar e Saldo Real
+    const winsEl = document.getElementById('status-wins');
+    const lossesEl = document.getElementById('status-losses');
+    const bancaAtualEl = document.getElementById('status-banca-atual');
+    const labelBancaEl = document.getElementById('label-banca-atual');
+    const btnAtualizarSaldo = document.getElementById('btn-atualizar-saldo-painel');
+    
+    if (winsEl) winsEl.textContent = statusPlacar.wins;
+    if (lossesEl) lossesEl.textContent = statusPlacar.losses;
+    if (bancaAtualEl) bancaAtualEl.textContent = `R$ ${statusBancaAtual.toFixed(2)}`;
+    if (labelBancaEl) labelBancaEl.textContent = '💰 Banca Atual:';
+    
+    // Mostrar campos reais
+    const contBancaIni = document.getElementById('container-banca-inicial');
+    const contStopG = document.getElementById('container-stop-gain');
+    const contStopL = document.getElementById('container-stop-loss');
+    const bancaIniEl = document.getElementById('status-banca-inicial');
+    const stopGEl = document.getElementById('status-stop-gain');
+    const stopLEl = document.getElementById('status-stop-loss');
+    
+    if (contBancaIni) contBancaIni.style.display = 'flex';
+    if (contStopG) contStopG.style.display = 'flex';
+    if (contStopL) contStopL.style.display = 'flex';
+    if (btnAtualizarSaldo) btnAtualizarSaldo.style.display = 'block';
+    
+    if (bancaIniEl) bancaIniEl.textContent = `R$ ${statusBancaInicial.toFixed(2)}`;
+    
+    // Mostrar meta de Green e limite de Red
+    if (stopGEl) stopGEl.textContent = `${stopWinValor} Green(s)`;
+    if (stopLEl) stopLEl.textContent = `${stopLossValor} Red(s)`;
+  }
+  
+  const estEl = document.getElementById('status-estrategia');
+  if (estEl) estEl.textContent = `👔 ${statusEstrategia}`;
+}
+
+function atualizarSaldoInicial() {
+  // Obter saldo atual
+  var saldoElement = document.querySelector("#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L");
+  
+  if (saldoElement) {
+    var textoSaldo = saldoElement.textContent.trim();
+    var saldoLimpo = textoSaldo.replace(/R\$/g, '').replace(/&nbsp;/g, '').replace(/\s/g, '').trim();
+    var saldoNumerico = parseFloat(saldoLimpo.replace(',', '.'));
+    
+    if (!isNaN(saldoNumerico)) {
+      statusBancaInicial = saldoNumerico;
+      statusBancaAtual = saldoNumerico;
+      atualizarPainelStatus();
+      mostrarAlertaNaPagina('✅ Saldo inicial atualizado!', '#4CAF50', 2000);
+    }
+  }
+}
+
+// Criar painel ao carregar - APENAS NA MESA DA ROLETA
+setTimeout(() => {
+  const mesaRoleta = document.querySelector('.game-table');
+  if (mesaRoleta) {
+    criarPainelStatus();
+    atualizarPainelStatus();
+  }
+}, 2000);
+
+// Monitorar mudanças de página e recriar painel se necessário
+setInterval(() => {
+  const mesaRoleta = document.querySelector('.game-table');
+  
+  if (mesaRoleta && !painelStatus) {
+    // Está na mesa e painel não existe - criar
+    criarPainelStatus();
+    atualizarPainelStatus();
+  } else if (!mesaRoleta) {
+    // Saiu da mesa - remover painéis
+    if (painelStatus) {
+      painelStatus.remove();
+      painelStatus = null;
+    }
+    if (painelQuentes) {
+      painelQuentes.remove();
+      painelQuentes = null;
+    }
+    if (painelFrios) {
+      painelFrios.remove();
+      painelFrios = null;
+    }
+  }
+}, 1000);
+
+// Atualizar painel a cada 2 segundos (apenas se existir)
+setInterval(() => {
+  if (painelStatus) {
+    // Obter saldo atual
+    var saldoElement = document.querySelector("#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L");
+    
+    if (saldoElement) {
+      var textoSaldo = saldoElement.textContent.trim();
+      var saldoLimpo = textoSaldo.replace(/R\$/g, '').replace(/&nbsp;/g, '').replace(/\s/g, '').trim();
+      var saldoNumerico = parseFloat(saldoLimpo.replace(',', '.'));
+      
+      if (!isNaN(saldoNumerico)) {
+        statusBancaAtual = saldoNumerico;
+        atualizarPainelStatus();
+      }
+    }
+  }
+}, 2000);
+
+// Listener para receber atualizações do sidepanel e background
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!chrome.runtime || !chrome.runtime.id) return;
+
+  if (request.tipo === 'atualizar_quentes_frios') {
+    atualizarPainelQuentesFrios(request.quentes, request.frios, request.estrategiaAtual, request.maxRodadas);
+  }
+
+  if (request.tipo === 'atualizar_simulacao') {
+    saldoSimulacao = request.saldo;
+    placarSimulacao = request.placar;
+    atualizarPainelStatus();
+  }
+
+  if (request.action === 'atualizarStatusPainel') {
+    statusBotAtivo = request.ativo || false;
+    statusEstrategia = request.estrategia || 'Nenhuma';
+    statusPlacar = request.placar || { wins: 0, losses: 0 };
+    stopWinValor = request.stopWin || 0;  // Quanto quer ganhar
+    stopLossValor = request.stopLoss || 0; // Quanto pode perder
+    
+    // Se não for IA, esconder o status da IA
+    if (!statusEstrategia.includes('I.A')) {
+      const statusIAEl = document.getElementById('status-ia-painel');
+      if (statusIAEl) statusIAEl.style.display = 'none';
+    }
+    
+    atualizarPainelStatus();
+  }
+
+  if (request.tipo === 'status_ia_atualizar') {
+    const statusIAEl = document.getElementById('status-ia-painel');
+    if (statusIAEl) {
+      statusIAEl.style.display = 'block';
+      statusIAEl.textContent = request.texto;
+    }
+  }
+
+  if (request.tipo === 'aposta_contagem_rodadas') {
+    const countdownEl = document.getElementById('status-countdown');
+    if (countdownEl) {
+      countdownEl.style.display = 'block';
+      countdownEl.innerHTML = `⏳ Aguardando <b style="color: #ff9800;">${request.rodadas}</b> rodada(s)...`;
+      countdownEl.style.color = '#ff9800';
+    }
+  }
+
+  if (request.tipo === 'aposta_contagem') {
+    const countdownEl = document.getElementById('status-countdown');
+    const labelAcao = request.nomeEstrategia || 'Apostando';
+    
+    if (countdownEl) {
+      if (request.segundos > 0) {
+        countdownEl.style.display = 'block';
+        const icone = labelAcao.includes('Simulando') ? '🧪' : '🚀';
+        const cor = labelAcao.includes('Simulando') ? '#00bcd4' : '#00ff00';
+        countdownEl.innerHTML = `${icone} ${labelAcao} em <b style="color: ${cor};">${request.segundos}s</b>...`;
+        countdownEl.style.color = cor;
+
+        // Mostrar alerta grande também para apostas reais
+        if (request.segundos === 4 && !labelAcao.includes('Simulando')) {
+            mostrarAlertaNaPagina(`🚀 ${labelAcao}`, '#ff9800', 5000);
+        }
+      } else {
+        const msgFinal = labelAcao.includes('Simulando') ? '🧪 Simulação registrada!' : '🎰 Apostando agora!';
+        countdownEl.innerHTML = msgFinal;
+        setTimeout(() => {
+          if (countdownEl) countdownEl.style.display = 'none';
+        }, 3000);
+      }
+    }
+  }
+
+  if (request.tipo === 'debug_alerta') {
+    console.log('🔍 [DEBUG-BG]:', request.mensagem);
+    mostrarAlertaNaPagina(request.mensagem, request.mensagem.includes('✅') ? '#4CAF50' : '#f44336', 10000);
+  }
+
+  if (request.tipo === 'limpar_alertas') {
+    if (alertaAtual) {
+        alertaAtual.remove();
+        alertaAtual = null;
+    }
+    const alertasAntigos = document.querySelectorAll('div[style*="z-index: 999999"]');
+    alertasAntigos.forEach(a => a.remove());
+  }
+
+  if (request.action === 'obterSaldo') {
+    var saldo = lerSaldoDaPagina();
+    if (saldo !== null) {
+      console.log('💰 Saldo encontrado:', saldo);
+      sendResponse({ saldo: 'R$ ' + saldo.toFixed(2), saldoNumerico: saldo });
+    } else {
+      console.log('❌ Saldo não encontrado na página');
+      sendResponse({ saldo: 'R$ 0,00', saldoNumerico: 0 });
+    }
+    return;
+  }
+
+  if (request.tipo === 'obter_ultimo_numero') {
+    // Procurar o último número no DOM
+    let numeroDetectado = encontrarUltimoNumeroNoDOM(document);
+    
+    // Se não achou, procurar em iframes
+    if (numeroDetectado === null) {
+        const iframes = document.querySelectorAll('iframe');
+        for (const iframe of iframes) {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                numeroDetectado = encontrarUltimoNumeroNoDOM(iframeDoc);
+                if (numeroDetectado !== null) break;
+            } catch (e) {
+                // Ignorar iframes inacessíveis
+            }
+        }
+    }
+    
+    console.log(`🎯 [CONTENT] Último número capturado: ${numeroDetectado}`);
+    sendResponse({ numero: numeroDetectado });
+    return true; // Manter o canal aberto para resposta assíncrona
+  }
+});

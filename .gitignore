@@ -1,0 +1,7 @@
+node_modules/
+.vscode/
+*.log
+error_log
+.DS_Store
+bot-system/server/db.json
+admin/cadastros.json

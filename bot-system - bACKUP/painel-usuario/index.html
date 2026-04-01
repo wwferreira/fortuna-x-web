@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rei dos Bots — Configuração</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .screen { width: 100%; max-width: 480px; padding: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #333; border-radius: 14px; padding: 24px; margin-bottom: 14px; }
+  .logo { text-align: center; margin-bottom: 28px; }
+  .logo h1 { color: #a855f7; font-size: 22px; }
+  .logo p { color: #666; font-size: 13px; margin-top: 4px; }
+  input, select { width: 100%; padding: 12px 14px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 14px; margin-bottom: 14px; }
+  input:focus, select:focus { outline: none; border-color: #a855f7; }
+  label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; }
+  .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+  .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; display: none; }
+  .msg-ok  { background: rgba(34,197,94,.15);  border: 1px solid #22c55e; color: #22c55e; }
+  .msg-err { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .section-title { font-size: 12px; color: #a855f7; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 12px; border-top: 1px solid #2a2a3e; padding-top: 14px; }
+  .status-ws { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; margin-bottom: 16px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #555; flex-shrink: 0; }
+  .dot.on { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .user-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .user-email { font-size: 13px; color: #a855f7; }
+  .btn-sair { background: none; border: 1px solid #444; color: #888; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .estrategia-desc { font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 14px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .stat-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .stat-label { font-size: 11px; color: #666; margin-bottom: 6px; }
+  .stat-val { font-size: 22px; font-weight: 800; }
+  .stat-green { color: #22c55e; }
+  .stat-red   { color: #ef4444; }
+  .stat-blue  { color: #60a5fa; }
+  .saldo-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .saldo-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+  .saldo-val { font-size: 18px; font-weight: 800; }
+  .btn-toggle { width: 100%; padding: 16px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 800; letter-spacing: 1px; transition: all .2s; margin-top: 12px; }
+  .btn-toggle:active { transform: scale(.97); }
+  .btn-toggle.ligar    { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+  .btn-toggle.desligar { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; }
+  .status-banner { display: none; padding: 16px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 700; margin-top: 12px; animation: pulse 1.5s infinite; }
+  .status-banner.inicializando { background: rgba(168,85,247,.15); border: 1px solid #a855f7; color: #a855f7; }
+  .status-banner.desligando    { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+  #loginScreen  { display: block; }
+  #configScreen { display: none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen" id="loginScreen">
+  <div class="card">
+    <div class="logo">
+      <h1>🤖 Rei dos Bots</h1>
+      <p>Faça login para configurar seu bot</p>
+    </div>
+    <div class="msg msg-err" id="loginErr"></div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" id="loginSenha" placeholder="••••••••">
+    <button class="btn btn-primary" id="btnLogin">Entrar</button>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div class="screen" id="configScreen">
+
+  <!-- CABEÇALHO -->
+  <div class="card">
+    <div class="user-info">
+      <div>
+        <div style="font-size:11px;color:#666">Logado como</div>
+        <div class="user-email" id="userEmailDisplay"></div>
+      </div>
+      <button class="btn-sair" id="btnSair">Sair</button>
+    </div>
+    <div class="status-ws">
+      <div class="dot" id="wsDot"></div>
+      <span id="wsStatus">Verificando servidor...</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="card">
+    <div style="font-size:12px;color:#a855f7;font-weight:700;margin-bottom:12px;">📊 Desempenho em Tempo Real</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Greens</div>
+        <div class="stat-val stat-green" id="statGreens">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Reds</div>
+        <div class="stat-val stat-red" id="statReds">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Assertiv.</div>
+        <div class="stat-val stat-blue" id="statAssert">—</div>
+      </div>
+    </div>
+    <div class="saldo-box">
+      <div>
+        <div class="saldo-label">Saldo Atual</div>
+        <div class="saldo-val" id="statSaldo">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="saldo-label">Lucro / Perda</div>
+        <div class="saldo-val" id="statLucro" style="font-size:15px">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURAÇÃO -->
+  <div class="card">
+    <div class="msg msg-ok" id="msgSalvo">✅ Configuração salva!</div>
+    <div class="msg msg-err" id="msgErro"></div>
+
+    <label>Estratégia de Aposta</label>
+    <select id="selectEstrategia"></select>
+    <div class="estrategia-desc" id="descEstrategia"></div>
+
+    <div class="section-title">💰 Gestão de Banca</div>
+    <div class="form-row">
+      <div>
+        <label>Valor da Ficha (R$)</label>
+        <input type="number" id="valorFicha" placeholder="1.00" min="0.5" step="0.5">
+      </div>
+      <div>
+        <label>Gales (0 = sem gale)</label>
+        <input type="number" id="gales" placeholder="1" min="0" max="3">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Stop Win (R$)</label>
+        <input type="number" id="stopWin" placeholder="50.00" min="0">
+      </div>
+      <div>
+        <label>Stop Loss (R$)</label>
+        <input type="number" id="stopLoss" placeholder="30.00" min="0">
+      </div>
+    </div>
+
+    <button class="btn btn-success" id="btnSalvar">💾 Salvar e Enviar para Extensão</button>
+    <button class="btn-toggle ligar" id="btnToggleBot">▶️ LIGAR BOT</button>
+    
+    <div class="status-banner inicializando" id="bannerInicializando">
+      ⏳ Aguarde. Seu bot está inicializando...
+      <br><span style="font-size: 10px; text-decoration: underline; cursor: pointer;" onclick="forcarParada()">Cancelar</span>
+    </div>
+    <div class="status-banner desligando"    id="bannerDesligando">
+      🔄 Encerrando apostas. Saindo da mesa...
+      <br><span style="font-size: 10px; text-decoration: underline; cursor: pointer;" onclick="forcarParada()">Cancelar</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Função global para os banners
+async function forcarParada() {
+  if (!confirm('Deseja cancelar o processo atual?')) return;
+  try {
+    await fetch(`${API}/comando`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, acao: 'desligar' })
+    });
+    botLigado = false;
+    atualizarBotaoToggle();
+    esconderBanners();
+  } catch(e) {}
+}
+const API = 'http://localhost:3000/api';
+let emailLogado = null;
+let estrategiasDisponiveis = [];
+let botLigado = false;
+let pollingStatusTimer = null;
+
+// ===== SESSÃO PERSISTENTE =====
+function salvarSessao(email) {
+  localStorage.setItem('rdb_email', email);
+}
+function limparSessao() {
+  localStorage.removeItem('rdb_email');
+  localStorage.removeItem('rdb_botLigado');
+}
+function salvarEstadoBot(ligado) {
+  localStorage.setItem('rdb_botLigado', ligado ? '1' : '0');
+}
+
+// ===== LOGIN =====
+document.getElementById('btnLogin').addEventListener('click', fazerLogin);
+document.getElementById('loginSenha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha })
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      errEl.textContent = e.erro;
+      errEl.style.display = 'block';
+      return;
+    }
+    salvarSessao(email);
+    abrirPainel(email);
+  } catch (e) {
+    errEl.textContent = 'Erro ao conectar com o servidor.';
+    errEl.style.display = 'block';
+  }
+}
+
+async function abrirPainel(email) {
+  try {
+    emailLogado = email;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('configScreen').style.display = 'block';
+    document.getElementById('userEmailDisplay').textContent = email;
+
+    // Carregar dados em paralelo para ser mais rápido
+    await Promise.allSettled([
+      carregarEstrategias(),
+      carregarConfig()
+    ]);
+
+    iniciarPollingStats();
+    iniciarPollingStatus();
+    monitorarServidor();
+  } catch (e) {
+    console.error('Erro ao abrir painel:', e);
+  }
+}
+
+document.getElementById('btnSair').addEventListener('click', () => {
+  limparSessao();
+  emailLogado = null;
+  botLigado = false;
+  if (pollingStatusTimer) { clearInterval(pollingStatusTimer); pollingStatusTimer = null; }
+  esconderBanners();
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('configScreen').style.display = 'none';
+});
+
+// ===== BOTÃO LIGAR / DESLIGAR =====
+document.getElementById('btnToggleBot').addEventListener('click', async () => {
+  const acao = botLigado ? 'desligar' : 'ligar';
+  try {
+    const res = await fetch(`${API}/comando`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, acao })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      botLigado = !botLigado;
+      atualizarBotaoToggle();
+      // Mostrar banner de status
+      if (acao === 'ligar') {
+        mostrarBanner('inicializando');
+      } else {
+        mostrarBanner('desligando');
+      }
+      if (!data.enviado) {
+        mostrarMsg('msgErro', '⚠️ Extensão não conectada ao servidor.');
+      }
+    }
+  } catch (e) {
+    mostrarMsg('msgErro', 'Erro ao enviar comando. Servidor offline?');
+  }
+});
+
+function atualizarBotaoToggle() {
+  const btn = document.getElementById('btnToggleBot');
+  if (botLigado) {
+    btn.textContent = '⏹️ DESLIGAR BOT';
+    btn.className = 'btn-toggle desligar';
+  } else {
+    btn.textContent = '▶️ LIGAR BOT';
+    btn.className = 'btn-toggle ligar';
+  }
+}
+
+// ===== ESTRATÉGIAS =====
+async function carregarEstrategias() {
+  try {
+    const res = await fetch(`${API}/estrategias`);
+    if (!res.ok) throw new Error('Falha ao carregar estratégias');
+    estrategiasDisponiveis = await res.json();
+    if (!Array.isArray(estrategiasDisponiveis)) estrategiasDisponiveis = [];
+    
+    const sel = document.getElementById('selectEstrategia');
+    sel.innerHTML = estrategiasDisponiveis.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('');
+    sel.addEventListener('change', mostrarDescEstrategia);
+    mostrarDescEstrategia();
+  } catch (e) {
+    console.error('Erro carregarEstrategias:', e);
+    mostrarMsg('msgErro', 'Erro ao carregar estratégias do servidor.');
+  }
+}
+
+function mostrarDescEstrategia() {
+  const chave = document.getElementById('selectEstrategia').value;
+  const est = estrategiasDisponiveis.find(e => e.chave === chave);
+  const desc = document.getElementById('descEstrategia');
+  if (est) desc.textContent = `${est.descricao || ''} — ${(est.numeros || []).length} números`;
+}
+
+async function carregarConfig() {
+  try {
+    const res = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
+    const config = await res.json();
+    
+    if (res.ok) {
+      if (config.estrategia) { 
+        document.getElementById('selectEstrategia').value = config.estrategia; 
+        mostrarDescEstrategia(); 
+      }
+      if (config.valor_ficha) document.getElementById('valorFicha').value = config.valor_ficha;
+      if (config.stop_win)    document.getElementById('stopWin').value = config.stop_win;
+      if (config.stop_loss)   document.getElementById('stopLoss').value = config.stop_loss;
+      if (config.gales !== undefined) document.getElementById('gales').value = config.gales;
+      
+      botLigado = config.botLigado || false;
+    } else {
+      // Usuário novo ou sem config
+      botLigado = false;
+    }
+    atualizarBotaoToggle();
+  } catch (e) {
+    console.error('Erro carregarConfig:', e);
+  }
+}
+
+document.getElementById('btnSalvar').addEventListener('click', async () => {
+  const estChave = document.getElementById('selectEstrategia').value;
+  
+  // 1. Buscar a estratégia completa no servidor para garantir que os gatilhos existam
+  let estCompleta = estrategiasDisponiveis.find(e => e.chave === estChave);
+  
+  const config = {
+    estrategia: estChave,
+    nome: estCompleta ? estCompleta.nome : estChave,
+    gatilhos: estCompleta ? estCompleta.gatilhos : [],
+    valor_ficha: parseFloat(document.getElementById('valorFicha').value) || 1,
+    stop_win:    parseFloat(document.getElementById('stopWin').value)    || 0,
+    stop_loss:   parseFloat(document.getElementById('stopLoss').value)   || 0,
+    gales:       parseInt(document.getElementById('gales').value)        || 0
+  };
+
+  try {
+    const res = await fetch(`${API}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, ...config })
+    });
+    
+    if (res.ok) {
+      mostrarMsg('msgSalvo', '✅ Configurações salvas e enviadas para a extensão!');
+    } else {
+      throw new Error('Erro ao salvar no servidor');
+    }
+  } catch (e) {
+    mostrarMsg('msgErro', '❌ Erro ao salvar configurações.');
+  }
+});
+
+// ===== BANNERS DE STATUS =====
+function mostrarBanner(tipo) {
+  document.getElementById('bannerInicializando').style.display = tipo === 'inicializando' ? 'block' : 'none';
+  document.getElementById('bannerDesligando').style.display    = tipo === 'desligando'    ? 'block' : 'none';
+}
+
+function esconderBanners() {
+  document.getElementById('bannerInicializando').style.display = 'none';
+  document.getElementById('bannerDesligando').style.display    = 'none';
+}
+
+function iniciarPollingStatus() {
+  if (pollingStatusTimer) clearInterval(pollingStatusTimer);
+  pollingStatusTimer = setInterval(verificarStatusBot, 2000);
+}
+
+async function verificarStatusBot() {
+  if (!emailLogado) return;
+  try {
+    const res = await fetch(`${API}/status/${encodeURIComponent(emailLogado)}`);
+    const data = await res.json();
+    const status = data.statusBot;
+    
+    if (status === 'na_mesa' || status === 'deslogado' || !status) {
+      esconderBanners();
+    } else if (status === 'inicializando') {
+      mostrarBanner('inicializando');
+    } else if (status === 'desligando') {
+      mostrarBanner('desligando');
+    } else {
+      // Outros status desconhecidos
+      esconderBanners();
+    }
+  } catch (e) { /* servidor offline */ }
+}
+
+// ===== STATS =====
+function iniciarPollingStats() {
+  atualizarStats();
+  setInterval(atualizarStats, 3000);
+}
+
+async function atualizarStats() {
+  if (!emailLogado) return;
+  try {
+    const res = await fetch(`${API}/stats/${encodeURIComponent(emailLogado)}`);
+    const s = await res.json();
+    document.getElementById('statGreens').textContent = s.greens ?? 0;
+    document.getElementById('statReds').textContent   = s.reds   ?? 0;
+    const total = (s.greens || 0) + (s.reds || 0);
+    document.getElementById('statAssert').textContent = total > 0 ? ((s.greens / total * 100).toFixed(0) + '%') : '—';
+    const saldo = s.saldo !== null && s.saldo !== undefined ? parseFloat(s.saldo) : null;
+    document.getElementById('statSaldo').textContent  = saldo !== null ? `R$ ${saldo.toFixed(2)}` : '—';
+    if (saldo !== null && s.saldoInicial !== null && s.saldoInicial !== undefined) {
+      const lucro = saldo - parseFloat(s.saldoInicial);
+      const el = document.getElementById('statLucro');
+      el.textContent = (lucro >= 0 ? '+' : '') + `R$ ${lucro.toFixed(2)}`;
+      el.style.color = lucro >= 0 ? '#22c55e' : '#ef4444';
+    }
+  } catch (e) { /* servidor offline */ }
+}
+
+// ===== STATUS SERVIDOR =====
+let wsMonitor = null;
+function monitorarServidor() {
+  verificarServidor();
+  setInterval(verificarServidor, 5000);
+}
+
+function verificarServidor() {
+  const dot    = document.getElementById('wsDot');
+  const status = document.getElementById('wsStatus');
+  
+  // Usar uma URL baseada no host atual para ser flexível
+  const wsHost = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.host;
+  const wsUrl = `ws://${wsHost}`;
+
+  if (wsMonitor) {
+    try { wsMonitor.close(); } catch(e) {}
+  }
+
+  wsMonitor = new WebSocket(wsUrl);
+  wsMonitor.onopen  = () => { 
+    dot.classList.add('on'); 
+    status.textContent = 'Servidor online'; 
+    setTimeout(() => { if (wsMonitor) wsMonitor.close(); }, 1000);
+  };
+  wsMonitor.onerror = () => { 
+    dot.classList.remove('on'); 
+    status.textContent = 'Servidor offline'; 
+  };
+}
+
+function mostrarMsg(id, texto) {
+  const el = document.getElementById(id);
+  el.textContent = texto;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+// ===== RESTAURAR SESSÃO AO CARREGAR =====
+window.addEventListener('load', () => {
+  const emailSalvo = localStorage.getItem('rdb_email');
+  if (emailSalvo) {
+    abrirPainel(emailSalvo);
+  }
+});
+</script>
+</body>
+</html>

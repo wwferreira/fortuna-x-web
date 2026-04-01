@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Bot Fortuna X</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar Esquerda */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a0000 0%, #0d0000 100%);
+            border-right: 1px solid #cc0000;
+            display: flex;
+            flex-direction: column;
+        }
+        .logo {
+            padding: 30px 20px;
+            border-bottom: 1px solid #660000;
+        }
+        .logo h1 {
+            color: #cc0000;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+        .nav-item {
+            padding: 15px 25px;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95em;
+        }
+        .nav-item:hover {
+            background: rgba(204, 0, 0, 0.1);
+            color: #fff;
+        }
+        .nav-item.active {
+            background: rgba(204, 0, 0, 0.2);
+            color: #cc0000;
+            border-left-color: #cc0000;
+        }
+        
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .topbar {
+            background: #111;
+            padding: 20px 30px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topbar h2 {
+            color: #fff;
+            font-size: 1.8em;
+            margin: 0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-backup {
+            background: #cc0000;
+            color: white;
+            border: 1px solid #fff;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-backup:hover {
+            background: #ff0000;
+        }
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #0a0a0a;
+        }
+        
+        /* Tabela de Usuários */
+        .data-table {
+            width: 100%;
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        .data-table thead {
+            background: #1a1a1a;
+        }
+        .data-table th {
+            padding: 15px;
+            text-align: left;
+            color: #cc0000;
+            font-weight: 600;
+            border-bottom: 2px solid #cc0000;
+        }
+        .data-table td {
+            padding: 15px;
+            color: #ccc;
+            border-bottom: 1px solid #222;
+        }
+        .data-table tbody tr {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .data-table tbody tr:hover {
+            background: #1a1a1a;
+        }
+        
+        /* Botões */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #cc0000;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #ff0000;
+        }
+        .btn-secondary {
+            background: #333;
+            color: #ccc;
+        }
+        .btn-secondary:hover {
+            background: #444;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #111;
+            border: 1px solid #cc0000;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        .modal-header h2 {
+            color: #cc0000;
+            font-size: 1.5em;
+        }
+        .close-btn {
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .close-btn:hover {
+            color: #cc0000;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95em;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #cc0000;
+        }
+        .form-input:disabled {
+            background: #0a0a0a;
+            color: #666;
+        }
+        
+        /* Checkboxes Grid */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        .checkbox-item input {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .checkbox-item label {
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        /* Actions */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            padding: 10px 15px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            width: 300px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #cc0000;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        /* Aposta Card */
+        .aposta-card {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .aposta-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .aposta-card-title {
+            color: #cc0000;
+            font-weight: 600;
+        }
+        .btn-remove {
+            background: #660000;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .btn-remove:hover {
+            background: #cc0000;
+        }
+        /* Fichas Input Box */
+        .ficha-input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .ficha-input-box label {
+            font-size: 0.75em;
+            color: #888;
+            font-weight: 600;
+        }
+        
+        .alert-info {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid #2196f3;
+            color: #2196f3;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h1>🎰 Fortuna X</h1>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="mostrarUsuarios()">
+                <span>👥</span>
+                <span>Usuários</span>
+            </div>
+            <div class="nav-item" onclick="mostrarEstrategias()">
+                <span>⚙️</span>
+                <span>Estratégias</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="topbar">
+            <h2 id="pageTitle">Usuários</h2>
+            <div class="btn-group">
+                <button class="btn-backup" onclick="exportarBackup()">📤 Exportar Backup</button>
+                <button class="btn-backup" onclick="document.getElementById('importInput').click()">📥 Importar Backup</button>
+                <input type="file" id="importInput" style="display:none" accept=".json" onchange="importarBackup(this)">
+            </div>
+        </div>
+        <div class="content-area" id="contentArea">
+            <div class="empty-state">Carregando...</div>
+        </div>
+    </div>
+    
+    <!-- Modal Usuário -->
+    <div id="modalUsuario" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Novo Usuário</h2>
+                <button class="close-btn" onclick="fecharModal()">&times;</button>
+            </div>
+            
+            <form id="formUsuario">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" class="form-input" id="inputNome" placeholder="Digite o nome completo">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="inputEmail" placeholder="usuario@exemplo.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-input" id="inputSenha" placeholder="Digite a senha">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Token (Gerado Automaticamente)</label>
+                    <input type="text" class="form-input" id="inputToken" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">ID da Máquina</label>
+                    <input type="text" class="form-input" id="inputHwid" placeholder="ID da Máquina (installation_id)">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Data de Validade (Vencimento)</label>
+                    <input type="date" class="form-input" id="inputValidade">
+                    <small style="color: #888;">Deixe em branco para acesso vitalício</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estratégias Vinculadas</label>
+                    <div class="checkbox-grid" id="estrategiasCheckbox"></div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="button" class="btn btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Estratégia -->
+    <div id="modalEstrategia" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="modalTitleEst">Nova Estratégia</h2>
+                <button class="close-btn" onclick="fecharModalEstrategia()">&times;</button>
+            </div>
+            
+            <form id="formEstrategia">
+                <div class="form-group">
+                    <label class="form-label">Nome da Estratégia</label>
+                    <input type="text" class="form-input" id="inputNomeEst" placeholder="Ex: Vizinhos da C2">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tipo de Estratégia</label>
+                    <select class="form-input" id="inputTipoEstrategia" onchange="atualizarCamposEstrategia()">
+                        <option value="COMUM">Tipo: Gatilho Normal (Baseado em Sequência)</option>
+                        <option value="FUNCIONARIO_MES">Funcionário do Mês (7 últimos diferentes + 2 vizinhos)</option>
+                        <option value="QUENTES">Números Quentes (Mais saindo)</option>
+                        <option value="FRIOS">Números Frios (Menos saindo)</option>
+                        <option value="AMBOS">Quentes e Frios</option>
+                        <option value="IA_ENGINE" style="color: #ff9800; font-weight: bold;">🤖 IA - Caçadora de Padrões (Probabilidade)</option>
+                        <option value="IA_PLENO" style="color: #00bcd4; font-weight: bold;">🎯 IA - Caçadora de I.A Fortuna X (Straight Up)</option>
+                        <option value="SEGUIDORES">NÚMEROS QUE SE PUXAM (Frequência de Saída)</option>
+                    </select>
+                </div>
+                
+                <!-- Campos para IA -->
+                <div id="camposIA" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid #ff9800;">
+                    <h3 style="color: #ff9800; margin-bottom: 15px; font-size: 1.1em;">🧠 Parâmetros da Inteligência Artificial</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Assertividade Mínima (%)</label>
+                            <input type="number" class="form-input" id="inputIAAssertividade" value="75" min="50" max="100">
+                            <small style="color: #888;">Aposta apenas se o padrão tiver esta taxa de acerto.</small>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Máximo de Gales (IA)</label>
+                            <input type="number" class="form-input" id="inputIAGales" value="1" min="0" max="3">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Áreas de Atuação Permitidas</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="iaCheckColunas" checked> <span>Colunas / Dúzias</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="iaCheckCores" checked> <span>Cores (Preto/Vermelho)</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="iaCheckVizinhos" checked> <span>Vizinhos do Zero / Órfãos</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="iaCheckPlenos"> <span>Números Plenos (Mais Risco)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="alert-info" style="margin-top: 15px;">
+                        <strong>ℹ️ Nota sobre a análise:</strong> A IA utilizará o seletor de rodadas configurado no histórico do Bot para definir o tamanho da amostra de análise.
+                    </div>
+                </div>
+
+                <!-- Campos para Frequência (Seguidores) -->
+                <div id="camposFrequencia" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid #25d366;">
+                    <h3 style="color: #25d366; margin-bottom: 15px; font-size: 1.1em;">📈 Parâmetros de Frequência</h3>
+                    <div class="form-group">
+                        <label class="form-label">Mínimo de Aparições (Batidas em 500 rodadas)</label>
+                        <input type="number" class="form-input" id="inputBatidas" value="15" min="1" max="500">
+                        <small style="color: #888;">Só aposta se o último número tiver saído pelo menos este número de vezes no histórico analisado.</small>
+                    </div>
+                </div>
+                
+                <!-- Campos Comuns -->
+                <div id="camposComum" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: #cc0000; font-size: 1.1em; margin: 0;">🎯 Configuração de Gatilhos</h3>
+                        <button type="button" class="btn btn-primary btn-small" onclick="adicionarAposta()">➕ Adicionar Gatilho</button>
+                    </div>
+                    
+                    <div id="listaApostas"></div>
+                </div>
+
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #cc0000; margin-bottom: 15px; font-size: 1.1em;">⚙️ Configurações Gerais</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Rodadas para Aguardar (Entrada na Mesa)</label>
+                            <input type="number" class="form-input" id="inputRodadasAguardar" value="0" min="0" max="20">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Rodadas para Aguardar (Após Green)</label>
+                            <input type="number" class="form-input" id="inputRodadasAposGreen" value="0" min="0" max="20">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos para Estratégias Especiais -->
+                <div id="camposEspecial" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                    <h3 style="color: #cc0000; margin-bottom: 15px; font-size: 1.1em;">🎯 Configuração Especial (Admin)</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Quantidade de Vizinhos</label>
+                            <input type="number" class="form-input" id="inputVizinhos" value="2" min="0" max="5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Multiplicador G1 (Gale)</label>
+                            <input type="number" class="form-input" id="inputGaleEspecial" value="0" min="0" max="10">
+                            <small style="color: #888;">Deixe 0 para ignorar Gale no Admin.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="alert" style="background: #1a0000; border: 1px solid #cc0000; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                        <strong style="color: #cc0000;">⚠️ Importante:</strong>
+                        <p style="color: #999; font-size: 0.9em; margin-top: 5px;">
+                            Se você configurou o Gale e as Rodadas diretamente no Bot (lado do cliente), pode deixar estes campos como <b>0</b> aqui no Admin para não haver conflito.
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="button" class="btn btn-primary" onclick="salvarEstrategia()">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalEstrategia()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+const SUPABASE_URL = 'https://vfmzxgznrgwnzghqaaau.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbXp4Z3pucmd3bnpnaHFhYWF1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjAxNTUzNiwiZXhwIjoyMDgxNTkxNTM2fQ.t-MCR6v0onhFLDAk9KgpzK_9NdT3NZ2SirQP2QV-h2k';
+
+let usuarios = [];
+let estrategias = [];
+let usuarioEditando = null;
+
+async function fazerRequisicao(tabela, metodo = 'GET', dados = null) {
+    const url = `${SUPABASE_URL}/rest/v1/${tabela}`;
+    const opcoes = {
+        method: metodo,
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=representation'
+        }
+    };
+    if (dados) opcoes.body = JSON.stringify(dados);
+    
+    const res = await fetch(url, opcoes);
+    if (!res.ok) throw new Error(`Erro ${res.status}`);
+    const contentType = res.headers.get('Content-Type') || '';
+    if (res.status === 204 || !contentType.toLowerCase().includes('application/json')) {
+        return null;
+    }
+    return await res.json();
+}
+
+function gerarToken() {
+    return 'FRT-' + Math.random().toString(36).substr(2, 9).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+}
+
+async function listarAuthUsers(page = 1, perPage = 1000) {
+    const url = `${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=${perPage}`;
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+}
+
+async function carregarDados() {
+    try {
+        const pUsuariosBase = fazerRequisicao('usuarios_view').catch(async () => {
+            return fazerRequisicao('usuarios').catch(() => []);
+        });
+        const pEstrategias = fazerRequisicao('estrategias').catch(() => []);
+        const pAuthUsers = listarAuthUsers().catch(() => []);
+        const [resUsuariosBase, resEstrategias, resAuthUsers] = await Promise.all([pUsuariosBase, pEstrategias, pAuthUsers]);
+        usuarios = Array.isArray(resUsuariosBase) ? resUsuariosBase : [];
+        estrategias = Array.isArray(resEstrategias) ? resEstrategias : [];
+        const authUsers = Array.isArray(resAuthUsers) ? resAuthUsers : [];
+        let perfis = [];
+        try {
+            perfis = await fazerRequisicao('usuarios').catch(() => []);
+        } catch (_) {
+            perfis = [];
+        }
+        if (Array.isArray(perfis) && perfis.length > 0) {
+            const mapa = new Map(perfis.map(p => [p.id, p]));
+            const mapaAuth = new Map(authUsers.map(a => [a.id, a]));
+            usuarios = usuarios.map(u => {
+                const p = mapa.get(u.id);
+                const a = mapaAuth.get(u.id);
+                const metaAuth = (a && a.raw_user_meta_data) ? a.raw_user_meta_data : ((a && a.user_metadata) ? a.user_metadata : null);
+                const uMeta = u.raw_user_meta_data || u.user_metadata || {};
+                const combinedMeta = Object.assign({}, uMeta, metaAuth || {});
+                return {
+                    ...u,
+                    installation_id: (p && p.installation_id != null) ? p.installation_id : u.installation_id,
+                    active: (p && p.active != null) ? p.active : u.active,
+                    nome: u.nome ?? (p && p.nome) ?? (combinedMeta.nome) ?? null,
+                    email: u.email ?? (p && p.email) ?? (a && a.email) ?? null,
+                    user_metadata: combinedMeta
+                };
+            });
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar dados:', erro);
+        usuarios = usuarios || [];
+        estrategias = estrategias || [];
+    }
+}
+
+async function mostrarUsuarios() {
+    const contentArea = document.getElementById('contentArea');
+    document.getElementById('pageTitle').textContent = 'Usuários';
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+    
+    contentArea.innerHTML = '<div style="text-align:center; padding: 50px; color: #cc0000;">⌛ Carregando usuários...</div>';
+    
+    try {
+        await carregarDados();
+        
+        let todosVinculos = [];
+        try {
+            todosVinculos = await fazerRequisicao('usuario_estrategias').catch(() => []);
+        } catch (e) {
+            console.error('Erro ao buscar vínculos:', e);
+        }
+        
+        let html = `
+            <div class="actions-bar">
+                <input type="text" class="search-box" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios(this.value)">
+                <button class="btn btn-primary" onclick="abrirModalNovo()">➕ Novo Usuário</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Data Cadastro</th>
+                        <th>Vencimento</th>
+                        <th>Máquina</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaUsuarios">
+        `;
+        
+        if (!usuarios || usuarios.length === 0) {
+            html += '<tr><td colspan="6" style="text-align:center; padding: 20px; color: #999;">Nenhum usuário encontrado.</td></tr>';
+        } else {
+            usuarios.forEach(u => {
+                const vinculadas = Array.isArray(todosVinculos) ? todosVinculos.filter(v => v.usuario_id === u.id) : [];
+                const meta = u.user_metadata || {};
+                const machineId = u.installation_id || meta.active_installation_id || meta.installation_id || u.hwid || u.machine_id || u.device_id || meta.hwid || meta.active_client_id || '';
+                const dataCadastro = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : 'N/A';
+                
+                // Tratar a data de vencimento que vem do banco
+                let vencimentoFormatado = 'Vitalício';
+                const valRaw = u.data_vencimento || meta.data_vencimento;
+                if (valRaw) {
+                    // Evitar erro de timezone no JS (quando o banco guarda "YYYY-MM-DD")
+                    const d = valRaw.includes('T') ? new Date(valRaw) : new Date(valRaw + 'T12:00:00');
+                    if (!isNaN(d.getTime())) {
+                        vencimentoFormatado = d.toLocaleDateString('pt-BR');
+                    }
+                }
+
+                html += `
+                    <tr>
+                        <td>${u.nome || 'Sem nome'}<br><span class="badge" style="margin-top:4px; font-size:10px">${vinculadas.length} estratégias</span></td>
+                        <td>${u.email}<br><code style="color: #cc0000; font-size: 11px;">${u.token || 'N/A'}</code></td>
+                        <td style="color: #ccc;">${dataCadastro}</td>
+                        <td style="color: #ff9800; font-weight: bold;">${vencimentoFormatado}</td>
+                        <td><code style="color: #66ccff; font-size: 11px;">${machineId || 'Não vinculado'}</code></td>
+                        <td>
+                            <button class="btn btn-secondary btn-small" onclick="editarUsuario('${u.id}')">✏️ Editar</button>
+                            <button class="btn btn-secondary btn-small" onclick="deletarUsuario('${u.id}','${u.email}')">🗑️ Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        contentArea.innerHTML = html;
+    } catch (erro) {
+        console.error('Erro ao renderizar usuários:', erro);
+        contentArea.innerHTML = `<div style="text-align:center; padding: 50px; color: #cc0000;">❌ Erro ao carregar dados: ${erro.message}</div>`;
+    }
+}
+
+async function mostrarEstrategias() {
+    const contentArea = document.getElementById('contentArea');
+    document.getElementById('pageTitle').textContent = 'Estratégias';
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
+    
+    contentArea.innerHTML = '<div style="text-align:center; padding: 50px; color: #cc0000;">⌛ Carregando estratégias...</div>';
+    
+    try {
+        await carregarDados();
+        
+        let html = `
+            <div class="actions-bar">
+                <input type="text" class="search-box" placeholder="🔍 Buscar estratégia..." onkeyup="filtrarEstrategias(this.value)">
+                <button class="btn btn-primary" onclick="abrirModalNovaEstrategia()">➕ Nova Estratégia</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Gatilhos</th>
+                        <th>Criado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaEstrategias">
+        `;
+        
+        if (!estrategias || estrategias.length === 0) {
+            html += '<tr><td colspan="4" style="text-align:center; padding: 20px; color: #999;">Nenhuma estratégia encontrada.</td></tr>';
+        } else {
+            estrategias.forEach(e => {
+                const numGatilhos = Array.isArray(e.gatilhos) ? e.gatilhos.length : 0;
+                const dataCriacao = e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR') : 'N/A';
+                html += `
+                    <tr>
+                        <td>${e.nome}</td>
+                        <td><span class="badge">${numGatilhos} gatilhos</span></td>
+                        <td>${dataCriacao}</td>
+                        <td>
+                            <button class="btn btn-secondary btn-small" onclick="visualizarEstrategia('${e.id}')">👁️ Ver</button>
+                            <button class="btn btn-secondary btn-small" onclick="editarEstrategia('${e.id}')">✏️ Editar</button>
+                            <button class="btn btn-secondary btn-small" onclick="deletarEstrategia('${e.id}', '${e.nome}')">🗑️ Deletar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        contentArea.innerHTML = html;
+    } catch (erro) {
+        console.error('Erro ao mostrar estratégias:', erro);
+        contentArea.innerHTML = `<div style="text-align:center; padding: 50px; color: #cc0000;">❌ Erro ao carregar estratégias: ${erro.message}</div>`;
+    }
+}
+
+function filtrarEstrategias(termo) {
+    const linhas = document.querySelectorAll('#tabelaEstrategias tr');
+    linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(termo.toLowerCase()) ? '' : 'none';
+    });
+}
+
+let apostasLista = [];
+
+function atualizarCamposEstrategia() {
+    const tipo = document.getElementById('inputTipoEstrategia').value;
+    const camposComum = document.getElementById('camposComum');
+    const camposEspecial = document.getElementById('camposEspecial');
+    const camposIA = document.getElementById('camposIA');
+    const camposFrequencia = document.getElementById('camposFrequencia');
+    
+    // Reset
+    camposComum.style.display = 'none';
+    camposEspecial.style.display = 'none';
+    camposIA.style.display = 'none';
+    camposFrequencia.style.display = 'none';
+
+    if (tipo === 'COMUM') {
+        camposComum.style.display = 'block';
+    } else if (tipo === 'IA_ENGINE' || tipo === 'IA_PLENO') {
+        camposIA.style.display = 'block';
+    } else if (tipo === 'SEGUIDORES') {
+        camposFrequencia.style.display = 'block';
+        camposEspecial.style.display = 'block';
+    } else {
+        camposEspecial.style.display = 'block';
+    }
+}
+
+function adicionarAposta() {
+    const aposta = {
+        id: Date.now(),
+        legenda: '',
+        numeros: '',
+        repeticoes: 0,
+        qtdGales: 0,
+        qtdCiclos: 0,
+        gales: [],
+        ciclos: []
+    };
+    apostasLista.push(aposta);
+    renderizarApostas();
+}
+
+function removerAposta(id) {
+    apostasLista = apostasLista.filter(a => a.id !== id);
+    renderizarApostas();
+}
+
+function renderizarApostas() {
+    const container = document.getElementById('listaApostas');
+    
+    if (apostasLista.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Nenhum gatilho adicionado. Clique em "Adicionar Gatilho" para começar.</p>';
+        return;
+    }
+    
+    let html = '';
+    apostasLista.forEach((aposta, index) => {
+        if (!aposta.gales) aposta.gales = [];
+        if (!aposta.ciclos) aposta.ciclos = [];
+        if (aposta.tipoSecundario === undefined) aposta.tipoSecundario = 'NENHUM';
+        
+        html += `
+            <div class="aposta-card" style="border: 2px solid #333; background: #0a0a0a; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <div class="aposta-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+                    <span class="aposta-card-title" style="color: #cc0000; font-weight: bold; font-size: 1.1em;">Configuração do Gatilho #${index + 1}</span>
+                    <button type="button" class="btn-remove" onclick="removerAposta(${aposta.id})" style="background: #cc0000; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">🗑️ REMOVER</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" style="color: #fff; font-weight: bold;">Legenda de Aposta</label>
+                    <input type="text" class="form-input" value="${aposta.legenda || ''}" 
+                           onchange="apostasLista[${index}].legenda = this.value"
+                           placeholder="Ex: D1, VIZINHOS DA C2">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" style="color: #fff; font-weight: bold;">Números para Apostar (Gatilhos)</label>
+                    <input type="text" class="form-input" value="${aposta.numeros || ''}"
+                           onchange="apostasLista[${index}].numeros = this.value"
+                           placeholder="Ex: 0,32,15,19,4,21,2,25,17,34">
+                    <small style="color: #888;">Separe os números por vírgula ou use nomes como 'Vizinhos da C2'</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" style="color: #fff; font-weight: bold;">Repetições</label>
+                    <input type="number" class="form-input" value="${aposta.repeticoes || 1}" 
+                           onchange="apostasLista[${index}].repeticoes = parseInt(this.value)" min="1" max="20">
+                    <small style="color: #888;">Quantas vezes o gatilho deve se repetir antes de entrar</small>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                    <div>
+                        <label class="form-label" style="color: #ff9800; font-weight: bold;">Gale</label>
+                        <input type="number" class="form-input" value="${aposta.qtdGales || 0}" 
+                               onchange="apostasLista[${index}].qtdGales = parseInt(this.value); if(parseInt(this.value) > 0) apostasLista[${index}].tipoSecundario = 'GALE'; renderizarApostas();" 
+                               placeholder="Qtd (ex: 3)" min="0" max="10">
+                    </div>
+                    <div>
+                        <label class="form-label" style="color: #2196f3; font-weight: bold;">Ciclo</label>
+                        <input type="number" class="form-input" value="${aposta.qtdCiclos || 0}" 
+                               onchange="apostasLista[${index}].qtdCiclos = parseInt(this.value); if(parseInt(this.value) > 0) apostasLista[${index}].tipoSecundario = 'CICLO'; renderizarApostas();" 
+                               placeholder="Qtd (ex: 3)" min="0" max="10">
+                    </div>
+                </div>
+
+                ${aposta.qtdGales > 0 ? `
+                    <div style="margin-top: 15px; background: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h4 style="color: #ff9800; margin-bottom: 10px; font-size: 0.9em;">💰 VALORES DAS FICHAS (GALE)</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
+                            ${Array.from({length: aposta.qtdGales}, (_, i) => {
+                                if (aposta.gales[i] === undefined) aposta.gales[i] = 1;
+                                return `
+                                    <div class="ficha-input-box">
+                                        <label style="color: #ff9800; font-size: 0.75em;">G${i + 1}</label>
+                                        <input type="number" class="form-input" value="${aposta.gales[i]}" 
+                                               onchange="apostasLista[${index}].gales[${i}] = parseInt(this.value)"
+                                               min="1" style="padding: 8px; font-size: 0.9em;">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${aposta.qtdCiclos > 0 ? `
+                    <div style="margin-top: 15px; background: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <h4 style="color: #2196f3; margin-bottom: 10px; font-size: 0.9em;">🔄 VALORES DAS FICHAS (CICLO)</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
+                            ${Array.from({length: aposta.qtdCiclos}, (_, i) => {
+                                if (aposta.ciclos[i] === undefined) aposta.ciclos[i] = 1;
+                                return `
+                                    <div class="ficha-input-box">
+                                        <label style="color: #2196f3; font-size: 0.75em;">C${i + 1}</label>
+                                        <input type="number" class="form-input" value="${aposta.ciclos[i]}" 
+                                               onchange="apostasLista[${index}].ciclos[${i}] = parseInt(this.value)"
+                                               min="1" style="padding: 8px; font-size: 0.9em;">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function abrirModalNovaEstrategia() {
+    estrategiaEditando = null;
+    apostasLista = [];
+    document.getElementById('modalTitleEst').textContent = 'Nova Estratégia';
+    document.getElementById('inputNomeEst').value = '';
+    document.getElementById('inputTipoEstrategia').value = 'COMUM';
+    document.getElementById('inputRodadasAguardar').value = '0';
+    document.getElementById('inputRodadasAposGreen').value = '0';
+    document.getElementById('inputVizinhos').value = '0';
+    document.getElementById('inputBatidas').value = '15';
+    atualizarCamposEstrategia();
+    renderizarApostas();
+    document.getElementById('modalEstrategia').classList.add('active');
+}
+
+let estrategiaEditando = null;
+
+async function editarEstrategia(estId) {
+    estrategiaEditando = estrategias.find(e => e.id === estId);
+    if (!estrategiaEditando) return;
+    
+    document.getElementById('modalTitleEst').textContent = 'Editar Estratégia';
+    document.getElementById('inputNomeEst').value = estrategiaEditando.nome;
+    
+    // Detectar tipo de estratégia
+    const gatilho = estrategiaEditando.gatilhos[0];
+    let tipo = 'COMUM';
+    
+    if (gatilho?.apostaEm?.includes('FUNCIONARIO_MES')) {
+        tipo = 'FUNCIONARIO_MES';
+    } else if (gatilho?.apostaEm?.includes('QUENTES')) {
+        tipo = 'QUENTES';
+    } else if (gatilho?.apostaEm?.includes('FRIOS')) {
+        tipo = 'FRIOS';
+    } else if (gatilho?.apostaEm?.includes('AMBOS')) {
+        tipo = 'AMBOS';
+    } else if (gatilho?.configEspecial?.tipo === 'IA_ENGINE') {
+        tipo = 'IA_ENGINE';
+    } else if (gatilho?.configEspecial?.tipo === 'IA_PLENO') {
+        tipo = 'IA_PLENO';
+    } else if (gatilho?.apostaEm?.includes('SEGUIDORES')) {
+        tipo = 'SEGUIDORES';
+    }
+    
+    document.getElementById('inputTipoEstrategia').value = tipo;
+    
+    // Preencher campos comuns
+    const esperarRodadas = gatilho?.configEspecial?.esperarRodadas || 0;
+    const esperarRodadasAposGreen = gatilho?.configEspecial?.esperarRodadasAposGreen || 0;
+    
+    document.getElementById('inputRodadasAguardar').value = esperarRodadas;
+    document.getElementById('inputRodadasAposGreen').value = esperarRodadasAposGreen;
+    
+    if (tipo === 'COMUM') {
+        // Carregar todas as apostas (gatilhos)
+        apostasLista = estrategiaEditando.gatilhos.map((g, index) => {
+            const m = g.multiplicadores || [1];
+            const fichasSecundarias = m.slice(1); // Remove a entrada (1x)
+            
+            return {
+                id: Date.now() + index,
+                legenda: g.legenda || '',
+                numeros: Array.isArray(g.apostaEm) ? g.apostaEm.join(',') : (g.apostaEm || ''),
+                repeticoes: g.repeticoes || 1,
+                tipoSecundario: g.tipo || 'NENHUM',
+                qtdGales: g.tipo === 'GALE' ? (g.etapas || fichasSecundarias.length) : 0,
+                qtdCiclos: g.tipo === 'CICLO' ? (g.etapas || fichasSecundarias.length) : 0,
+                gales: g.tipo === 'GALE' ? fichasSecundarias : [],
+                ciclos: g.tipo === 'CICLO' ? fichasSecundarias : []
+            };
+        });
+        renderizarApostas();
+    } else if (tipo === 'IA_ENGINE' || tipo === 'IA_PLENO') {
+        document.getElementById('inputIAAssertividade').value = gatilho?.configEspecial?.assertividadeMinima || 75;
+        document.getElementById('inputIAGales').value = gatilho?.etapas || 1;
+        
+        const areas = gatilho?.configEspecial?.areasPermitidas || [];
+        document.getElementById('iaCheckColunas').checked = areas.includes('COLUNAS') || areas.includes('DUZIAS');
+        document.getElementById('iaCheckCores').checked = areas.includes('CORES');
+        document.getElementById('iaCheckVizinhos').checked = areas.includes('VIZINHOS_ZERO') || areas.includes('ORFAOS');
+        document.getElementById('iaCheckPlenos').checked = areas.includes('PLENOS');
+    } else if (tipo === 'SEGUIDORES') {
+        document.getElementById('inputBatidas').value = gatilho?.configEspecial?.batidas || 15;
+        document.getElementById('inputVizinhos').value = gatilho?.configEspecial?.vizinhos || 1;
+    } else {
+        document.getElementById('inputVizinhos').value = gatilho?.configEspecial?.vizinhos || 2;
+    }
+    
+    atualizarCamposEstrategia();
+    document.getElementById('modalEstrategia').classList.add('active');
+}
+
+async function visualizarEstrategia(estId) {
+    const est = estrategias.find(e => e.id === estId);
+    if (!est) return;
+    
+    let html = `
+        <div style="max-width: 800px;">
+            <span class="back-btn" onclick="mostrarEstrategias()" style="cursor: pointer; color: #cc0000; font-weight: bold; margin-bottom: 20px; display: block;">← Voltar</span>
+            <div style="background: #111; border: 1px solid #cc0000; border-radius: 12px; padding: 30px; margin-top: 20px;">
+                <h2 style="color: #cc0000; margin-bottom: 20px;">${est.nome}</h2>
+                
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #cc0000; margin-bottom: 15px;">📋 Informações</h3>
+                    <p style="color: #999; margin-bottom: 10px;"><strong>ID:</strong> <code style="color: #666;">${est.id}</code></p>
+                    <p style="color: #999; margin-bottom: 10px;"><strong>Criado em:</strong> ${new Date(est.criado_em).toLocaleString('pt-BR')}</p>
+                    <p style="color: #999;"><strong>Atualizado em:</strong> ${est.atualizado_em ? new Date(est.atualizado_em).toLocaleString('pt-BR') : 'Nunca'}</p>
+                </div>
+                
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #cc0000; margin-bottom: 15px;">🎯 Gatilhos (${Array.isArray(est.gatilhos) ? est.gatilhos.length : 0})</h3>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${est.gatilhos.map((g, i) => `
+                            <div style="background: #0a0a0a; padding: 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #cc0000;">
+                                <p style="color: #fff; margin-bottom: 5px;"><strong>#${i + 1} - ${g.legenda || 'Sem legenda'}</strong></p>
+                                <p style="color: #888; font-size: 0.9em;">Tipo: ${g.tipo} | Etapas: ${g.etapas}</p>
+                                <p style="color: #888; font-size: 0.9em;">Aposta em: ${g.apostaEm?.join(', ')}</p>
+                                <p style="color: #888; font-size: 0.9em;">Multiplicadores: ${g.multiplicadores?.join(', ')}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="editarEstrategia('${est.id}')">✏️ Editar</button>
+                    <button class="btn btn-secondary" onclick="mostrarEstrategias()">Voltar</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('contentArea').innerHTML = html;
+}
+
+async function salvarEstrategia() {
+    const nome = document.getElementById('inputNomeEst').value;
+    const tipo = document.getElementById('inputTipoEstrategia').value;
+    const rodadasAguardar = parseInt(document.getElementById('inputRodadasAguardar').value) || 0;
+    const rodadasAposGreen = parseInt(document.getElementById('inputRodadasAposGreen').value) || 0;
+    
+    if (!nome) {
+        alert('Preencha o nome da estratégia');
+        return;
+    }
+    
+    let gatilhos = [];
+    const legendas = [];
+    
+    try {
+        if (tipo === 'COMUM') {
+            if (apostasLista.length === 0) {
+                alert('Adicione pelo menos um gatilho');
+                return;
+            }
+            
+            for (const aposta of apostasLista) {
+                if (!aposta.numeros) {
+                    alert('Preencha os números em todos os gatilhos');
+                    return;
+                }
+                
+                // Inversão solicitada: Legenda aciona, Numeros (Gatilhos) aposta
+                const acionadores = aposta.legenda.split(/[\s,]+/).map(n => n.trim()).filter(n => n !== '');
+                const numerosAposta = aposta.numeros.split(/[\s,]+/).map(n => n.trim()).filter(n => n !== '');
+                
+                // Montar multiplicadores: Entrada (1) + Secundários
+                let multiplicadores = [1];
+                let etapas = 0;
+                let tipoGatilho = 'NENHUM';
+
+                if (aposta.tipoSecundario === 'GALE') {
+                    tipoGatilho = 'GALE';
+                    etapas = aposta.qtdGales;
+                    // O multiplicador inicial é sempre 1x. Os Gales vêm depois.
+                    multiplicadores = [1, ...(aposta.gales.slice(0, aposta.qtdGales).map(v => parseInt(v) || 1))];
+                } else if (aposta.tipoSecundario === 'CICLO') {
+                    tipoGatilho = 'CICLO';
+                    etapas = aposta.qtdCiclos;
+                    multiplicadores = [1, ...(aposta.ciclos.slice(0, aposta.qtdCiclos).map(v => parseInt(v) || 1))];
+                }
+                
+                gatilhos.push({
+                    tipo: tipoGatilho,
+                    etapas: etapas,
+                    legenda: aposta.legenda, // Mantém para referência visual
+                    acionadores: acionadores, // Novos campos para clareza
+                    apostaEm: numerosAposta,  // Os números reais que o bot vai clicar
+                    repeticoes: aposta.repeticoes || 1,
+                    configEspecial: {
+                        tipo: 'AUTONOMO',
+                        esperarRodadas: rodadasAguardar,
+                        esperarRodadasAposGreen: rodadasAposGreen
+                    },
+                    multiplicadores: multiplicadores
+                });
+            }
+        } else if (tipo === 'IA_ENGINE' || tipo === 'IA_PLENO') {
+            // Nova Estratégia de IA
+            const assertividade = parseInt(document.getElementById('inputIAAssertividade').value) || 75;
+            const maxGales = parseInt(document.getElementById('inputIAGales').value) || 1;
+            
+            const areasPermitidas = [];
+            if (document.getElementById('iaCheckColunas').checked) areasPermitidas.push('COLUNAS', 'DUZIAS');
+            if (document.getElementById('iaCheckCores').checked) areasPermitidas.push('CORES');
+            if (document.getElementById('iaCheckVizinhos').checked) areasPermitidas.push('VIZINHOS_ZERO', 'ORFAOS');
+            if (document.getElementById('iaCheckPlenos').checked) areasPermitidas.push('PLENOS');
+
+            const progressaoRecuperacao = [1, 1, 1, 2, 2, 3, 4, 6, 9, 12];
+            const listaMultiplicadores = tipo === 'IA_PLENO' 
+                ? progressaoRecuperacao.slice(0, maxGales + 1)
+                : Array.from({length: maxGales + 1}, (_, i) => Math.pow(3, i));
+
+            gatilhos.push({
+                tipo: 'GALE',
+                etapas: maxGales,
+                legenda: tipo === 'IA_PLENO' ? 'Motor de I.A Fortuna X (Straight Up)' : 'Motor de Probabilidade IA',
+                apostaEm: ['IA_DYNAMIC'], // Sinaliza para o background.js usar o motor de IA
+                repeticoes: 1,
+                configEspecial: {
+                    tipo: tipo,
+                    assertividadeMinima: assertividade,
+                    areasPermitidas: areasPermitidas,
+                    esperarRodadas: rodadasAguardar,
+                    esperarRodadasAposGreen: rodadasAposGreen
+                },
+                multiplicadores: listaMultiplicadores
+            });
+        } else {
+            // Estratégias especiais (Funcionário do Mês, Quentes, Frios, Ambos, Seguidores)
+            const batidas = tipo === 'SEGUIDORES' ? (parseInt(document.getElementById('inputBatidas').value) || 15) : 0;
+            const vizinhos = parseInt(document.getElementById('inputVizinhos').value) || 0;
+            
+            // Tratamento para permitir valor 0 (zero) sem cair no default || 3 ou || 5
+            const rawGale = document.getElementById('inputGaleEspecial').value;
+            const galeEspecial = rawGale === "" ? 3 : parseInt(rawGale);
+            
+            const rawRodadas = document.getElementById('inputRodadasAguardar').value;
+            const rodadasAguardarEsp = rawRodadas === "" ? (tipo === 'SEGUIDORES' ? 1 : 5) : parseInt(rawRodadas);
+
+            let apostaEm = [tipo];
+            let legenda = tipo === 'SEGUIDORES' ? 'Estratégia: Números que se puxam' : `Automático: ${tipo}`;
+            let multiplicadores = [1, galeEspecial]; 
+            let tipoGatilho = tipo === 'FUNCIONARIO_MES' ? 'CICLO' : 'GALE';
+            
+            gatilhos.push({
+                tipo: tipoGatilho,
+                etapas: 1,
+                legenda: legenda,
+                apostaEm: apostaEm,
+                repeticoes: tipo === 'FUNCIONARIO_MES' ? 2 : 1,
+                configEspecial: {
+                    tipo: 'AUTONOMO',
+                    batidas: batidas,
+                    esperarRodadas: rodadasAguardarEsp,
+                    esperarRodadasAposGreen: rodadasAposGreen,
+                    vizinhos: vizinhos,
+                    multiplicadorGale: galeEspecial
+                },
+                multiplicadores: multiplicadores
+            });
+        }
+        
+        // Salvar no banco
+        if (estrategiaEditando) {
+            await fazerRequisicao(`estrategias?id=eq.${estrategiaEditando.id}`, 'PATCH', {
+                nome,
+                gatilhos,
+                legendas,
+                atualizado_em: new Date().toISOString()
+            });
+            alert('✅ Estratégia atualizada!');
+        } else {
+            await fazerRequisicao('estrategias', 'POST', {
+                nome,
+                gatilhos,
+                legendas
+            });
+            alert('✅ Estratégia criada!');
+        }
+        
+        fecharModalEstrategia();
+        mostrarEstrategias();
+    } catch (erro) {
+        alert('❌ Erro: ' + erro.message);
+        console.error(erro);
+    }
+}
+
+async function deletarEstrategia(estId, nome) {
+    if (!confirm(`Tem certeza que deseja deletar a estratégia "${nome}"?`)) return;
+    
+    try {
+        // Deletar vínculos primeiro
+        await fazerRequisicao(`usuario_estrategias?estrategia_id=eq.${estId}`, 'DELETE');
+        
+        // Deletar estratégia
+        await fazerRequisicao(`estrategias?id=eq.${estId}`, 'DELETE');
+        
+        alert('✅ Estratégia deletada!');
+        mostrarEstrategias();
+    } catch (erro) {
+        alert('❌ Erro: ' + erro.message);
+    }
+}
+
+function fecharModalEstrategia() {
+    document.getElementById('modalEstrategia').classList.remove('active');
+}
+
+function isEstrategiaComum(est) {
+    const estrategiasPrecriadas = ['👔 Funcionário do Mês', '🔥 Números Quentes', '❄️ Números Frios', '🔥❄️ Números Quentes e Frios', 'I.A Fortuna X', 'IA Engine'];
+    
+    // 1. Verificar pelo nome (caso sejam as automáticas fixas)
+    if (estrategiasPrecriadas.some(nome => est.nome.includes(nome))) return false;
+
+    // 2. Verificar se os gatilhos sinalizam IA ou automação dinâmica
+    const gatilhos = est.gatilhos || [];
+    const isDinamica = gatilhos.some(g => {
+        // Caso 1: Estrutura do modal de admin.html
+        const isIA_Admin = g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO');
+        const apostaEm = Array.isArray(g.apostaEm) ? g.apostaEm : [];
+        const isAuto_Admin = apostaEm.some(tag => ['IA_DYNAMIC', 'DYNAMIC_FUNCIONARIO', 'QUENTES', 'FRIOS', 'AMBOS', 'FUNCIONARIO_MES', 'SEGUIDORES'].includes(tag));
+        
+        // Caso 2: Estrutura da página estrategias.html
+        const isDinamica_Page = g.modo === 'DINAMICA';
+        const isIA_Page = g.tipoEspecial && ['IA_ENGINE', 'IA_PLENO', 'IA_FORTUNA_X'].includes(g.tipoEspecial);
+        
+        return isIA_Admin || isAuto_Admin || isDinamica_Page || isIA_Page;
+    });
+
+    return !isDinamica;
+}
+
+function abrirModalNovo() {
+    usuarioEditando = null;
+    document.getElementById('modalTitle').textContent = 'Novo Usuário';
+    document.getElementById('inputNome').value = '';
+    document.getElementById('inputEmail').value = '';
+    document.getElementById('inputSenha').value = '';
+    document.getElementById('inputToken').value = gerarToken();
+    document.getElementById('inputHwid').value = '';
+    document.getElementById('inputValidade').value = '';
+    
+    // Checkboxes estratégias
+    let html = '';
+    
+    if (estrategias.length === 0) {
+        html = '<p style="color: #666; font-size: 0.9em; padding: 10px;">Nenhuma estratégia encontrada.</p>';
+    } else {
+        estrategias.forEach(e => {
+            html += `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="est-${e.id}" value="${e.id}">
+                    <label for="est-${e.id}">${e.nome}</label>
+                </div>
+            `;
+        });
+    }
+    document.getElementById('estrategiasCheckbox').innerHTML = html;
+    
+    document.getElementById('modalUsuario').classList.add('active');
+}
+
+async function editarUsuario(userId) {
+    usuarioEditando = usuarios.find(u => u.id === userId);
+    if (!usuarioEditando) return;
+    
+    document.getElementById('modalTitle').textContent = 'Editar Usuário';
+    document.getElementById('inputNome').value = usuarioEditando.nome || '';
+    document.getElementById('inputEmail').value = usuarioEditando.email;
+    document.getElementById('inputSenha').value = '';
+    document.getElementById('inputToken').value = usuarioEditando.token || '';
+    (function preencherHwidInicial() {
+        const meta = usuarioEditando.user_metadata || {};
+        const preferencia = [
+            usuarioEditando.installation_id,
+            meta.active_installation_id,
+            meta.installation_id,
+            meta.hwid,
+            usuarioEditando.hwid,
+            usuarioEditando.machine_id,
+            meta.active_client_id
+        ];
+        document.getElementById('inputHwid').value = preferencia.find(v => !!v) || '';
+    })();
+    
+    try {
+        const perfil = await fazerRequisicao(`usuarios?id=eq.${userId}`).catch(() => []);
+        const p = Array.isArray(perfil) ? perfil[0] : perfil;
+        
+        if (p) {
+            if (p.installation_id && !document.getElementById('inputHwid').value) {
+                document.getElementById('inputHwid').value = p.installation_id;
+            }
+            if (p.data_vencimento) {
+                // Preencher campo date formatado (YYYY-MM-DD)
+                const valRaw = p.data_vencimento;
+                const d = valRaw.includes('T') ? new Date(valRaw) : new Date(valRaw + 'T12:00:00');
+                if (!isNaN(d.getTime())) {
+                    document.getElementById('inputValidade').value = d.toISOString().split('T')[0];
+                }
+            } else if (usuarioEditando.user_metadata?.data_vencimento) {
+                const valRaw = usuarioEditando.user_metadata.data_vencimento;
+                const d = valRaw.includes('T') ? new Date(valRaw) : new Date(valRaw + 'T12:00:00');
+                if (!isNaN(d.getTime())) {
+                    document.getElementById('inputValidade').value = d.toISOString().split('T')[0];
+                }
+            } else {
+                document.getElementById('inputValidade').value = '';
+            }
+        }
+        
+        const hwidInputVazio = !document.getElementById('inputHwid').value;
+        if (hwidInputVazio) {
+            const authUserArr = await listarAuthUsers().catch(() => []);
+            const a = Array.isArray(authUserArr) ? authUserArr.find(x => x.id === userId) : null;
+            const inst = a && a.user_metadata && (a.user_metadata.active_installation_id || a.user_metadata.installation_id || a.user_metadata.hwid || a.user_metadata.active_client_id);
+            if (inst) document.getElementById('inputHwid').value = inst;
+        }
+    } catch (_) {}
+    
+    // Carregar estratégias vinculadas
+    const vinculadas = await fazerRequisicao(`usuario_estrategias?usuario_id=eq.${userId}`);
+    const idsVinculadas = vinculadas.map(v => v.estrategia_id);
+    
+    // Checkboxes estratégias
+    let html = '';
+    if (estrategias.length === 0) {
+        html = '<p style="color: #666; font-size: 0.9em; padding: 10px;">Nenhuma estratégia encontrada.</p>';
+    } else {
+        estrategias.forEach(e => {
+            const checked = idsVinculadas.includes(e.id) ? 'checked' : '';
+            html += `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="est-${e.id}" value="${e.id}" ${checked}>
+                    <label for="est-${e.id}">${e.nome}</label>
+                </div>
+            `;
+        });
+    }
+    document.getElementById('estrategiasCheckbox').innerHTML = html;
+    
+    document.getElementById('modalUsuario').classList.add('active');
+}
+
+async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade) {
+    const payload = {
+        id: userId,
+        nome: nome || null,
+        email: email || null,
+        token: token || null,
+        installation_id: hwid || null,
+        data_vencimento: validade || null,
+        active_client_id: null,
+        active_updated_at: null
+    };
+
+    const tentativaPatch = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (tentativaPatch.ok) {
+        return;
+    }
+
+    const tentativaInsert = await fetch(`${SUPABASE_URL}/rest/v1/usuarios`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!tentativaInsert.ok) {
+        throw new Error(`Falha ao salvar perfil do usuário: ${tentativaInsert.status}`);
+    }
+}
+
+async function salvarUsuario() {
+    const nome = document.getElementById('inputNome').value;
+    const email = document.getElementById('inputEmail').value;
+    const senha = document.getElementById('inputSenha').value;
+    const token = document.getElementById('inputToken').value;
+    const hwid = document.getElementById('inputHwid').value;
+    const validade = document.getElementById('inputValidade').value;
+    
+    if (!email) {
+        alert('Preencha o email');
+        return;
+    }
+    
+    // Pegar estratégias selecionadas
+    const estrategiasSelecionadas = [];
+    document.querySelectorAll('#estrategiasCheckbox input:checked').forEach(cb => {
+        estrategiasSelecionadas.push(cb.value);
+    });
+    
+    try {
+        if (usuarioEditando) {
+            // Atualizar usuário existente
+            const url = `${SUPABASE_URL}/auth/v1/admin/users/${usuarioEditando.id}`;
+            const body = {
+                user_metadata: { nome, token, hwid, data_vencimento: validade }
+            };
+            if (senha) body.password = senha;
+            
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify(body)
+            });
+            
+            if (!res.ok) throw new Error('Erro ao atualizar');
+
+            await salvarPerfilUsuario(usuarioEditando.id, nome, email, token, hwid, validade);
+            
+            // Atualizar estratégias
+            await fazerRequisicao(`usuario_estrategias?usuario_id=eq.${usuarioEditando.id}`, 'DELETE');
+            if (estrategiasSelecionadas.length > 0) {
+                const vinculos = estrategiasSelecionadas.map(estId => ({
+                    usuario_id: usuarioEditando.id,
+                    estrategia_id: estId
+                }));
+                await fazerRequisicao('usuario_estrategias', 'POST', vinculos);
+            }
+            
+            alert('✅ Usuário atualizado!');
+        } else {
+            // Criar novo usuário
+            if (!senha) {
+                alert('Preencha a senha');
+                return;
+            }
+            
+            const url = `${SUPABASE_URL}/auth/v1/admin/users`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({
+                    email,
+                    password: senha,
+                    email_confirm: true,
+                    user_metadata: { nome, token, hwid, data_vencimento: validade }
+                })
+            });
+            
+            if (!res.ok) throw new Error('Erro ao criar usuário');
+            
+            const novoUsuario = await res.json();
+
+            await salvarPerfilUsuario(novoUsuario.id, nome, email, token, hwid, validade);
+            
+            // Vincular estratégias
+            if (estrategiasSelecionadas.length > 0) {
+                const vinculos = estrategiasSelecionadas.map(estId => ({
+                    usuario_id: novoUsuario.id,
+                    estrategia_id: estId
+                }));
+                await fazerRequisicao('usuario_estrategias', 'POST', vinculos);
+            }
+            
+            alert('✅ Usuário criado!');
+        }
+        
+        fecharModal();
+        mostrarUsuarios();
+    } catch (erro) {
+        alert('❌ Erro: ' + erro.message);
+    }
+}
+
+function fecharModal() {
+    document.getElementById('modalUsuario').classList.remove('active');
+}
+
+function filtrarUsuarios(termo) {
+    const linhas = document.querySelectorAll('#tabelaUsuarios tr');
+    linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(termo.toLowerCase()) ? '' : 'none';
+    });
+}
+
+async function deletarUsuario(userId, email) {
+    const confirmar = confirm(`Excluir o usuário ${email}? Esta ação removerá vínculos e o usuário no Auth.`);
+    if (!confirmar) return;
+    try {
+        await fazerRequisicao(`usuario_estrategias?usuario_id=eq.${userId}`, 'DELETE');
+        await fazerRequisicao(`usuarios?id=eq.${userId}`, 'DELETE');
+        const url = `${SUPABASE_URL}/auth/v1/admin/users/${userId}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        if (!res.ok && res.status !== 204) throw new Error(`Erro ${res.status}`);
+        alert('✅ Usuário excluído!');
+        mostrarUsuarios();
+    } catch (e) {
+        alert('❌ Erro: ' + e.message);
+    }
+}
+
+// ===== BACKUP EXPORTAR/IMPORTAR =====
+async function exportarBackup() {
+    try {
+        const titulo = document.getElementById('pageTitle').textContent;
+        const tabela = titulo === 'Usuários' ? 'usuarios' : 'estrategias';
+        
+        const dados = await fazerRequisicao(tabela);
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${tabela}_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        alert('❌ Erro ao exportar: ' + e.message);
+    }
+}
+
+async function importarBackup(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const dados = JSON.parse(e.target.result);
+            const titulo = document.getElementById('pageTitle').textContent;
+            const tabela = titulo === 'Usuários' ? 'usuarios' : 'estrategias';
+
+            if (!confirm(`Deseja importar ${dados.length} registros para ${tabela}?`)) return;
+
+            let sucessos = 0;
+            for (const item of dados) {
+                try {
+                    const res = await fetch(`${SUPABASE_URL}/rest/v1/${tabela}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: JSON.stringify(item)
+                    });
+                    if (res.ok) sucessos++;
+                } catch (err) { console.error(err); }
+            }
+
+            alert(`✅ Importação concluída! ${sucessos} registros importados.`);
+            if (tabela === 'usuarios') mostrarUsuarios(); else mostrarEstrategias();
+        } catch (err) {
+            alert('❌ Erro ao importar: ' + err.message);
+        }
+        input.value = '';
+    };
+    reader.readAsText(file);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await carregarDados();
+        mostrarUsuarios();
+    } catch (e) {
+        console.error('Erro inicial:', e);
+        document.getElementById('contentArea').innerHTML = `<div style="text-align:center; padding: 50px; color: #cc0000;">❌ Erro ao iniciar: ${e.message}</div>`;
+    }
+});
+    </script>
+</body>
+</html>

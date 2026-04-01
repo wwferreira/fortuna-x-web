@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rei dos Bots — Mobile</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .screen { width: 100%; max-width: 480px; padding: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #333; border-radius: 14px; padding: 24px; margin-bottom: 14px; }
+  .logo { text-align: center; margin-bottom: 20px; }
+  .logo h1 { color: #FFD700; font-size: 22px; }
+  .logo p { color: #666; font-size: 13px; margin-top: 4px; }
+  input, select { width: 100%; padding: 12px 14px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 14px; margin-bottom: 14px; }
+  input:focus, select:focus { outline: none; border-color: #000000; }
+  label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #000000, #1a1a1a); color: white; }
+  .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; display: none; }
+  .msg-ok  { background: rgba(34,197,94,.15);  border: 1px solid #22c55e; color: #22c55e; }
+  .msg-err { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
+  .ip-input { background: #0f0f1a; border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 15px; }
+  .ip-input input { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="card">
+    <div class="logo">
+      <h1>🤖 Rei dos Bots</h1>
+      <p>Painel Mobile</p>
+    </div>
+    
+    <div class="msg msg-err" id="msgErro"></div>
+    <div class="msg msg-ok" id="msgSucesso"></div>
+    
+    <label>IP do Computador</label>
+    <div class="ip-input">
+      <input type="text" id="ipServidor" placeholder="192.168.1.10" value="192.168.1.10">
+      <div style="font-size: 10px; color: #666; margin-top: 5px;">
+        Digite o IP do computador onde o bot está rodando
+      </div>
+    </div>
+    
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="seu@email.com">
+    
+    <label>Senha</label>
+    <input type="password" id="loginSenha" placeholder="••••••••">
+    
+    <button class="btn btn-primary" onclick="conectar()">🔗 Conectar</button>
+    
+    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 11px; color: #888;">
+      <strong style="color: #fff;">Como usar:</strong><br>
+      1. Certifique-se que o bot está rodando no PC<br>
+      2. Digite o IP do PC (geralmente 192.168.1.X)<br>
+      3. Use o mesmo email/senha do Supabase<br>
+      4. Clique em Conectar
+    </div>
+  </div>
+</div>
+
+<script>
+function mostrarMsg(tipo, texto) {
+  const msgErro = document.getElementById('msgErro');
+  const msgSucesso = document.getElementById('msgSucesso');
+  
+  msgErro.style.display = 'none';
+  msgSucesso.style.display = 'none';
+  
+  if (tipo === 'erro') {
+    msgErro.textContent = texto;
+    msgErro.style.display = 'block';
+  } else {
+    msgSucesso.textContent = texto;
+    msgSucesso.style.display = 'block';
+  }
+}
+
+async function conectar() {
+  const ip = document.getElementById('ipServidor').value.trim();
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  
+  if (!ip || !email || !senha) {
+    mostrarMsg('erro', 'Preencha todos os campos');
+    return;
+  }
+  
+  const url = `http://${ip}:3000`;
+  
+  try {
+    mostrarMsg('sucesso', '🔄 Conectando...');
+    
+    // Testar conexão
+    const testRes = await fetch(`${url}/api/estrategias`, { 
+      method: 'GET',
+      mode: 'cors'
+    });
+    
+    if (!testRes.ok) {
+      throw new Error('Servidor não respondeu');
+    }
+    
+    // Fazer login
+    const loginRes = await fetch(`${url}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha }),
+      mode: 'cors'
+    });
+    
+    const loginData = await loginRes.json();
+    
+    if (!loginRes.ok || loginData.erro) {
+      throw new Error(loginData.erro || 'Erro no login');
+    }
+    
+    // Sucesso - redirecionar para o painel
+    mostrarMsg('sucesso', '✅ Conectado! Redirecionando...');
+    
+    setTimeout(() => {
+      window.location.href = `${url}/painel`;
+    }, 1500);
+    
+  } catch (e) {
+    console.error('Erro:', e);
+    mostrarMsg('erro', `❌ Erro: ${e.message}. Verifique se o IP está correto e o servidor está rodando.`);
+  }
+}
+
+// Permitir Enter no campo senha
+document.getElementById('loginSenha').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') conectar();
+});
+</script>
+</body>
+</html>

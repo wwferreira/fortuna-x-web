@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Moderna - Fortuna X</title>
+    <style>
+        :root {
+            --primary: #00ff41;
+            --bg: #0a0a0a;
+            --card: #141414;
+            --text: #ffffff;
+            --gray: #888;
+            --danger: #ff4444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 5px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 12px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+            font-size: 14px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        label {
+            color: var(--gray);
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        input {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 6px;
+            color: #fff;
+            font-size: 12px;
+            width: 100%;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: #000;
+            padding: 8px;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .btn-add:hover {
+            filter: brightness(1.2);
+        }
+
+        .gestao-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gestao-item {
+            background: #1a1a1a;
+            border-left: 3px solid var(--primary);
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .info-main {
+            font-weight: bold;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .info-sub {
+            font-size: 10px;
+            color: var(--gray);
+        }
+
+        .actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 10px;
+        }
+
+        .btn-open { background: #0088cc; color: #fff; }
+        .btn-del { background: var(--danger); color: #fff; }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 10px;
+            color: var(--gray);
+            padding: 4px;
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            background: var(--card);
+        }
+
+        td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #222;
+            font-size: 11px;
+        }
+
+        .win { color: var(--primary); }
+        .loss { color: var(--danger); }
+
+        /* Estilos das linhas de status */
+        .row-concluido { background: rgba(212, 175, 55, 0.2) !important; border-left: 3px solid #d4af37; }
+        .row-nao-concluido { background: rgba(255, 68, 68, 0.2) !important; border-left: 3px solid #ff4444; }
+
+        .btn-status {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .btn-check { background: #217346; color: white; }
+        .btn-cross { background: #b02a37; color: white; }
+        
+        .btn-status:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .header-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .btn-back {
+            background: #333;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+        }
+
+        #msgFeedback {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 11px;
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .feedback-error { background: var(--danger); color: #fff; }
+        .feedback-success { background: var(--primary); color: #000; }
+    </style>
+</head>
+<body>
+    <div id="msgFeedback"></div>
+
+    <div class="container" id="mainContainer">
+        <div class="card" id="viewList">
+            <h2>📊 MINHAS GESTÕES</h2>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>NOME DA ESTRATÉGIA</label>
+                    <input type="text" id="nome" placeholder="Ex: Alavancagem">
+                </div>
+                <div class="form-group">
+                    <label>BANCA (R$)</label>
+                    <input type="number" id="valor" placeholder="100.00">
+                </div>
+                <div class="form-group">
+                    <label>META (%)</label>
+                    <input type="number" id="percentual" placeholder="10">
+                </div>
+                <div class="form-group full">
+                    <label>DIAS</label>
+                    <input type="number" id="dias" placeholder="30">
+                </div>
+            </div>
+            <button class="btn-add" id="btnCriarGestao">+ CRIAR GESTÃO</button>
+            <div id="listaGestoes" class="gestao-list" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="card" id="viewDetails" style="display: none;">
+            <div class="header-back">
+                <button class="btn-back" id="btnVoltar">< VOLTAR</button>
+                <h2 id="detalheTitulo" style="margin: 0; flex: 1; font-size: 13px;">DETALHES</h2>
+            </div>
+            <div id="statsResumo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <!-- Preenchido via JS -->
+            </div>
+            <div class="table-container">
+                <table id="tabelaDias">
+                    <thead>
+                        <tr>
+                            <th>DIA</th>
+                            <th>BANCA</th>
+                            <th>META</th>
+                            <th>TOTAL</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="planilha.js"></script>
+</body>
+</html>
