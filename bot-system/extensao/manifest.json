@@ -73,11 +73,9 @@
         "http://162.141.111.167/*",
         "https://*.supabase.co/*",
         "https://*.unpkg.com/*",
-        "https://api.telegram.org/*",
         "https://fortuna-x-web.onrender.com/*",
         "wss://fortuna-x-web.onrender.com/*",
-        "http://localhost:3000/*",
-        "ws://localhost:3000/*",
+        "https://api.telegram.org/*",
         "<all_urls>"
     ]
 }

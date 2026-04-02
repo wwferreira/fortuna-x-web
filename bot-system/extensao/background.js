@@ -1885,7 +1885,7 @@ let tentativasReconexao = 0;
 const MAX_TENTATIVAS = 999; // Tentar reconectar indefinidamente
 
 function conectarServidorLocal() {
-    const WS_URL = 'wss://fortuna-x-server.onrender.com';
+    const WS_URL = 'wss://fortuna-x-web.onrender.com';
     
     console.log('🔌 [WS-SERVIDOR] Função conectarServidorLocal() chamada');
     
