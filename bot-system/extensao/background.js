@@ -2064,6 +2064,16 @@ function conectarServidorLocal() {
 async function iniciarBotRemoto() {
     console.log('🚀 [WS-SERVIDOR] Iniciando bot remotamente...');
     
+    // Garantir que o sidepanel esteja aberto (necessário para algumas funções)
+    try {
+        const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+        for (const window of windows) {
+            await chrome.sidePanel.open({ windowId: window.id }).catch(() => {});
+        }
+    } catch (e) {
+        console.log('⚠️ [WS-SERVIDOR] Erro ao abrir sidepanel:', e.message);
+    }
+    
     // Atualizar status no servidor
     if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
         wsServidor.send(JSON.stringify({
