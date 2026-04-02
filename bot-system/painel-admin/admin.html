@@ -1352,7 +1352,13 @@ async function editarUsuario(userId) {
     document.getElementById('inputEmail').value = usuarioEditando.email;
     document.getElementById('inputSenha').value = '';
     document.getElementById('inputToken').value = usuarioEditando.token || '';
-    document.getElementById('checkBotOnline').checked = usuarioEditando.bot_online === true || (usuarioEditando.user_metadata && usuarioEditando.user_metadata.bot_online === true);
+    
+    // Buscar bot_online de várias fontes possíveis para garantir que apareça marcado se estiver salvo
+    const botOnlineStatus = usuarioEditando.bot_online === true || 
+                          (usuarioEditando.user_metadata && usuarioEditando.user_metadata.bot_online === true) ||
+                          (usuarioEditando.raw_user_meta_data && usuarioEditando.raw_user_meta_data.bot_online === true);
+    
+    document.getElementById('checkBotOnline').checked = botOnlineStatus;
     
     (function preencherHwidInicial() {
         const meta = usuarioEditando.user_metadata || {};
