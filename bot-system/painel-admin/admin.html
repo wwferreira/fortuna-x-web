@@ -663,6 +663,7 @@ async function carregarDados() {
                     ...u,
                     installation_id: (p && p.installation_id != null) ? p.installation_id : u.installation_id,
                     active: (p && p.active != null) ? p.active : u.active,
+                    bot_online: (p && p.bot_online != null) ? p.bot_online : (u.bot_online ?? combinedMeta.bot_online ?? false),
                     nome: u.nome ?? (p && p.nome) ?? (combinedMeta.nome) ?? null,
                     email: u.email ?? (p && p.email) ?? (a && a.email) ?? null,
                     user_metadata: combinedMeta
