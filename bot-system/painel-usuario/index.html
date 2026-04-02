@@ -1026,17 +1026,26 @@ async function atualizarStats() {
   try {
     const res = await fetch(`${API}/stats/${encodeURIComponent(emailLogado)}`);
     const s = await res.json();
+    
+    // Atualizar Placar
     document.getElementById('statGreens').textContent = s.greens ?? 0;
     document.getElementById('statReds').textContent   = s.reds   ?? 0;
     const total = (s.greens || 0) + (s.reds || 0);
     document.getElementById('statAssert').textContent = total > 0 ? ((s.greens / total * 100).toFixed(0) + '%') : '—';
-    const saldo = s.saldo !== null && s.saldo !== undefined ? parseFloat(s.saldo) : null;
-    document.getElementById('statSaldo').textContent  = saldo !== null ? `R$ ${saldo.toFixed(2)}` : '—';
-    if (saldo !== null && s.saldoInicial !== null && s.saldoInicial !== undefined) {
-      const lucro = saldo - parseFloat(s.saldoInicial);
+    
+    // Atualizar Saldo e Lucro
+    const saldo = (s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null;
+    const saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
+    
+    document.getElementById('statSaldo').textContent = saldo !== null ? `R$ ${saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '—';
+    
+    if (saldo !== null && saldoInicial !== null) {
+      const lucro = saldo - saldoInicial;
       const el = document.getElementById('statLucro');
-      el.textContent = (lucro >= 0 ? '+' : '') + `R$ ${lucro.toFixed(2)}`;
+      el.textContent = (lucro >= 0 ? '+' : '') + `R$ ${lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
       el.style.color = lucro >= 0 ? '#22c55e' : '#ef4444';
+    } else {
+      document.getElementById('statLucro').textContent = '—';
     }
   } catch (e) { /* servidor offline */ }
 }

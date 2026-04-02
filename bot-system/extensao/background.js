@@ -2522,7 +2522,7 @@ async function redirecionarParaMesa(tabId) {
     await chrome.tabs.update(tabId, { url: URL_MESA });
 }
 
-// Enviar stats para o servidor a cada 5 segundos
+// Enviar stats para o servidor a cada 3 segundos
 setInterval(() => {
     if (emailUsuarioLogado) {
         // Tentar pegar stats do storage primeiro, depois do botState
@@ -2540,23 +2540,20 @@ setInterval(() => {
                 wins = placarSim.wins || 0;
                 losses = placarSim.losses || 0;
                 saldo = result.saldoSimulacao || 1000.00;
-                saldoInicial = 1000.00; // Saldo inicial padrão da simulação
-                console.log('📊 [STATS] Modo Simulação - usando dados simulados:', {wins, losses, saldo});
+                saldoInicial = 1000.00; 
             } else {
                 // Usar dados reais - priorizar storage do sidepanel
-                if (result.rouletteState && (result.rouletteState.wins !== undefined || result.rouletteState.losses !== undefined)) {
-                    wins = result.rouletteState.wins || 0;
-                    losses = result.rouletteState.losses || 0;
-                    saldo = result.rouletteState.ultimoSaldoPush || botState.ultimoSaldoPush || null;
-                    saldoInicial = result.rouletteState.saldoInicial || botState.saldoInicial || null;
-                    console.log('📊 [STATS] Modo Real - usando dados do storage:', {wins, losses, saldo});
-                } else {
-                    // Fallback para dados do background
-                    wins = botState.wins || 0;
-                    losses = botState.losses || 0;
-                    saldo = botState.ultimoSaldoPush || null;
-                    saldoInicial = botState.saldoInicial || null;
-                    console.log('📊 [STATS] Modo Real - usando dados do botState:', {wins, losses, saldo});
+                const rState = result.rouletteState || {};
+                wins = rState.wins ?? botState.wins ?? 0;
+                losses = rState.losses ?? botState.losses ?? 0;
+                
+                // Tentar capturar o saldo do rState ou botState
+                saldo = rState.ultimoSaldoPush ?? botState.ultimoSaldoPush ?? null;
+                saldoInicial = rState.saldoInicial ?? botState.saldoInicial ?? null;
+                
+                // Se o saldo for null, tentar converter de texto se disponível
+                if (saldo === null && rState.saldoAtual) {
+                    saldo = parseFloat(rState.saldoAtual.replace(/[^\d.,]/g, '').replace(',', '.'));
                 }
             }
             
@@ -2566,8 +2563,8 @@ setInterval(() => {
                 reds: losses,
                 saldo: saldo,
                 saldoInicial: saldoInicial,
-                modo_simulacao: isSimulacao, // Enviando o modo atual para o servidor
-                estrategia_nome: result.rouletteState?.estrategia_nome || botState.estrategia_nome || 'Nenhuma'
+                modo_simulacao: isSimulacao,
+                estrategia_nome: result.rouletteState?.nomeEstrategiaSelecionada || result.rouletteState?.estrategia_nome || botState.estrategia_nome || 'Nenhuma'
             };
             
             console.log('📊 [STATS] Enviando para servidor:', statsData);
@@ -2578,17 +2575,13 @@ setInterval(() => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(statsData)
             }).then(response => {
-                if (response.ok) {
-                    console.log('✅ [STATS] Enviado com sucesso');
-                } else {
-                    console.error('❌ [STATS] Erro:', response.status);
-                }
+                if (!response.ok) console.error('❌ [STATS] Erro:', response.status);
             }).catch(error => {
                 console.error('❌ [STATS] Erro de conexão:', error);
             });
         });
     }
-}, 3000); // Atualizado para 3 segundos conforme solicitação do usuário bilateralmente
+}, 3000);
 
 // Iniciar conexão quando a extensão carregar
 console.log('🎯 [WS-SERVIDOR] Aguardando 2 segundos para iniciar conexão...');

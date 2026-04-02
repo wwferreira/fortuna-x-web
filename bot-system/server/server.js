@@ -613,18 +613,24 @@ app.post('/api/stats', async (req, res) => {
 
   try {
     const updateData = {
-      stats: { greens, reds, saldo, saldoInicial, atualizado: Date.now() },
+      stats: { 
+        greens, 
+        reds, 
+        saldo, 
+        saldoInicial, 
+        atualizado: Date.now() 
+      },
       updated_at: new Date().toISOString()
     };
 
-    // Atualizar modo_simulacao e nome da estratégia se enviados pela extensão
     if (modo_simulacao !== undefined) updateData.modo_simulacao = modo_simulacao;
-    if (estrategia_nome) {
-      // Também atualizar no campo config para o painel ler
-      const { data: user } = await supabase.from('usuarios_bot').select('config').eq('email', email).single();
-      const newConfig = { ...(user?.config || {}), estrategia_nome };
-      updateData.config = newConfig;
-    }
+    
+    // Buscar config atual para não perder outros dados
+    const { data: user } = await supabase.from('usuarios_bot').select('config').eq('email', email).single();
+    let newConfig = user?.config || {};
+    
+    if (estrategia_nome) newConfig.estrategia_nome = estrategia_nome;
+    updateData.config = newConfig;
 
     const { error } = await supabase
       .from('usuarios_bot')
