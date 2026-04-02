@@ -608,23 +608,34 @@ app.post('/api/comando', async (req, res) => {
 
 // Status do bot (greens, reds, saldo)
 app.post('/api/stats', async (req, res) => {
-  const { email, greens, reds, saldo, saldoInicial } = req.body;
-  
-  console.log('📊 [STATS] Recebendo stats:', { email, greens, reds, saldo, saldoInicial });
-  
+  const { email, greens, reds, saldo, saldoInicial, modo_simulacao, estrategia_nome } = req.body;
+  if (!email) return res.status(400).json({ erro: 'Email obrigatório' });
+
   try {
-    await supabase
+    const updateData = {
+      stats: { greens, reds, saldo, saldoInicial, atualizado: Date.now() },
+      updated_at: new Date().toISOString()
+    };
+
+    // Atualizar modo_simulacao e nome da estratégia se enviados pela extensão
+    if (modo_simulacao !== undefined) updateData.modo_simulacao = modo_simulacao;
+    if (estrategia_nome) {
+      // Também atualizar no campo config para o painel ler
+      const { data: user } = await supabase.from('usuarios_bot').select('config').eq('email', email).single();
+      const newConfig = { ...(user?.config || {}), estrategia_nome };
+      updateData.config = newConfig;
+    }
+
+    const { error } = await supabase
       .from('usuarios_bot')
-      .update({ 
-        stats: { greens, reds, saldo, saldoInicial, atualizado: Date.now() }
-      })
+      .update(updateData)
       .eq('email', email);
-    
-    console.log('✅ [STATS] Stats salvas no Supabase para:', email);
+
+    if (error) throw error;
     res.json({ ok: true });
   } catch (e) {
     console.error('❌ [STATS] Erro ao salvar stats:', e);
-    res.status(500).json({ erro: 'Erro no servidor' });
+    res.status(500).json({ erro: e.message });
   }
 });
 

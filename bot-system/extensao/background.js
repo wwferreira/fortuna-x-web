@@ -2565,7 +2565,9 @@ setInterval(() => {
                 greens: wins,
                 reds: losses,
                 saldo: saldo,
-                saldoInicial: saldoInicial
+                saldoInicial: saldoInicial,
+                modo_simulacao: isSimulacao, // Enviando o modo atual para o servidor
+                estrategia_nome: result.rouletteState?.estrategia_nome || botState.estrategia_nome || 'Nenhuma'
             };
             
             console.log('📊 [STATS] Enviando para servidor:', statsData);
