@@ -255,7 +255,7 @@ app.get('/api/config/:email', async (req, res) => {
 // Salvar config do usuário
 app.post('/api/config', async (req, res) => {
   const { 
-    email, estrategia_id, estrategia_nome, gatilhos, valor_ficha, stop_win, stop_loss, gales, 
+    email, estrategia, estrategia_id, estrategia_nome, gatilhos, valor_ficha, stop_win, stop_loss, gales, 
     qtd_hot, qtd_cold, vizinhos, qtd_analise, ficha_g1, ficha_g2,
     tipo_progressao, gales_multiplicadores, ciclo_multiplicadores,
     // Novos campos do Funcionário do Mês
@@ -264,6 +264,7 @@ app.post('/api/config', async (req, res) => {
   
   try {
     const config = { 
+      estrategia: estrategia || '',
       estrategia_id: estrategia_id || null,
       estrategia_nome: estrategia_nome || '',
       gatilhos: gatilhos || [],
@@ -271,9 +272,9 @@ app.post('/api/config', async (req, res) => {
       stop_win: stop_win || 0,
       stop_loss: stop_loss || 0,
       gales: gales || 0,
-      qtd_hot: qtd_hot ?? 5,
-      qtd_cold: qtd_cold ?? 5,
-      vizinhos: vizinhos ?? 0,
+      qtd_hot: (qtd_hot !== undefined && qtd_hot !== null) ? qtd_hot : 5,
+      qtd_cold: (qtd_cold !== undefined && qtd_cold !== null) ? qtd_cold : 5,
+      vizinhos: (vizinhos !== undefined && vizinhos !== null) ? vizinhos : 0,
       qtd_analise: qtd_analise ?? 100,
       ficha_g1: ficha_g1 ?? 0,
       ficha_g2: ficha_g2 ?? 0,

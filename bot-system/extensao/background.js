@@ -466,8 +466,11 @@ function enviarDadosQuentesFriosParaMesa() {
             freq: contagem[numStr]
         }));
 
-        const quentes = [...ranking].sort((a, b) => b.freq - a.freq).slice(0, config.qtdQuentes || 3); 
-        const frios = [...ranking].sort((a, b) => a.freq - b.freq).slice(0, config.qtdFrios || 3); 
+        const qtdQ = (config.qtdQuentes !== undefined && config.qtdQuentes !== null) ? config.qtdQuentes : 3;
+        const qtdC = (config.qtdFrios !== undefined && config.qtdFrios !== null) ? config.qtdFrios : 3;
+
+        const quentes = [...ranking].sort((a, b) => b.freq - a.freq).slice(0, qtdQ); 
+        const frios = [...ranking].sort((a, b) => a.freq - b.freq).slice(0, qtdC); 
 
         // Enviar para TODAS as abas para evitar que filtros de URL bloqueiem o painel (ex: big.bet.br)
         chrome.tabs.query({}, (tabs) => {

@@ -718,31 +718,35 @@ async function carregarEstrategias() {
     estrategiasDisponiveis = await res.json();
     if (!Array.isArray(estrategiasDisponiveis)) estrategiasDisponiveis = [];
     
-    console.log('📋 Estratégias carregadas para', emailLogado, ':', estrategiasDisponiveis);
+    console.log('📋 Estratégias carregadas:', estrategiasDisponiveis);
     
     const sel = document.getElementById('selectEstrategia');
     
-    // Usar 'chave' como value e 'nome' como texto
-    sel.innerHTML = estrategiasDisponiveis.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('');
-    
-    if (estrategiasDisponiveis.length === 0) {
-      sel.innerHTML = '<option value="">Nenhuma estratégia disponível</option>';
-    }
+    // Usar 'chave' como value e manter o id no data-id
+    sel.innerHTML = '<option value="">Selecione uma estratégia...</option>' + 
+      estrategiasDisponiveis.map(e => `<option value="${e.chave}" data-id="${e.id}">${e.nome}</option>`).join('');
     
     sel.addEventListener('change', () => {
         mostrarDescEstrategia();
         toggleCamposEspeciais();
     });
+    
+    // Se só tiver uma estratégia, seleciona ela
+    if (estrategiasDisponiveis.length === 1) {
+      sel.selectedIndex = 1;
+    }
+    
     mostrarDescEstrategia();
     toggleCamposEspeciais();
   } catch (e) {
     console.error('❌ Erro carregarEstrategias:', e);
-    mostrarMsg('msgErroEstrategia', 'Erro ao carregar estratégias do servidor.');
+    mostrarMsg('msgErroEstrategia', 'Erro ao carregar estratégias.');
   }
 }
 
 function mostrarDescEstrategia() {
-  const chave = document.getElementById('selectEstrategia').value;
+  const sel = document.getElementById('selectEstrategia');
+  const chave = sel.value;
   const est = estrategiasDisponiveis.find(e => e.chave == chave);
   const desc = document.getElementById('descEstrategia');
   if (est) {
@@ -765,37 +769,56 @@ async function carregarConfig() {
         statusEst.textContent = config.estrategia_nome || config.nome || 'Nenhuma selecionada';
       }
 
+      const sel = document.getElementById('selectEstrategia');
       if (config.estrategia) { 
-        document.getElementById('selectEstrategia').value = config.estrategia; 
-        mostrarDescEstrategia(); 
+        // Tentar selecionar por chave ou por ID legado
+        let found = false;
+        for (let opt of sel.options) {
+          if (opt.value === config.estrategia || opt.getAttribute('data-id') === String(config.estrategia_id)) {
+            sel.value = opt.value;
+            found = true;
+            break;
+          }
+        }
+        
+        if (!found && config.estrategia_nome) {
+          // Tentar por nome como último recurso
+          for (let opt of sel.options) {
+            if (opt.text === config.estrategia_nome) {
+              sel.value = opt.value;
+              found = true;
+              break;
+            }
+          }
+        }
       }
-      if (config.valor_ficha) document.getElementById('valorFicha').value = config.valor_ficha;
-      if (config.stop_win)    document.getElementById('stopWin').value = config.stop_win;
-      if (config.stop_loss)   document.getElementById('stopLoss').value = config.stop_loss;
-      if (config.gales !== undefined) document.getElementById('gales').value = config.gales;
       
-      // Novos campos
-      if (config.qtd_hot !== undefined) document.getElementById('configQtdHot').value = config.qtd_hot;
-      if (config.qtd_cold !== undefined) document.getElementById('configQtdCold').value = config.qtd_cold;
-      if (config.vizinhos !== undefined) document.getElementById('configVizinhos').value = config.vizinhos;
-      if (config.ficha_g1 !== undefined) document.getElementById('configFichaG1').value = config.ficha_g1;
-      if (config.ficha_g2 !== undefined) document.getElementById('configFichaG2').value = config.ficha_g2;
+      // Preencher campos com valores do servidor ou padrões
+      document.getElementById('valorFicha').value = config.valor_ficha || 1;
+      document.getElementById('stopWin').value = config.stop_win || 0;
+      document.getElementById('stopLoss').value = config.stop_loss || 0;
+      document.getElementById('gales').value = config.gales ?? 0;
+      document.getElementById('configQtdHot').value = config.qtd_hot ?? 5;
+      document.getElementById('configQtdCold').value = config.qtd_cold ?? 5;
+      document.getElementById('configVizinhos').value = config.vizinhos ?? 0;
+      document.getElementById('configFichaG1').value = config.ficha_g1 ?? 2;
+      document.getElementById('configFichaG2').value = config.ficha_g2 ?? 4;
       
       if (config.qtd_analise !== undefined) {
           document.getElementById('configQtdAnalise').value = config.qtd_analise;
-          document.getElementById('valAnalise').textContent = config.qtd_analise;
+          if (document.getElementById('valAnalise')) document.getElementById('valAnalise').textContent = config.qtd_analise;
       }
  
+      mostrarDescEstrategia();
       toggleCamposEspeciais();
       toggleCamposGale();
 
       botLigado = config.botLigado || false;
     } else {
-      // Usuário novo ou sem config
       botLigado = false;
     }
     
-    // Carregar credenciais da casa (do Supabase user_metadata)
+    // Carregar credenciais da casa
     const resUser = await fetch(`${API}/user-metadata/${encodeURIComponent(emailLogado)}`);
     if (resUser.ok) {
       const userData = await resUser.json();
@@ -811,45 +834,56 @@ async function carregarConfig() {
 }
 
 function toggleCamposEspeciais() {
-    const est = document.getElementById('selectEstrategia')?.value;
-    if (!est) return;
-    
+    const sel = document.getElementById('selectEstrategia');
+    const est = sel?.value;
     const container = document.getElementById('camposEspeciais');
+    
+    if (!container) return;
+    
+    if (!est) {
+        container.style.display = 'none';
+        return;
+    }
+    
     const rowHot = document.getElementById('campoHot');
     const rowCold = document.getElementById('campoCold');
     const rowViz = document.getElementById('campoVizinhos');
     const rowFuncionario = document.getElementById('campoFuncionarioMes');
     const rowProgressaoGeral = document.getElementById('campoProgressaoGeral');
 
-    if (!container) return; // Se não existir, sair
-
     // Buscar estratégia selecionada
-    const estrategiaSelecionada = estrategiasDisponiveis.find(e => e.chave == est);
+    const estObj = estrategiasDisponiveis.find(e => e.chave == est);
     
-    if (estrategiaSelecionada) {
-        const nome = estrategiaSelecionada.nome.toLowerCase();
+    if (estObj) {
+        const nome = estObj.nome.toLowerCase();
+        console.log('🎯 Estratégia selecionada:', nome);
         
-        // Verificar se é Funcionário do Mês
-        if (nome.includes('funcionário') || nome.includes('funcionario')) {
-            container.style.display = 'block';
-            
+        container.style.display = 'block';
+        
+        const isFunc = nome.includes('funcionário') || nome.includes('funcionario');
+        const isQuente = nome.includes('quente');
+        const isFrio = nome.includes('frio');
+        const isDinamica = isQuente || isFrio;
+
+        if (isFunc) {
             if (rowHot) rowHot.style.display = 'none';
             if (rowCold) rowCold.style.display = 'none';
-            if (rowViz) rowViz.style.display = 'none'; // Vizinhos fixo em 2 para FM
+            if (rowViz) rowViz.style.display = 'none';
             if (rowFuncionario) rowFuncionario.style.display = 'block';
-            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none'; // Esconder progressão geral
-        }
-        // Verificar se é uma estratégia dinâmica (Quentes, Frios, Ambos)
-        else if (nome.includes('quente') || nome.includes('frio')) {
-            container.style.display = 'block';
-            
-            if (rowHot) rowHot.style.display = nome.includes('quente') ? 'block' : 'none';
-            if (rowCold) rowCold.style.display = nome.includes('frio') ? 'block' : 'none';
+            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
+        } else if (isDinamica) {
+            if (rowHot) rowHot.style.display = isQuente ? 'block' : 'none';
+            if (rowCold) rowCold.style.display = isFrio ? 'block' : 'none';
             if (rowViz) rowViz.style.display = 'block';
             if (rowFuncionario) rowFuncionario.style.display = 'none';
-            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block'; // Mostrar progressão geral
+            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block';
         } else {
-            container.style.display = 'none';
+            // Estratégia normal (gatilhos fixos)
+            if (rowHot) rowHot.style.display = 'none';
+            if (rowCold) rowCold.style.display = 'none';
+            if (rowViz) rowViz.style.display = 'block'; // Vizinhos sempre útil
+            if (rowFuncionario) rowFuncionario.style.display = 'none';
+            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block';
         }
     } else {
         container.style.display = 'none';
@@ -981,11 +1015,11 @@ function esconderBanners() {
 
 function iniciarPollingStatus() {
   if (pollingStatusTimer) clearInterval(pollingStatusTimer);
-  // Polling bilateral a cada 3 segundos (Status, Stats e Config)
+  // Polling bilateral a cada 3 segundos (Status e Stats)
   pollingStatusTimer = setInterval(() => {
     verificarStatusBot();
     atualizarStats();
-    carregarConfig(); // Mantém o nome da estratégia e modo simulação atualizados
+    // carregarConfig() removido daqui para não resetar os campos enquanto o usuário digita
   }, 3000);
 }
 
@@ -1407,7 +1441,8 @@ function fecharModalCasa() {
   document.getElementById('modalCasa').style.display = 'none';
 }
 
-function abrirModalEstrategiasConfig() {
+async function abrirModalEstrategiasConfig() {
+  await carregarConfig(); // Carrega os valores atuais do servidor antes de abrir
   document.getElementById('modalEstrategiasConfig').style.display = 'block';
 }
 
@@ -1415,7 +1450,8 @@ function fecharModalEstrategiasConfig() {
   document.getElementById('modalEstrategiasConfig').style.display = 'none';
 }
 
-function abrirModalGestao() {
+async function abrirModalGestao() {
+  await carregarConfig(); // Carrega os valores atuais do servidor antes de abrir
   document.getElementById('modalGestao').style.display = 'block';
 }
 
@@ -1433,7 +1469,8 @@ function fecharModalHistorico() {
 
 // ===== SALVAR DADOS DOS MODAIS =====
 async function salvarEstrategia() {
-  const estChave = document.getElementById('selectEstrategia').value;
+  const sel = document.getElementById('selectEstrategia');
+  const estChave = sel.value;
   let estCompleta = estrategiasDisponiveis.find(e => e.chave == estChave);
   
   if (!estCompleta) {
@@ -1441,71 +1478,61 @@ async function salvarEstrategia() {
     return;
   }
   
-  // Verificar se é Funcionário do Mês
-  const isFuncionarioMes = estCompleta.nome.toLowerCase().includes('funcionário') || 
-                          estCompleta.nome.toLowerCase().includes('funcionario');
+  const nome = estCompleta.nome.toLowerCase();
+  const isFuncionarioMes = nome.includes('funcionário') || nome.includes('funcionario');
   
-  // Coletar configurações básicas
+  // Coletar configurações
   const config = {
     estrategia_id: estCompleta.id,
     estrategia_nome: estCompleta.nome,
-    estrategia: estCompleta.chave, // Importante para o servidor encontrar os gatilhos
+    estrategia: estCompleta.chave,
     gatilhos: estCompleta.gatilhos || [],
-    qtd_hot: parseInt(document.getElementById('configQtdHot').value) >= 0 ? parseInt(document.getElementById('configQtdHot').value) : 5,
-    qtd_cold: parseInt(document.getElementById('configQtdCold').value) >= 0 ? parseInt(document.getElementById('configQtdCold').value) : 5,
-    vizinhos: parseInt(document.getElementById('configVizinhos').value) >= 0 ? parseInt(document.getElementById('configVizinhos').value) : 0,
+    qtd_hot: document.getElementById('configQtdHot').value !== "" ? parseInt(document.getElementById('configQtdHot').value) : 5,
+    qtd_cold: document.getElementById('configQtdCold').value !== "" ? parseInt(document.getElementById('configQtdCold').value) : 5,
+    vizinhos: document.getElementById('configVizinhos').value !== "" ? parseInt(document.getElementById('configVizinhos').value) : 0,
     qtd_analise: parseInt(document.getElementById('configQtdAnalise').value) || 100
   };
 
-  // Configurações específicas do Funcionário do Mês
+  // Se for Funcionário do Mês, pegar os campos específicos
   if (isFuncionarioMes) {
-    const numerosFixos = document.getElementById('configNumerosFixosFM')?.value || '';
-    const tipoProgressaoFM = document.getElementById('configTipoProgressaoFM')?.value || 'simples';
+    config.numeros_fixos_fm = document.getElementById('configNumerosFixosFM')?.value || '';
+    config.tipo_progressao_fm = document.getElementById('configTipoProgressaoFM')?.value || 'simples';
+    config.vizinhos = 2; // Fixo para FM
     
-    config.numeros_fixos_fm = numerosFixos;
-    config.tipo_progressao_fm = tipoProgressaoFM;
-    config.vizinhos = 2; // Sempre 2 vizinhos para Funcionário do Mês
-    
-    if (tipoProgressaoFM === 'gale' || tipoProgressaoFM === 'ciclo') {
+    const tipoFM = config.tipo_progressao_fm;
+    if (tipoFM === 'gale' || tipoFM === 'ciclo') {
       const qtdEtapas = parseInt(document.getElementById('sliderEtapasFM')?.value) || 2;
       const multiplicadores = [];
-      
       for (let i = 1; i <= qtdEtapas; i++) {
         const slider = document.getElementById(`sliderEtapaFM${i}`);
-        if (slider) {
-          multiplicadores.push(parseInt(slider.value));
-        }
+        if (slider) multiplicadores.push(parseInt(slider.value));
       }
-      
-      if (tipoProgressaoFM === 'gale') {
-        config.gales_multiplicadores_fm = multiplicadores;
-      } else {
-        config.ciclo_multiplicadores_fm = multiplicadores;
-      }
+      if (tipoFM === 'gale') config.gales_multiplicadores_fm = multiplicadores;
+      else config.ciclo_multiplicadores_fm = multiplicadores;
     }
   } else {
-    // Coletar configurações de progressão para outras estratégias
-    const tipoProgressao = document.getElementById('configTipoProgressao')?.value || 'simples';
-    config.tipo_progressao = tipoProgressao;
-    
-    if (tipoProgressao === 'gale' || tipoProgressao === 'ciclo') {
+    // Progressão para outras estratégias
+    const tipo = document.getElementById('configTipoProgressao')?.value || 'simples';
+    config.tipo_progressao = tipo;
+    if (tipo === 'gale' || tipo === 'ciclo') {
       const qtdEtapas = parseInt(document.getElementById('sliderEtapas')?.value) || 2;
       const multiplicadores = [];
-      
       for (let i = 1; i <= qtdEtapas; i++) {
         const slider = document.getElementById(`sliderEtapa${i}`);
-        if (slider) {
-          multiplicadores.push(parseInt(slider.value)); // Usar parseInt para garantir números inteiros
-        }
+        if (slider) multiplicadores.push(parseInt(slider.value));
       }
-      
-      if (tipoProgressao === 'gale') {
-        config.gales_multiplicadores = multiplicadores;
-      } else {
-        config.ciclo_multiplicadores = multiplicadores;
-      }
+      if (tipo === 'gale') config.gales_multiplicadores = multiplicadores;
+      else config.ciclo_multiplicadores = multiplicadores;
     }
   }
+
+  // Manter valores de gestão atuais
+  config.valor_ficha = parseFloat(document.getElementById('valorFicha').value) || 1;
+  config.stop_win = parseFloat(document.getElementById('stopWin').value) || 0;
+  config.stop_loss = parseFloat(document.getElementById('stopLoss').value) || 0;
+  config.gales = parseInt(document.getElementById('gales').value) || 0;
+  config.ficha_g1 = parseFloat(document.getElementById('configFichaG1').value) || 0;
+  config.ficha_g2 = parseFloat(document.getElementById('configFichaG2').value) || 0;
 
   try {
     const res = await fetch(`${API}/config`, {
@@ -1514,46 +1541,43 @@ async function salvarEstrategia() {
       body: JSON.stringify({ email: emailLogado, ...config })
     });
     
-    if (!res.ok) throw new Error('Erro ao salvar estratégia');
+    if (!res.ok) throw new Error('Erro ao salvar');
     
-    mostrarMsg('msgSalvoEstrategia', '✅ Estratégia salva e enviada para a extensão!');
-    
-    // Fechar modal após salvar
-    setTimeout(() => {
-      fecharModalEstrategiasConfig();
-    }, 1500);
+    mostrarMsg('msgSalvoEstrategia', '✅ Estratégia salva com sucesso!');
+    setTimeout(() => fecharModalEstrategiasConfig(), 1500);
   } catch (e) {
-    mostrarMsg('msgErroEstrategia', '❌ Erro ao salvar estratégia.');
+    mostrarMsg('msgErroEstrategia', '❌ Erro ao salvar.');
   }
 }
 
 async function salvarGestao() {
-  const config = {
-    valor_ficha: parseFloat(document.getElementById('valorFicha').value) || 1,
-    stop_win:    parseFloat(document.getElementById('stopWin').value)    || 0,
-    stop_loss:   parseFloat(document.getElementById('stopLoss').value)   || 0,
-    gales:       parseInt(document.getElementById('gales').value)        || 0,
-    ficha_g1:    parseFloat(document.getElementById('configFichaG1').value) || 0,
-    ficha_g2:    parseFloat(document.getElementById('configFichaG2').value) || 0
-  };
-
+  // Pegar config atual para não sobrescrever estratégia
   try {
+    const resGet = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
+    const currentConfig = await resGet.json();
+    
+    const config = {
+      ...currentConfig,
+      valor_ficha: parseFloat(document.getElementById('valorFicha').value) || 1,
+      stop_win:    parseFloat(document.getElementById('stopWin').value)    || 0,
+      stop_loss:   parseFloat(document.getElementById('stopLoss').value)   || 0,
+      gales:       parseInt(document.getElementById('gales').value)        || 0,
+      ficha_g1:    parseFloat(document.getElementById('configFichaG1').value) || 0,
+      ficha_g2:    parseFloat(document.getElementById('configFichaG2').value) || 0
+    };
+
     const res = await fetch(`${API}/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: emailLogado, ...config })
     });
     
-    if (!res.ok) throw new Error('Erro ao salvar gestão');
+    if (!res.ok) throw new Error('Erro ao salvar');
     
-    mostrarMsg('msgSalvoGestao', '✅ Configurações salvas e enviadas para a extensão!');
-    
-    // Fechar modal após salvar
-    setTimeout(() => {
-      fecharModalGestao();
-    }, 1500);
+    mostrarMsg('msgSalvoGestao', '✅ Gestão salva com sucesso!');
+    setTimeout(() => fecharModalGestao(), 1500);
   } catch (e) {
-    mostrarMsg('msgErroGestao', '❌ Erro ao salvar configurações.');
+    mostrarMsg('msgErroGestao', '❌ Erro ao salvar.');
   }
 }
 

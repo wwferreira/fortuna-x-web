@@ -3,197 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rei dos Bots — Mobile</title>
+<title>Rei dos Bots — Login Mobile</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  .screen { width: 100%; max-width: 480px; padding: 20px; }
-  .card { background: #1a1a2e; border: 1px solid #333; border-radius: 14px; padding: 24px; margin-bottom: 14px; }
-  .logo { text-align: center; margin-bottom: 20px; }
-  .logo h1 { color: #FFD700; font-size: 22px; }
-  .logo p { color: #666; font-size: 13px; margin-top: 4px; }
-  input, select { width: 100%; padding: 12px 14px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 14px; margin-bottom: 14px; }
-  input:focus, select:focus { outline: none; border-color: #000000; }
-  label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; }
-  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all .2s; }
-  .btn:active { transform: scale(.97); }
-  .btn-primary { background: linear-gradient(135deg, #000000, #1a1a1a); color: white; }
-  .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; display: none; }
-  .msg-ok  { background: rgba(34,197,94,.15);  border: 1px solid #22c55e; color: #22c55e; }
-  .msg-err { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
-  .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .section-title { font-size: 12px; color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 12px; border-top: 1px solid #2a2a3e; padding-top: 14px; }
-  .estrategia-desc { font-size: 12px; color: #666; margin-top: -10px; margin-bottom: 14px; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .stat-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px 10px; text-align: center; }
-  .stat-label { font-size: 11px; color: #666; margin-bottom: 6px; }
-  .stat-val { font-size: 22px; font-weight: 800; }
-  .stat-green { color: #22c55e; }
-  .stat-red   { color: #ef4444; }
-  .stat-blue  { color: #60a5fa; }
-  .saldo-box { background: #0f0f1a; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .saldo-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-  .saldo-val { font-size: 18px; font-weight: 800; }
-  .btn-toggle { width: 100%; padding: 16px; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: 800; letter-spacing: 1px; transition: all .2s; margin-top: 12px; }
-  .btn-toggle.ligar    { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-  .btn-toggle.desligar { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; }
-  .status-banner { display: none; padding: 16px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 700; margin-top: 12px; animation: pulse 1.5s infinite; }
-  .status-banner.inicializando { background: rgba(255,255,255,.15); border: 1px solid #ffffff; color: #ffffff; }
-  .status-banner.desligando    { background: rgba(239,68,68,.15);  border: 1px solid #ef4444; color: #ef4444; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
-  .user-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .user-email { font-size: 13px; color: #ffffff; }
-  .btn-sair { background: none; border: 1px solid #444; color: #888; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-  .toggle-simulacao { position: relative; display: inline-block; width: 44px; height: 24px; }
-  .toggle-simulacao input { opacity: 0; width: 0; height: 0; }
-  .toggle-simulacao .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-  .toggle-simulacao .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-  .toggle-simulacao input:checked + .slider { background-color: #FFD700; }
-  .toggle-simulacao input:checked + .slider:before { transform: translateX(20px); }
+  .screen { width: 100%; max-width: 400px; padding: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #333; border-radius: 14px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .logo { text-align: center; margin-bottom: 25px; }
+  .logo h1 { color: #FFD700; font-size: 24px; letter-spacing: 1px; }
+  .logo p { color: #888; font-size: 14px; margin-top: 5px; }
+  label { display: block; font-size: 12px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
+  input { width: 100%; padding: 14px; background: #0f0f1a; border: 1px solid #333; border-radius: 10px; color: white; font-size: 16px; margin-bottom: 20px; transition: border-color 0.3s; }
+  input:focus { outline: none; border-color: #FFD700; }
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #FFD700, #b8860b); color: #000; transition: transform 0.2s; }
+  .btn:active { transform: scale(0.98); }
+  .msg { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; text-align: center; }
+  .msg-err { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; }
+  .msg-ok { background: rgba(34,197,94,0.1); border: 1px solid #22c55e; color: #22c55e; }
 </style>
 </head>
 <body>
 
-<div class="screen" id="loginScreen">
+<div class="screen">
   <div class="card">
     <div class="logo">
-      <h1>🤖 Rei dos Bots</h1>
-      <p>Acesse seu painel pelo celular</p>
+      <h1>🤖 REI DOS BOTS</h1>
+      <p>Acesso Mobile</p>
     </div>
     
-    <div class="msg msg-err" id="loginErr"></div>
+    <div class="msg msg-err" id="msgErr"></div>
+    <div class="msg msg-ok" id="msgOk"></div>
+    
     <label>Email</label>
-    <input type="email" id="loginEmail" placeholder="seu@email.com">
+    <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+    
     <label>Senha</label>
-    <input type="password" id="loginSenha" placeholder="••••••••">
-    <button class="btn btn-primary" id="btnLogin" onclick="fazerLogin()">Entrar</button>
-  </div>
-</div>
-
-<div class="screen" id="configScreen" style="display:none">
-  <div class="card">
-    <div class="user-info">
-      <div>
-        <div style="font-size:11px;color:#666">Logado como</div>
-        <div class="user-email" id="userEmailDisplay"></div>
-      </div>
-      <button class="btn-sair" id="btnSair">Sair</button>
-    </div>
+    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
     
-    <!-- TOGGLE MODO SIMULAÇÃO -->
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-      <div>
-        <div style="font-size: 11px; color: #FFD700; font-weight: 700;">🧪 Modo Simulação</div>
-        <div id="statusModoOperacao" style="font-size: 10px; color: #888;">Ativo</div>
-      </div>
-      <label class="toggle-simulacao">
-        <input type="checkbox" id="toggleSimulacao" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="section-title">Estratégia</div>
-    <label>Selecionar Estratégia</label>
-    <select id="selectEstrategia" onchange="toggleCamposEspeciais()"></select>
-    <div class="estrategia-desc" id="descEstrategia"></div>
-
-    <!-- CAMPOS DINÂMICOS -->
-    <div id="camposEspeciais" style="display:none; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #FFD700;">
-      <div id="campoHot" style="display:none">
-        <label>🔥 Qtd. Números Quentes</label>
-        <input type="number" id="configQtdHot" value="5">
-      </div>
-      <div id="campoCold" style="display:none">
-        <label>❄️ Qtd. Números Frios</label>
-        <input type="number" id="configQtdCold" value="5">
-      </div>
-      <div id="campoVizinhos">
-        <label>⭕ Vizinhos da Racetrack</label>
-        <input type="number" id="configVizinhos" value="1">
-      </div>
-      <label>🔍 Analisar Histórico (rodadas)</label>
-      <input type="number" id="configQtdAnalise" value="100">
-    </div>
-
-    <div class="section-title">Gestão</div>
-    <div class="form-row">
-      <div>
-        <label>Ficha Base (R$)</label>
-        <input type="number" id="valorFicha" value="1.00" step="0.5">
-      </div>
-      <div>
-        <label>Gales (0-2)</label>
-        <input type="number" id="gales" value="0" min="0" max="2" onchange="toggleCamposGale()">
-      </div>
-    </div>
-
-    <div id="camposGale" style="display:none">
-      <div class="form-row">
-        <div id="divGale1">
-          <label>Ficha G1 (R$)</label>
-          <input type="number" id="configFichaG1" value="2.00" step="0.5">
-        </div>
-        <div id="divGale2">
-          <label>Ficha G2 (R$)</label>
-          <input type="number" id="configFichaG2" value="4.00" step="0.5">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div>
-        <label>Stop Win (R$)</label>
-        <input type="number" id="stopWin" value="50.00">
-      </div>
-      <div>
-        <label>Stop Loss (R$)</label>
-        <input type="number" id="stopLoss" value="30.00">
-      </div>
-    </div>
-
-    <button class="btn btn-success" onclick="salvarConfig()">💾 Salvar Configurações</button>
-    
-    <div class="section-title">Status e Comandos</div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Greens</div>
-        <div class="stat-val stat-green" id="statGreens">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Reds</div>
-        <div class="stat-val stat-red" id="statReds">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Saldo</div>
-        <div class="stat-val" id="statSaldo" style="font-size:16px">R$ 0</div>
-      </div>
-    </div>
-
-    <button class="btn-toggle ligar" id="btnToggleBot">▶️ LIGAR BOT</button>
-    
-    <div class="status-banner inicializando" id="bannerInicializando">⏳ Inicializando...</div>
-    <div class="status-banner desligando" id="bannerDesligando">🔄 Desligando...</div>
+    <button class="btn" onclick="fazerLogin()">ENTRAR NO PAINEL</button>
   </div>
 </div>
 
 <script>
-const SERVIDOR_API = 'https://fortuna-x-web.onrender.com';
-const API = SERVIDOR_API + '/api';
+// URL do servidor Render
+const API = 'https://fortuna-x-web.onrender.com/api';
 
-let emailLogado = null;
-let estrategiasDisponiveis = [];
-let botLigado = false;
-
-// LOGIN
 async function fazerLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const senha = document.getElementById('loginSenha').value;
-  const errEl = document.getElementById('loginErr');
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
+  const msgErr = document.getElementById('msgErr');
+  const msgOk = document.getElementById('msgOk');
+  
+  msgErr.style.display = 'none';
+  msgOk.style.display = 'none';
   
   if (!email || !senha) {
-    errEl.textContent = 'Preencha email e senha';
-    errEl.style.display = 'block';
+    msgErr.textContent = 'Preencha todos os campos';
+    msgErr.style.display = 'block';
     return;
   }
   
@@ -203,165 +69,35 @@ async function fazerLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, senha })
     });
+    
     const data = await res.json();
-    if (!res.ok || data.erro) throw new Error(data.erro || 'Erro no login');
     
-    emailLogado = email;
-    abrirPainel();
-  } catch (e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
-  }
-}
-
-async function abrirPainel() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('configScreen').style.display = 'block';
-  document.getElementById('userEmailDisplay').textContent = emailLogado;
-  
-  await carregarEstrategias();
-  await carregarConfig();
-  
-  setInterval(atualizarStats, 3000);
-}
-
-// ESTRATEGIAS
-async function carregarEstrategias() {
-  try {
-    const res = await fetch(`${API}/estrategias/${encodeURIComponent(emailLogado)}`);
-    estrategiasDisponiveis = await res.json();
-    const sel = document.getElementById('selectEstrategia');
-    sel.innerHTML = estrategiasDisponiveis.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('');
-  } catch (e) { console.error(e); }
-}
-
-function toggleCamposEspeciais() {
-  const chave = document.getElementById('selectEstrategia').value;
-  const est = estrategiasDisponiveis.find(e => e.chave === chave);
-  const container = document.getElementById('camposEspeciais');
-  
-  if (!est) {
-    container.style.display = 'none';
-    return;
-  }
-  
-  container.style.display = 'block';
-  const nome = est.nome.toLowerCase();
-  document.getElementById('campoHot').style.display = nome.includes('quente') ? 'block' : 'none';
-  document.getElementById('campoCold').style.display = nome.includes('frio') ? 'block' : 'none';
-  
-  const desc = document.getElementById('descEstrategia');
-  desc.textContent = `${(est.gatilhos || []).length} gatilhos configurados`;
-}
-
-// CONFIG
-async function carregarConfig() {
-  try {
-    const res = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
-    const config = await res.json();
-    if (config.estrategia) {
-      document.getElementById('selectEstrategia').value = config.estrategia;
-      toggleCamposEspeciais();
+    if (!res.ok || data.erro) {
+      msgErr.textContent = data.erro || 'Erro ao fazer login';
+      msgErr.style.display = 'block';
+      return;
     }
-    document.getElementById('valorFicha').value = config.valor_ficha || 1;
-    document.getElementById('gales').value = config.gales || 0;
-    document.getElementById('stopWin').value = config.stop_win || 50;
-    document.getElementById('stopLoss').value = config.stop_loss || 30;
-    document.getElementById('configQtdHot').value = config.qtd_hot ?? 5;
-    document.getElementById('configQtdCold').value = config.qtd_cold ?? 5;
-    document.getElementById('configVizinhos').value = config.vizinhos ?? 1;
-    document.getElementById('configQtdAnalise').value = config.qtd_analise ?? 100;
     
-    botLigado = config.botLigado;
-    atualizarBotaoToggle();
-    toggleCamposGale();
-  } catch (e) { console.error(e); }
-}
-
-async function salvarConfig() {
-  const estChave = document.getElementById('selectEstrategia').value;
-  const est = estrategiasDisponiveis.find(e => e.chave === estChave);
-  
-  if (!est) {
-    alert('Selecione uma estratégia!');
-    return;
+    // Login OK
+    localStorage.setItem('rdb_email', email);
+    msgOk.textContent = '✅ Login realizado! Redirecionando...';
+    msgOk.style.display = 'block';
+    
+    setTimeout(() => {
+      // Redireciona para o index.html (que é o painel completo)
+      window.location.href = 'index.html';
+    }, 1000);
+    
+  } catch (e) {
+    msgErr.textContent = 'Erro ao conectar com o servidor.';
+    msgErr.style.display = 'block';
   }
-
-  const config = {
-    email: emailLogado,
-    estrategia: est.chave,
-    estrategia_id: est.id,
-    estrategia_nome: est.nome,
-    gatilhos: est.gatilhos || [],
-    valor_ficha: parseFloat(document.getElementById('valorFicha').value),
-    gales: parseInt(document.getElementById('gales').value),
-    stop_win: parseFloat(document.getElementById('stopWin').value),
-    stop_loss: parseFloat(document.getElementById('stopLoss').value),
-    qtd_hot: parseInt(document.getElementById('configQtdHot').value),
-    qtd_cold: parseInt(document.getElementById('configQtdCold').value),
-    vizinhos: parseInt(document.getElementById('configVizinhos').value),
-    qtd_analise: parseInt(document.getElementById('configQtdAnalise').value),
-    ficha_g1: parseFloat(document.getElementById('configFichaG1').value),
-    ficha_g2: parseFloat(document.getElementById('configFichaG2').value)
-  };
-
-  try {
-    const res = await fetch(`${API}/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config)
-    });
-    if (res.ok) alert('✅ Configurações salvas!');
-  } catch (e) { alert('Erro ao salvar'); }
 }
 
-// STATUS E COMANDOS
-async function atualizarStats() {
-  if (!emailLogado) return;
-  try {
-    const res = await fetch(`${API}/stats/${encodeURIComponent(emailLogado)}`);
-    const stats = await res.json();
-    document.getElementById('statGreens').textContent = stats.greens || 0;
-    document.getElementById('statReds').textContent = stats.reds || 0;
-    document.getElementById('statSaldo').textContent = `R$ ${stats.saldo || 0}`;
-    
-    const statusRes = await fetch(`${API}/status/${encodeURIComponent(emailLogado)}`);
-    const statusData = await statusRes.json();
-    botLigado = statusData.statusBot !== 'deslogado' && statusData.statusBot !== 'desligando';
-    atualizarBotaoToggle();
-    
-    document.getElementById('bannerInicializando').style.display = statusData.statusBot === 'inicializando' ? 'block' : 'none';
-    document.getElementById('bannerDesligando').style.display = statusData.statusBot === 'desligando' ? 'block' : 'none';
-  } catch (e) { console.error(e); }
-}
-
-document.getElementById('btnToggleBot').addEventListener('click', async () => {
-  const acao = botLigado ? 'desligar' : 'ligar';
-  try {
-    await fetch(`${API}/comando`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailLogado, acao })
-    });
-    botLigado = !botLigado;
-    atualizarBotaoToggle();
-  } catch (e) { console.error(e); }
+// Permitir Enter
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') fazerLogin();
 });
-
-function atualizarBotaoToggle() {
-  const btn = document.getElementById('btnToggleBot');
-  btn.textContent = botLigado ? '⏹️ DESLIGAR BOT' : '▶️ LIGAR BOT';
-  btn.className = botLigado ? 'btn-toggle desligar' : 'btn-toggle ligar';
-}
-
-function toggleCamposGale() {
-  const g = parseInt(document.getElementById('gales').value);
-  document.getElementById('camposGale').style.display = g > 0 ? 'block' : 'none';
-  document.getElementById('divGale1').style.display = g >= 1 ? 'block' : 'none';
-  document.getElementById('divGale2').style.display = g >= 2 ? 'block' : 'none';
-}
-
-document.getElementById('btnSair').addEventListener('click', () => location.reload());
 </script>
 </body>
 </html>
