@@ -132,15 +132,22 @@
     </div>
     
     <!-- TOGGLE MODO SIMULAÇÃO -->
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #FFD700;">
-      <div>
-        <div style="font-size: 11px; color: #FFD700; font-weight: 700;">🧪 Modo de Operação</div>
-        <div id="statusModoOperacao" style="font-size: 10px; color: #888;">Simulação Ativa</div>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #FFD700;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 11px; color: #FFD700; font-weight: 700;">🧪 Modo de Operação</div>
+          <div id="statusModoOperacao" style="font-size: 10px; color: #888;">Simulação Ativa</div>
+        </div>
+        <label class="toggle-simulacao">
+          <input type="checkbox" id="toggleSimulacao" checked>
+          <span class="slider"></span>
+        </label>
       </div>
-      <label class="toggle-simulacao">
-        <input type="checkbox" id="toggleSimulacao" checked>
-        <span class="slider"></span>
-      </label>
+      
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+        <div style="font-size: 11px; color: #ffffff; font-weight: 700;">🎯 Estratégia Ativa</div>
+        <div id="statusEstrategiaAtiva" style="font-size: 12px; color: #FFD700; font-weight: bold; margin-top: 2px;">Carregando...</div>
+      </div>
     </div>
     
     <!-- MENU DE NAVEGAÇÃO -->
@@ -752,6 +759,12 @@ async function carregarConfig() {
     const config = await res.json();
     
     if (res.ok) {
+      // Atualizar nome da estratégia ativa no painel principal
+      const statusEst = document.getElementById('statusEstrategiaAtiva');
+      if (statusEst) {
+        statusEst.textContent = config.estrategia_nome || config.nome || 'Nenhuma selecionada';
+      }
+
       if (config.estrategia) { 
         document.getElementById('selectEstrategia').value = config.estrategia; 
         mostrarDescEstrategia(); 
@@ -968,7 +981,12 @@ function esconderBanners() {
 
 function iniciarPollingStatus() {
   if (pollingStatusTimer) clearInterval(pollingStatusTimer);
-  pollingStatusTimer = setInterval(verificarStatusBot, 2000);
+  // Polling bilateral a cada 3 segundos (Status, Stats e Config)
+  pollingStatusTimer = setInterval(() => {
+    verificarStatusBot();
+    atualizarStats();
+    carregarConfig(); // Mantém o nome da estratégia e modo simulação atualizados
+  }, 3000);
 }
 
 async function verificarStatusBot() {
@@ -978,6 +996,13 @@ async function verificarStatusBot() {
     const data = await res.json();
     const status = data.statusBot;
     
+    // Atualizar modo simulação bilateralmente
+    const toggle = document.getElementById('toggleSimulacao');
+    if (data.modoSimulacao !== undefined && toggle) {
+        toggle.checked = data.modoSimulacao;
+        atualizarStatusSimulacao(data.modoSimulacao);
+    }
+
     if (status === 'na_mesa' || status === 'deslogado' || !status) {
       esconderBanners();
     } else if (status === 'inicializando') {
@@ -985,7 +1010,6 @@ async function verificarStatusBot() {
     } else if (status === 'desligando') {
       mostrarBanner('desligando');
     } else {
-      // Outros status desconhecidos
       esconderBanners();
     }
   } catch (e) { /* servidor offline */ }
@@ -993,8 +1017,8 @@ async function verificarStatusBot() {
 
 // ===== STATS =====
 function iniciarPollingStats() {
+  // Removido pois agora está centralizado no iniciarPollingStatus para ser bilateral 3s
   atualizarStats();
-  setInterval(atualizarStats, 3000);
 }
 
 async function atualizarStats() {

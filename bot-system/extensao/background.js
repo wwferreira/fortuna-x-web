@@ -2558,7 +2558,7 @@ setInterval(() => {
             });
         });
     }
-}, 5000);
+}, 3000); // Atualizado para 3 segundos conforme solicitação do usuário bilateralmente
 
 // Iniciar conexão quando a extensão carregar
 console.log('🎯 [WS-SERVIDOR] Aguardando 2 segundos para iniciar conexão...');

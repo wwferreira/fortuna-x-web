@@ -653,13 +653,16 @@ app.get('/api/status/:email', async (req, res) => {
   try {
     const { data } = await supabase
       .from('usuarios_bot')
-      .select('status_bot')
+      .select('status_bot, modo_simulacao')
       .eq('email', req.params.email)
       .single();
     
-    res.json({ statusBot: data?.status_bot || 'deslogado' });
+    res.json({ 
+      statusBot: data?.status_bot || 'deslogado',
+      modoSimulacao: data?.modo_simulacao ?? true // true por padrão
+    });
   } catch (e) {
-    res.json({ statusBot: 'deslogado' });
+    res.json({ statusBot: 'deslogado', modoSimulacao: true });
   }
 });
 
