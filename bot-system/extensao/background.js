@@ -1,5 +1,5 @@
 // ===== CONSTANTES =====
-const WS_URL = 'wss://fortuna-x-server.onrender.com';
+const WS_URL = 'wss://fortuna-x-web.onrender.com';
 const URL_MESA = 'https://big.bet.br/live-casino/game/3783645?provider=Playtech&from=%2Flive-casino';
 const URL_LOGIN_CASA = 'https://big.bet.br/casino?cmd=signin&path=phone';
 const URL_HOME_CASA = 'https://big.bet.br/pt';
@@ -1885,7 +1885,7 @@ let tentativasReconexao = 0;
 const MAX_TENTATIVAS = 999; // Tentar reconectar indefinidamente
 
 function conectarServidorLocal() {
-    const WS_URL = 'ws://localhost:3000';
+    const WS_URL = 'wss://fortuna-x-server.onrender.com';
     
     console.log('🔌 [WS-SERVIDOR] Função conectarServidorLocal() chamada');
     
@@ -2075,7 +2075,7 @@ async function iniciarBotRemoto() {
     
     // Buscar credenciais da casa de aposta do servidor
     try {
-        const response = await fetch(`http://localhost:3000/api/user-metadata/${encodeURIComponent(emailUsuarioLogado)}`);
+        const response = await fetch(`https://fortuna-x-web.onrender.com/api/user-metadata/${encodeURIComponent(emailUsuarioLogado)}`);
         const userData = await response.json();
         
         const casaEmail = userData.casa_email;
@@ -2543,7 +2543,7 @@ setInterval(() => {
             console.log('📊 [STATS] Enviando para servidor:', statsData);
             
             // Enviar via HTTP
-            fetch('http://localhost:3000/api/stats', {
+            fetch('https://fortuna-x-web.onrender.com/api/stats', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(statsData)
