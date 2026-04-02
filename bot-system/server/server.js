@@ -164,15 +164,21 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ erro: 'Email ou senha inválidos' });
     }
 
-    // Verificar se usuário está ativo
+    // Verificar se usuário está ativo e se pode usar o Bot Online
     const { data: userData } = await supabase
       .from('usuarios_bot')
-      .select('ativo')
+      .select('ativo, bot_online')
       .eq('email', email)
       .single();
 
     if (userData && !userData.ativo) {
       return res.status(401).json({ erro: 'Conta inativa. Contate o administrador.' });
+    }
+
+    // Verificar se é uma requisição do site (refer ou origin) e se tem permissão
+    const isBrowserRequest = req.headers.origin || req.headers.referer;
+    if (isBrowserRequest && userData && userData.bot_online === false) {
+      return res.status(403).json({ erro: 'Acesso ao Bot Online não autorizado para esta conta.' });
     }
 
     res.json({ 

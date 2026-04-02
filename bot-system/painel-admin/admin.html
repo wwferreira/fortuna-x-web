@@ -427,6 +427,17 @@
                     <small style="color: #888;">Deixe em branco para acesso vitalício</small>
                 </div>
                 
+                <div class="form-group" style="background: rgba(255, 215, 0, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 215, 0, 0.2); margin-bottom: 20px;">
+                    <label class="checkbox-item" style="background: transparent; border: none; padding: 0;">
+                        <input type="checkbox" id="checkBotOnline"> 
+                        <span style="color: #FFD700; font-weight: bold; font-size: 1em;">🌐 Permitir acesso ao Bot Online (Site)</span>
+                    </label>
+                    <small style="display: block; color: #888; margin-top: 8px;">
+                        Se marcado, o usuário pode logar no painel via navegador (reidosbots.net.br). 
+                        Se desmarcado, o login funciona apenas na extensão do PC.
+                    </small>
+                </div>
+                
                 <div class="form-group">
                     <label class="form-label">Estratégias Vinculadas</label>
                     <div class="checkbox-grid" id="estrategiasCheckbox"></div>
@@ -1310,6 +1321,7 @@ function abrirModalNovo() {
     document.getElementById('inputToken').value = gerarToken();
     document.getElementById('inputHwid').value = '';
     document.getElementById('inputValidade').value = '';
+    document.getElementById('checkBotOnline').checked = false;
     
     // Checkboxes estratégias
     let html = '';
@@ -1340,6 +1352,8 @@ async function editarUsuario(userId) {
     document.getElementById('inputEmail').value = usuarioEditando.email;
     document.getElementById('inputSenha').value = '';
     document.getElementById('inputToken').value = usuarioEditando.token || '';
+    document.getElementById('checkBotOnline').checked = usuarioEditando.bot_online === true || (usuarioEditando.user_metadata && usuarioEditando.user_metadata.bot_online === true);
+    
     (function preencherHwidInicial() {
         const meta = usuarioEditando.user_metadata || {};
         const preferencia = [
@@ -1413,7 +1427,7 @@ async function editarUsuario(userId) {
     document.getElementById('modalUsuario').classList.add('active');
 }
 
-async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade) {
+async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade, botOnline) {
     const payload = {
         id: userId,
         nome: nome || null,
@@ -1421,6 +1435,7 @@ async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade) {
         token: token || null,
         installation_id: hwid || null,
         data_vencimento: validade || null,
+        bot_online: botOnline || false,
         active_client_id: null,
         active_updated_at: null
     };
@@ -1463,6 +1478,7 @@ async function salvarUsuario() {
     const token = document.getElementById('inputToken').value;
     const hwid = document.getElementById('inputHwid').value;
     const validade = document.getElementById('inputValidade').value;
+    const botOnline = document.getElementById('checkBotOnline').checked;
     
     if (!email) {
         alert('Preencha o email');
@@ -1480,7 +1496,7 @@ async function salvarUsuario() {
             // Atualizar usuário existente
             const url = `${SUPABASE_URL}/auth/v1/admin/users/${usuarioEditando.id}`;
             const body = {
-                user_metadata: { nome, token, hwid, data_vencimento: validade }
+                user_metadata: { nome, token, hwid, data_vencimento: validade, bot_online: botOnline }
             };
             if (senha) body.password = senha;
             
@@ -1496,7 +1512,7 @@ async function salvarUsuario() {
             
             if (!res.ok) throw new Error('Erro ao atualizar');
 
-            await salvarPerfilUsuario(usuarioEditando.id, nome, email, token, hwid, validade);
+            await salvarPerfilUsuario(usuarioEditando.id, nome, email, token, hwid, validade, botOnline);
             
             // Atualizar estratégias
             await fazerRequisicao(`usuario_estrategias?usuario_id=eq.${usuarioEditando.id}`, 'DELETE');
@@ -1528,7 +1544,7 @@ async function salvarUsuario() {
                     email,
                     password: senha,
                     email_confirm: true,
-                    user_metadata: { nome, token, hwid, data_vencimento: validade }
+                    user_metadata: { nome, token, hwid, data_vencimento: validade, bot_online: botOnline }
                 })
             });
             
@@ -1536,7 +1552,7 @@ async function salvarUsuario() {
             
             const novoUsuario = await res.json();
 
-            await salvarPerfilUsuario(novoUsuario.id, nome, email, token, hwid, validade);
+            await salvarPerfilUsuario(novoUsuario.id, nome, email, token, hwid, validade, botOnline);
             
             // Vincular estratégias
             if (estrategiasSelecionadas.length > 0) {
