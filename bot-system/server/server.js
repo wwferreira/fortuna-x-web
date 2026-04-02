@@ -175,7 +175,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ erro: 'Conta inativa. Contate o administrador.' });
     }
 
-    // Verificar se é uma requisição do site (refer ou origin) e se tem permissão
+    // Verificar se é uma requisição do site e se tem permissão (bloqueia apenas se for explicitamente false)
     const isBrowserRequest = req.headers.origin || req.headers.referer;
     if (isBrowserRequest && userData && userData.bot_online === false) {
       return res.status(403).json({ erro: 'Acesso ao Bot Online não autorizado para esta conta.' });
