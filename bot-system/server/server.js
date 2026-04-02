@@ -345,8 +345,6 @@ app.get('/api/estrategias/:email?', async (req, res) => {
     const email = req.params.email;
     console.log('📋 Buscando estratégias para:', email);
     
-    // Por enquanto, retornar TODAS as estratégias (igual o painel admin faz)
-    // TODO: Implementar filtro por usuário quando a tabela usuario_estrategias estiver pronta
     const { data: estrategias, error } = await supabase
       .from('estrategias')
       .select('*')
@@ -357,8 +355,18 @@ app.get('/api/estrategias/:email?', async (req, res) => {
       throw error;
     }
     
-    console.log('✅ Estratégias encontradas:', estrategias?.length || 0);
-    res.json(estrategias || []);
+    // Garantir que todas as estratégias tenham uma 'chave'
+    const listaTratada = (estrategias || []).map(e => {
+      if (!e.chave) {
+        e.chave = e.nome.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+      }
+      return e;
+    });
+    
+    console.log('✅ Estratégias encontradas:', listaTratada.length);
+    res.json(listaTratada);
     
   } catch (e) {
     console.error('❌ Erro ao buscar estratégias:', e);
