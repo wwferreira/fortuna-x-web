@@ -1704,6 +1704,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 historicoRodadas: botState.historicoRodadas,
                 rouletteState: botState 
             }, () => {
+                // Sincronizar com o servidor WebSocket (Render)
+                if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+                    wsServidor.send(JSON.stringify({
+                        tipo: 'resultado',
+                        numero: numero,
+                        historico: botState.historicoRodadas.slice(0, 500) // Enviar as últimas 500
+                    }));
+                }
+
                 // Primeiro verificar o resultado da aposta anterior
                 verificarResultado(numero);
                 
@@ -1749,6 +1758,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Adicionar apenas os que não temos (simplificado)
                 const novos = numeros.filter(n => !botState.historicoRodadas.includes(n));
                 botState.historicoRodadas = [...novos, ...botState.historicoRodadas].slice(0, 1000);
+            }
+
+            // Enviar histórico completo para o servidor Render
+            if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+                wsServidor.send(JSON.stringify({
+                    tipo: 'resultado',
+                    numero: botState.historicoRodadas[0] || 0,
+                    historico: botState.historicoRodadas.slice(0, 500)
+                }));
             }
 
             // Atualizar sequenciaAtual com os mais recentes para não quebrar estratégias de sequência

@@ -135,6 +135,18 @@ wss.on('connection', (ws) => {
 
       if (msg.tipo === 'resultado') {
         console.log(`📊 Resultado de ${emailConectado}: número ${msg.numero}`);
+        
+        // Se a mensagem contiver o histórico completo, salvar no Supabase
+        if (msg.historico && Array.isArray(msg.historico)) {
+          console.log(`📜 Recebido histórico de ${msg.historico.length} rodadas para ${emailConectado}`);
+          await supabase
+            .from('usuarios_bot')
+            .update({ 
+              historico_rodadas: msg.historico,
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', emailConectado);
+        }
       }
 
       if (msg.tipo === 'status_bot') {
@@ -844,6 +856,21 @@ app.get('/test-ws', (req, res) => {
 app.use('/admin', express.static(path.join(__dirname, '../painel-admin')));
 app.use('/painel', express.static(path.join(__dirname, '../painel-usuario')));
 app.use(express.static(path.join(__dirname, '../../')));
+
+app.get('/api/historico/:email', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios_bot')
+      .select('historico_rodadas')
+      .eq('email', req.params.email)
+      .single();
+    
+    if (error) throw error;
+    res.json(data?.historico_rodadas || []);
+  } catch (e) {
+    res.json([]);
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
