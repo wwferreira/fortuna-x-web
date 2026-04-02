@@ -644,6 +644,14 @@ async function carregarDados() {
         usuarios = Array.isArray(resUsuariosBase) ? resUsuariosBase : [];
         estrategias = Array.isArray(resEstrategias) ? resEstrategias : [];
         const authUsers = Array.isArray(resAuthUsers) ? resAuthUsers : [];
+        
+        // Buscar dados extras da tabela usuarios_bot (onde fica a flag real do login)
+        let dadosBot = [];
+        try {
+            dadosBot = await fazerRequisicao('usuarios_bot').catch(() => []);
+        } catch (_) {}
+        const mapaBot = new Map(dadosBot.map(d => [d.email, d]));
+
         let perfis = [];
         try {
             perfis = await fazerRequisicao('usuarios').catch(() => []);
@@ -656,6 +664,7 @@ async function carregarDados() {
             usuarios = usuarios.map(u => {
                 const p = mapa.get(u.id);
                 const a = mapaAuth.get(u.id);
+                const dBot = mapaBot.get(u.email || a?.email || p?.email);
                 const metaAuth = (a && a.raw_user_meta_data) ? a.raw_user_meta_data : ((a && a.user_metadata) ? a.user_metadata : null);
                 const uMeta = u.raw_user_meta_data || u.user_metadata || {};
                 const combinedMeta = Object.assign({}, uMeta, metaAuth || {});
@@ -663,7 +672,7 @@ async function carregarDados() {
                     ...u,
                     installation_id: (p && p.installation_id != null) ? p.installation_id : u.installation_id,
                     active: (p && p.active != null) ? p.active : u.active,
-                    bot_online: (p && p.bot_online != null) ? p.bot_online : (u.bot_online ?? combinedMeta.bot_online ?? false),
+                    bot_online: (dBot && dBot.bot_online != null) ? dBot.bot_online : ((p && p.bot_online != null) ? p.bot_online : (u.bot_online ?? combinedMeta.bot_online ?? false)),
                     nome: u.nome ?? (p && p.nome) ?? (combinedMeta.nome) ?? null,
                     email: u.email ?? (p && p.email) ?? (a && a.email) ?? null,
                     user_metadata: combinedMeta
@@ -1442,12 +1451,13 @@ async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade, b
         token: token || null,
         installation_id: hwid || null,
         data_vencimento: validade || null,
-        bot_online: botOnline || false,
+        bot_online: botOnline,
         active_client_id: null,
         active_updated_at: null
     };
 
-    const tentativaPatch = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${userId}`, {
+    // Salvar na tabela 'usuarios'
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${userId}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -1458,24 +1468,16 @@ async function salvarPerfilUsuario(userId, nome, email, token, hwid, validade, b
         body: JSON.stringify(payload)
     });
 
-    if (tentativaPatch.ok) {
-        return;
-    }
-
-    const tentativaInsert = await fetch(`${SUPABASE_URL}/rest/v1/usuarios`, {
-        method: 'POST',
+    // Salvar também na tabela 'usuarios_bot' para garantir o login no celular
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios_bot?email=eq.${email}`, {
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=representation'
+            'Authorization': `Bearer ${SUPABASE_KEY}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ bot_online: botOnline })
     });
-
-    if (!tentativaInsert.ok) {
-        throw new Error(`Falha ao salvar perfil do usuário: ${tentativaInsert.status}`);
-    }
 }
 
 async function salvarUsuario() {
