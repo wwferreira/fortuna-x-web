@@ -1399,34 +1399,6 @@ function fecharModalHistorico() {
 }
 
 // ===== SALVAR DADOS DOS MODAIS =====
-async function salvarCasa() {
-  const casaUrl = document.getElementById('casaUrl').value;
-  const casaEmail = document.getElementById('casaEmail').value;
-  const casaSenha = document.getElementById('casaSenha').value;
-  
-  if (!casaUrl || !casaEmail || !casaSenha) {
-    mostrarMsg('msgErroCasa', '❌ Preencha todos os campos!');
-    return;
-  }
-  
-  try {
-    await fetch(`${API}/user-metadata`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: emailLogado,
-        casa_url: casaUrl,
-        casa_email: casaEmail,
-        casa_senha: casaSenha
-      })
-    });
-    
-    mostrarMsg('msgSalvoCasa', '✅ Credenciais salvas com sucesso!');
-  } catch (e) {
-    mostrarMsg('msgErroCasa', '❌ Erro ao salvar credenciais.');
-  }
-}
-
 async function salvarEstrategia() {
   const estId = document.getElementById('selectEstrategia').value;
   let estCompleta = estrategiasDisponiveis.find(e => e.id == estId);
@@ -1444,6 +1416,7 @@ async function salvarEstrategia() {
   const config = {
     estrategia_id: estCompleta.id,
     estrategia_nome: estCompleta.nome,
+    estrategia: estCompleta.chave, // Importante para o servidor encontrar os gatilhos
     gatilhos: estCompleta.gatilhos || [],
     qtd_hot: parseInt(document.getElementById('configQtdHot').value) || 5,
     qtd_cold: parseInt(document.getElementById('configQtdCold').value) || 5,

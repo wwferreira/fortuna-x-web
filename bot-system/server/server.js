@@ -263,16 +263,35 @@ app.post('/api/config', async (req, res) => {
 
     console.log('💾 Salvando config para', email, ':', config);
 
-    // Atualizar no Supabase
-    const { error } = await supabase
+    // Atualizar no Supabase usando update ou insert para ser mais robusto
+    const { data: userExistente, error: searchError } = await supabase
       .from('usuarios_bot')
-      .upsert({ 
-        email, 
-        config,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'email' });
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
 
-    if (error) throw error;
+    if (searchError) throw searchError;
+
+    let result;
+    if (userExistente) {
+      result = await supabase
+        .from('usuarios_bot')
+        .update({ 
+          config,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userExistente.id);
+    } else {
+      result = await supabase
+        .from('usuarios_bot')
+        .insert({ 
+          email, 
+          config,
+          ativo: true
+        });
+    }
+
+    if (result.error) throw result.error;
 
     // Enviar para extensão se conectada
     const ws = conexoesUsuario.get(email);
