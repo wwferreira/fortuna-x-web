@@ -2066,9 +2066,19 @@ async function iniciarBotRemoto() {
     
     // Garantir que o sidepanel esteja aberto (necessário para algumas funções)
     try {
-        const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
-        for (const window of windows) {
-            await chrome.sidePanel.open({ windowId: window.id }).catch(() => {});
+        // Método mais seguro para Chrome 116+
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        if (tab && tab.id) {
+            await chrome.sidePanel.open({ tabId: tab.id }).catch(() => {
+                // Fallback: tenta abrir na janela toda se falhar na aba
+                chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+            });
+        } else {
+            // Fallback para qualquer janela aberta
+            const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+            if (windows.length > 0) {
+                await chrome.sidePanel.open({ windowId: windows[0].id }).catch(() => {});
+            }
         }
     } catch (e) {
         console.log('⚠️ [WS-SERVIDOR] Erro ao abrir sidepanel:', e.message);
@@ -2390,6 +2400,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 console.log('🚪 [WS-SERVIDOR] Logout pendente detectado, injetando script de logout...');
                 // Aguardar 3s para a página renderizar
                 setTimeout(() => {
+                    // Verificar se a aba ainda existe antes de injetar
+                chrome.tabs.get(tabId, (tab) => {
+                    if (chrome.runtime.lastError || !tab) {
+                        console.error('❌ [WS-SERVIDOR] Aba de logout não existe mais');
+                        return;
+                    }
+                    
                     chrome.scripting.executeScript({
                         target: { tabId },
                         func: executarLogout
@@ -2398,7 +2415,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     }).catch((e) => {
                         console.error('❌ [WS-SERVIDOR] Erro ao injetar script de logout:', e);
                     });
-                }, 3000);
+                });
+            }, 3000);
             }
         });
     }
