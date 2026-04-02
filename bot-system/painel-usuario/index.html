@@ -722,8 +722,8 @@ async function carregarEstrategias() {
     
     const sel = document.getElementById('selectEstrategia');
     
-    // Usar 'id' como value e 'nome' como texto
-    sel.innerHTML = estrategiasDisponiveis.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+    // Usar 'chave' como value e 'nome' como texto
+    sel.innerHTML = estrategiasDisponiveis.map(e => `<option value="${e.chave}">${e.nome}</option>`).join('');
     
     if (estrategiasDisponiveis.length === 0) {
       sel.innerHTML = '<option value="">Nenhuma estratégia disponível</option>';
@@ -742,8 +742,8 @@ async function carregarEstrategias() {
 }
 
 function mostrarDescEstrategia() {
-  const id = document.getElementById('selectEstrategia').value;
-  const est = estrategiasDisponiveis.find(e => e.id == id);
+  const chave = document.getElementById('selectEstrategia').value;
+  const est = estrategiasDisponiveis.find(e => e.chave == chave);
   const desc = document.getElementById('descEstrategia');
   if (est) {
     const qtdGatilhos = (est.gatilhos || []).length;
@@ -824,7 +824,7 @@ function toggleCamposEspeciais() {
     if (!container) return; // Se não existir, sair
 
     // Buscar estratégia selecionada
-    const estrategiaSelecionada = estrategiasDisponiveis.find(e => e.id == est);
+    const estrategiaSelecionada = estrategiasDisponiveis.find(e => e.chave == est);
     
     if (estrategiaSelecionada) {
         const nome = estrategiaSelecionada.nome.toLowerCase();
@@ -1433,8 +1433,8 @@ function fecharModalHistorico() {
 
 // ===== SALVAR DADOS DOS MODAIS =====
 async function salvarEstrategia() {
-  const estId = document.getElementById('selectEstrategia').value;
-  let estCompleta = estrategiasDisponiveis.find(e => e.id == estId);
+  const estChave = document.getElementById('selectEstrategia').value;
+  let estCompleta = estrategiasDisponiveis.find(e => e.chave == estChave);
   
   if (!estCompleta) {
     mostrarMsg('msgErroEstrategia', '❌ Selecione uma estratégia!');
@@ -1451,9 +1451,9 @@ async function salvarEstrategia() {
     estrategia_nome: estCompleta.nome,
     estrategia: estCompleta.chave, // Importante para o servidor encontrar os gatilhos
     gatilhos: estCompleta.gatilhos || [],
-    qtd_hot: parseInt(document.getElementById('configQtdHot').value) || 5,
-    qtd_cold: parseInt(document.getElementById('configQtdCold').value) || 5,
-    vizinhos: parseInt(document.getElementById('configVizinhos').value) || 0,
+    qtd_hot: parseInt(document.getElementById('configQtdHot').value) >= 0 ? parseInt(document.getElementById('configQtdHot').value) : 5,
+    qtd_cold: parseInt(document.getElementById('configQtdCold').value) >= 0 ? parseInt(document.getElementById('configQtdCold').value) : 5,
+    vizinhos: parseInt(document.getElementById('configVizinhos').value) >= 0 ? parseInt(document.getElementById('configVizinhos').value) : 0,
     qtd_analise: parseInt(document.getElementById('configQtdAnalise').value) || 100
   };
 

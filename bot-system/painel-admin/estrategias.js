@@ -144,8 +144,17 @@ async function salvarEstrategia() {
     loading.style.display = 'block';
 
     try {
+        // Gerar chave a partir do nome se não existir
+        const chave = nome.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+            .replace(/[^a-z0-9]/g, '_') // Remove caracteres especiais
+            .replace(/_+/g, '_') // Remove múltiplos underscores
+            .replace(/^_|_$/g, ''); // Remove underscores no início/fim
+
         const dados = {
             nome: nome,
+            chave: chave,
             gatilhos: gatilhosTemp,
             criado_em: new Date().toISOString()
         };

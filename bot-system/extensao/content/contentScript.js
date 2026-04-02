@@ -751,15 +751,40 @@ function parseSaldoPagina(texto) {
 
 function lerSaldoDaPagina() {
     try {
-        // Tentar todos os elementos com a classe do saldo
-        var candidatos = document.querySelectorAll('[class*="fit-container__content"]');
-        for (var i = 0; i < candidatos.length; i++) {
-            var txt = candidatos[i].textContent || '';
-            if (txt.includes('R$')) {
-                var num = parseSaldoPagina(txt);
-                if (!isNaN(num) && num > 0) return num; // Exige > 0 para ignorar zeros momentâneos
+        // Seletores robustos para o saldo na bet365 e outros provedores
+        const seletores = [
+            '.fit-container__content', // Bet365/Evolution
+            '.balance-amount',
+            '.user-balance',
+            '.total-balance',
+            '.balance-value',
+            '.balance-amount__value',
+            '[class*="balance"]',
+            '[class*="fit-container__content"]'
+        ];
+
+        for (const seletor of seletores) {
+            const elementos = document.querySelectorAll(seletor);
+            for (let el of elementos) {
+                const txt = el.textContent || '';
+                if (txt.includes('R$') || txt.match(/\d+,\d{2}/)) {
+                    const num = parseSaldoPagina(txt);
+                    if (!isNaN(num) && num > 0) return num;
+                }
             }
         }
+
+        // Se não encontrar por seletor, procurar por texto em todos os elementos pequenos
+        // Isso é mais lento, mas serve como fallback
+        const spans = document.querySelectorAll('span, div');
+        for (let i = 0; i < Math.min(spans.length, 500); i++) { // Limitar busca por performance
+            const txt = spans[i].textContent || '';
+            if (txt.includes('R$') && txt.length < 30) {
+                const num = parseSaldoPagina(txt);
+                if (!isNaN(num) && num > 0) return num;
+            }
+        }
+
     } catch (e) {}
     return null;
 }
@@ -768,14 +793,18 @@ function monitorarEEnviarSaldo() {
     var saldo = lerSaldoDaPagina();
     // Ignorar null (elemento não encontrado) e 0 (momentâneo durante rodada)
     if (saldo !== null && saldo > 0 && saldo !== ultimoSaldoMonitorado) {
-        ultimoSaldoMonitorado = saldo;
-        try {
-            if (chrome.runtime && chrome.runtime.id) {
-                chrome.runtime.sendMessage({ tipo: 'atualizar_saldo', saldo: saldo })
-                    .catch(() => {}); // Silenciar erros quando sidepanel não está aberto
-            }
-        } catch (e) {}
-    }
+            console.log(`💰 [FORTUNA X] SALDO ATUALIZADO: R$ ${saldo}`);
+            ultimoSaldoMonitorado = saldo;
+            try {
+                if (chrome.runtime && chrome.runtime.id) {
+                    chrome.runtime.sendMessage({ tipo: 'atualizar_saldo', saldo: saldo })
+                        .catch(() => {}); // Silenciar erros quando sidepanel não está aberto
+                }
+            } catch (e) {}
+        } else if (saldo === null) {
+            // Log periódico discreto para debug se não encontrar saldo
+            if (Math.random() < 0.05) console.log('🔍 [FORTUNA X] Procurando saldo na página...');
+        }
 }
 
 if (chrome && chrome.runtime && chrome.runtime.id) {

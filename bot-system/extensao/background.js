@@ -1940,18 +1940,18 @@ function conectarServidorLocal() {
                         botState.gales = msg.gales || 0;
                         botState.fichaG1 = msg.ficha_g1 || 0;
                         botState.fichaG2 = msg.ficha_g2 || 0;
-                        botState.qtdHot = msg.qtd_hot || 5;
-                        botState.qtdCold = msg.qtd_cold || 5;
-                        botState.vizinhos = msg.vizinhos || 0;
+                        botState.qtdHot = (msg.qtd_hot !== undefined && msg.qtd_hot !== null) ? msg.qtd_hot : 5;
+                        botState.qtdCold = (msg.qtd_cold !== undefined && msg.qtd_cold !== null) ? msg.qtd_cold : 5;
+                        botState.vizinhos = (msg.vizinhos !== undefined && msg.vizinhos !== null) ? msg.vizinhos : 0;
                         botState.qtdAnalise = msg.qtd_analise || 100;
                         
                         // Atualizar configurações específicas de Quentes e Frios
                         if (!botState.configQuentesFrios) {
                             botState.configQuentesFrios = {};
                         }
-                        botState.configQuentesFrios.qtdQuentes = msg.qtd_hot || 5;
-                        botState.configQuentesFrios.qtdFrios = msg.qtd_cold || 5;
-                        botState.configQuentesFrios.qtdVizinhos = msg.vizinhos || 0;
+                        botState.configQuentesFrios.qtdQuentes = (msg.qtd_hot !== undefined && msg.qtd_hot !== null) ? msg.qtd_hot : 5;
+                        botState.configQuentesFrios.qtdFrios = (msg.qtd_cold !== undefined && msg.qtd_cold !== null) ? msg.qtd_cold : 5;
+                        botState.configQuentesFrios.qtdVizinhos = (msg.vizinhos !== undefined && msg.vizinhos !== null) ? msg.vizinhos : 0;
                         botState.configQuentesFrios.tipo = msg.tipo_progressao || 'simples';
                         
                         // Configurar multiplicadores se houver

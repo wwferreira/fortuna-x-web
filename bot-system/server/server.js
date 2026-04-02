@@ -105,7 +105,19 @@ wss.on('connection', (ws) => {
           
           // Buscar estratégia se houver
           if (config.estrategia) {
-            const est = db.estrategias.find(e => e.chave === config.estrategia);
+            let est = db.estrategias.find(e => e.chave === config.estrategia);
+            
+            // Se não achou no JSON local, buscar no Supabase
+            if (!est) {
+              const { data: estSupabase } = await supabase
+                .from('estrategias')
+                .select('*')
+                .eq('chave', config.estrategia)
+                .maybeSingle();
+              
+              if (estSupabase) est = estSupabase;
+            }
+
             if (est) {
               config.gatilhos = est.gatilhos || [];
               config.legendas = est.legendas || [];
@@ -206,7 +218,18 @@ app.get('/api/config/:email', async (req, res) => {
     }
     
     const config = userData.config || {};
-    const est = db.estrategias.find(e => e.chave === config.estrategia);
+    let est = db.estrategias.find(e => e.chave === config.estrategia);
+    
+    // Se não achou no JSON local, buscar no Supabase
+    if (!est && config.estrategia) {
+      const { data: estSupabase } = await supabase
+        .from('estrategias')
+        .select('*')
+        .eq('chave', config.estrategia)
+        .maybeSingle();
+      
+      if (estSupabase) est = estSupabase;
+    }
     
     // Garantir gatilhos e nome
     if (!config.gatilhos || config.gatilhos.length === 0) {
@@ -217,6 +240,9 @@ app.get('/api/config/:email', async (req, res) => {
     }
     if (!config.nome) {
       config.nome = est ? est.nome : (config.estrategia || '');
+    }
+    if (!config.estrategia_nome && est) {
+      config.estrategia_nome = est.nome;
     }
 
     res.json({ ...config, botLigado: userData.bot_ligado || false });
