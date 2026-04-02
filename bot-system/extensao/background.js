@@ -1938,6 +1938,15 @@ function conectarServidorLocal() {
                     email: emailUsuarioLogado
                 }));
                 console.log('📤 [WS-SERVIDOR] Mensagem de identificação enviada');
+
+                // Enviar histórico IMEDIATAMENTE após conectar
+                if (botState.historicoRodadas && botState.historicoRodadas.length > 0) {
+                    wsServidor.send(JSON.stringify({
+                        tipo: 'resultado',
+                        numero: botState.historicoRodadas[0] || 0,
+                        historico: botState.historicoRodadas.slice(0, 500)
+                    }));
+                }
             };
             
             wsServidor.onmessage = async (event) => {

@@ -136,16 +136,21 @@ wss.on('connection', (ws) => {
       if (msg.tipo === 'resultado') {
         console.log(`📊 Resultado de ${emailConectado}: número ${msg.numero}`);
         
-        // Se a mensagem contiver o histórico completo, salvar no Supabase
+        // Salvar histórico dentro do objeto config para garantir compatibilidade
         if (msg.historico && Array.isArray(msg.historico)) {
-          console.log(`📜 Recebido histórico de ${msg.historico.length} rodadas para ${emailConectado}`);
+          const { data: user } = await supabase.from('usuarios_bot').select('config').eq('email', emailConectado).single();
+          let currentConfig = user?.config || {};
+          currentConfig.historico_rodadas = msg.historico;
+
           await supabase
             .from('usuarios_bot')
             .update({ 
-              historico_rodadas: msg.historico,
+              config: currentConfig,
               updated_at: new Date().toISOString()
             })
             .eq('email', emailConectado);
+          
+          console.log(`📜 Histórico de ${msg.historico.length} números salvo para ${emailConectado}`);
         }
       }
 
@@ -861,12 +866,13 @@ app.get('/api/historico/:email', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('usuarios_bot')
-      .select('historico_rodadas')
+      .select('config')
       .eq('email', req.params.email)
       .single();
     
     if (error) throw error;
-    res.json(data?.historico_rodadas || []);
+    // Retornar o histórico de rodadas guardado dentro do config
+    res.json(data?.config?.historico_rodadas || []);
   } catch (e) {
     res.json([]);
   }
