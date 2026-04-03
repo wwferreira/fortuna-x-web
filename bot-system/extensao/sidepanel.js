@@ -1,4 +1,4 @@
-﻿// ===== SUPABASE CLIENT (EMBUTIDO) =====
+// ===== SUPABASE CLIENT (EMBUTIDO) =====
 const SUPABASE_URL = 'https://vfmzxgznrgwnzghqaaau.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmbXp4Z3pucmd3bnpnaHFhYWF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMTU1MzYsImV4cCI6MjA4MTU5MTUzNn0.wqPeHz7fMd8S2erj0KtVYd3BgKqRdi7ymxFkoUae-ck';
 
@@ -4250,6 +4250,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       inputQtdVizinhos.value = message.config.vizinhos;
       console.log('✅ [SIDEPANEL] Quantidade de vizinhos atualizada para:', message.config.vizinhos);
     }
+
+    if (message.config.qtd_analise !== undefined) {
+      const sliderHistorico = document.getElementById('sliderHistorico');
+      const valorSliderHistorico = document.getElementById('valorSliderHistorico');
+      if (sliderHistorico) sliderHistorico.value = message.config.qtd_analise;
+      if (valorSliderHistorico) valorSliderHistorico.textContent = message.config.qtd_analise;
+      console.log('✅ [SIDEPANEL] Quantidade de análise atualizada para:', message.config.qtd_analise);
+    }
     
     // Atualizar campos específicos do Funcionário do Mês
     const inputNumerosFixos = document.getElementById('inputNumerosFixos');
@@ -4280,6 +4288,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       if (message.config.vizinhos !== undefined) {
         state.configQuentesFrios.qtdVizinhos = message.config.vizinhos;
+      }
+      if (message.config.qtd_analise !== undefined) {
+        state.maxRodadasHistorico = message.config.qtd_analise;
       }
       
       // Atualizar configurações do Funcionário do Mês

@@ -1974,6 +1974,8 @@ function conectarServidorLocal() {
                         botState.qtdCold = (msg.qtd_cold !== undefined && msg.qtd_cold !== null) ? msg.qtd_cold : 5;
                         botState.vizinhos = (msg.vizinhos !== undefined && msg.vizinhos !== null) ? msg.vizinhos : 0;
                         botState.qtdAnalise = msg.qtd_analise || 100;
+                        botState.maxRodadasHistorico = msg.qtd_analise || 100; // Sincronizar com a variável usada nos cálculos
+
                         
                         // Atualizar configurações específicas de Quentes e Frios
                         if (!botState.configQuentesFrios) {
