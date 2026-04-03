@@ -354,6 +354,47 @@
       <!-- CAMPOS DINÂMICOS ESTRATÉGIA -->
       <div id="camposEspeciais" style="display:none; background: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #000000;">
         
+        <!-- MODO GATILHO PERSONALIZADO -->
+        <div id="campoModoGatilho" style="display:none; margin-bottom:20px;">
+            <div style="font-size:12px; color:#FFD700; font-weight:700; margin-bottom:15px; display:flex; align-items:center; border-bottom: 1px solid #333; padding-bottom:8px;">
+                🎯 CONFIGURAÇÃO MODO GATILHO
+            </div>
+            
+            <!-- Legendas -->
+            <div style="margin-bottom:15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                <label style="font-size:11px; color:#aaa;">1. CRIAR LEGENDAS (GRUPOS DE NÚMEROS)</label>
+                <div style="display: flex; gap: 5px; margin-top: 5px;">
+                    <input type="text" id="inputNomeLegenda" placeholder="Nome (Ex: DZ1)" style="flex: 1; font-size: 11px; padding: 8px; margin-bottom: 0;">
+                    <input type="text" id="inputNumerosLegenda" placeholder="Números (Ex: 1 2 3)" style="flex: 2; font-size: 11px; padding: 8px; margin-bottom: 0;">
+                    <button class="btn" style="width: auto; padding: 0 15px; background: #333; margin-bottom: 0;" onclick="adicionarLegendaLocal()">➕</button>
+                </div>
+                <div id="listaLegendasLocal" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;"></div>
+            </div>
+
+            <!-- Gatilhos -->
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                <label style="font-size:11px; color:#aaa;">2. CRIAR GATILHOS DE APOSTA</label>
+                <input type="text" id="inputSequenciaGatilho" placeholder="Sequência (Ex: DZ1 DZ2)" style="font-size: 11px; padding: 8px; margin-top: 5px;">
+                <input type="text" id="inputApostaGatilho" placeholder="Aposta em (Ex: D1, C2)" style="font-size: 11px; padding: 8px;">
+                
+                <label style="font-size:10px; color:#666;">TIPO DE PROGRESSÃO</label>
+                <select id="selectTipoGatilhoLocal" onchange="toggleConfigGaleLocal()" style="font-size: 11px; padding: 8px; margin-bottom: 10px;">
+                    <option value="simples">🔹 Simples (Apenas entrada)</option>
+                    <option value="gale">🎯 Gale</option>
+                    <option value="ciclo">🔄 Ciclo</option>
+                </select>
+
+                <div id="configGaleLocal" style="display: none; background: #0f0f1a; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                    <label style="font-size: 10px; color: #888;">Etapas: <span id="valEtapasLocal" style="color:#fff;">1</span></label>
+                    <input type="range" id="sliderEtapasLocal" min="1" max="10" value="1" style="width: 100%;" oninput="atualizarSlidersFichasLocal()">
+                    <div id="containerSlidersFichasLocal" style="margin-top: 10px;"></div>
+                </div>
+                
+                <button class="btn btn-success" style="font-size: 12px; padding: 10px;" onclick="adicionarGatilhoLocal()">➕ Adicionar Gatilho</button>
+                <div id="listaGatilhosLocal" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+
         <!-- NÚMEROS QUENTES -->
         <div id="campoHot" style="display:none; margin-bottom:15px">
             <label style="font-size:12px;color:#ffffff; display:block; margin-bottom:5px">🔥 Quantidade de Números Quentes</label>
@@ -464,82 +505,11 @@
       
       <button class="btn btn-success" onclick="salvarEstrategia()">💾 Salvar Estratégia</button>
       
-      <!-- BOTÃO MODO GATILHO -->
-      <button class="btn" style="background: linear-gradient(135deg, #FFD700, #b8860b); color: #000; border: none; margin-top: 10px;" onclick="abrirModalModoGatilho()">
-        🎯 Configurar Modo Gatilho (Legendas)
-      </button>
-
       <!-- BOTÃO VER TODAS ESTRATÉGIAS -->
       <button class="btn" style="background: #1a1a1a; color: #ffffff; border: 1px solid #ffffff; margin-top: 10px;" id="btnVerEstrategias">
         🎯 Ver Todas as Estratégias Disponíveis
       </button>
     </div>
-  </div>
-</div>
-
-<!-- MODAL MODO GATILHO (LEGENDAS E GATILHOS PERSONALIZADOS) -->
-<div class="modal" id="modalModoGatilho">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">🎯 Modo Gatilho Personalizado</h2>
-      <button class="btn-close-modal" onclick="fecharModalModoGatilho()">✕ Fechar</button>
-    </div>
-    
-    <!-- SEÇÃO LEGENDAS -->
-    <div class="card" style="margin-bottom: 15px;">
-      <div style="font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px;">
-        1. CRIAR LEGENDAS (GRUPOS DE NÚMEROS)
-      </div>
-      
-      <label>Nome da Legenda (Ex: DZ1, MEUS_NUMEROS)</label>
-      <input type="text" id="inputNomeLegenda" placeholder="Apenas letras e números">
-      
-      <label>Números (0 a 36 separados por espaço)</label>
-      <input type="text" id="inputNumerosLegenda" placeholder="Ex: 0 32 15 19 4 21">
-      
-      <button class="btn btn-primary" style="background: #333; margin-bottom: 15px;" onclick="adicionarLegendaLocal()">➕ Adicionar Legenda</button>
-      
-      <label style="color: #888; font-size: 11px;">LEGENDAS ATIVAS:</label>
-      <div id="listaLegendasLocal" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-        <!-- Legendas aparecem aqui -->
-      </div>
-    </div>
-
-    <!-- SEÇÃO GATILHOS -->
-    <div class="card">
-      <div style="font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px;">
-        2. CRIAR GATILHOS DE APOSTA
-      </div>
-      
-      <label>Sequência do Gatilho (Nomes das legendas separadas por espaço)</label>
-      <input type="text" id="inputSequenciaGatilho" placeholder="Ex: DZ1 DZ2 DZ1">
-      
-      <label>Aposta em (Ex: D1, C2, ou números puros)</label>
-      <input type="text" id="inputApostaGatilho" placeholder="Onde o bot deve apostar">
-      
-      <label>Tipo de Progressão</label>
-      <select id="selectTipoGatilhoLocal" onchange="toggleConfigGaleLocal()">
-        <option value="simples">🔹 Simples (Apenas entrada)</option>
-        <option value="gale">🎯 Gale</option>
-        <option value="ciclo">🔄 Ciclo</option>
-      </select>
-
-      <!-- Configuração Gale/Ciclo Local -->
-      <div id="configGaleLocal" style="display: none; background: #0f0f1a; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333;">
-        <label style="font-size: 11px; color: #888;">Quantidade de Etapas: <span id="valEtapasLocal" style="color:#fff; font-weight:bold;">1</span></label>
-        <input type="range" id="sliderEtapasLocal" min="1" max="10" value="1" style="width: 100%; margin-bottom: 10px;" oninput="atualizarSlidersFichasLocal()">
-        <div id="containerSlidersFichasLocal"></div>
-      </div>
-      
-      <button class="btn btn-success" onclick="adicionarGatilhoLocal()">➕ Adicionar Gatilho</button>
-      
-      <label style="color: #888; font-size: 11px; margin-top: 20px; display: block;">GATILHOS ATIVOS:</label>
-      <div id="listaGatilhosLocal" style="margin-top: 10px;">
-        <!-- Gatilhos aparecem aqui -->
-      </div>
-    </div>
-
-    <button class="btn btn-success" style="width: 100%; margin-top: 20px; height: 60px; font-size: 18px;" onclick="salvarModoGatilhoCompleto()">💾 SALVAR TUDO E ENVIAR PARA O BOT</button>
   </div>
 </div>
 
@@ -812,7 +782,8 @@ async function carregarEstrategias() {
     
     // Usar 'chave' como value e manter o id no data-id
     sel.innerHTML = '<option value="">Selecione uma estratégia...</option>' + 
-      estrategiasDisponiveis.map(e => `<option value="${e.chave}" data-id="${e.id}">${e.nome}</option>`).join('');
+      estrategiasDisponiveis.map(e => `<option value="${e.chave}" data-id="${e.id}">${e.nome}</option>`).join('') +
+      '<option value="modo_gatilho" style="color:#FFD700; font-weight:bold;">🎯 MODO GATILHO (Personalizado)</option>';
     
     sel.addEventListener('change', () => {
         mostrarDescEstrategia();
@@ -938,10 +909,25 @@ function toggleCamposEspeciais() {
     const rowViz = document.getElementById('campoVizinhos');
     const rowFuncionario = document.getElementById('campoFuncionarioMes');
     const rowProgressaoGeral = document.getElementById('campoProgressaoGeral');
+    const rowModoGatilho = document.getElementById('campoModoGatilho');
 
     // Buscar estratégia selecionada
     const estObj = estrategiasDisponiveis.find(e => e.chave == est);
     
+    // Se não achou por chave, mas é modo_gatilho manual
+    if (est === 'modo_gatilho') {
+        container.style.display = 'block';
+        if (rowModoGatilho) rowModoGatilho.style.display = 'block';
+        if (rowHot) rowHot.style.display = 'none';
+        if (rowCold) rowCold.style.display = 'none';
+        if (rowViz) rowViz.style.display = 'none';
+        if (rowFuncionario) rowFuncionario.style.display = 'none';
+        if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
+        
+        carregarModoGatilhoAtual(); // Carregar legendas/gatilhos existentes
+        return;
+    }
+
     if (estObj) {
         const nome = estObj.nome.toLowerCase();
         console.log('🎯 Estratégia selecionada:', nome);
@@ -1835,80 +1821,94 @@ function fecharModalHistorico() {
 async function salvarEstrategia() {
   const sel = document.getElementById('selectEstrategia');
   const estChave = sel.value;
-  let estCompleta = estrategiasDisponiveis.find(e => e.chave == estChave);
   
-  if (!estCompleta) {
-    mostrarMsg('msgErroEstrategia', '❌ Selecione uma estratégia!');
-    return;
-  }
-  
-  const nome = estCompleta.nome.toLowerCase();
-  const isFuncionarioMes = nome.includes('funcionário') || nome.includes('funcionario');
-  
-  // Coletar configurações
-  const config = {
-    estrategia_id: estCompleta.id,
-    estrategia_nome: estCompleta.nome,
-    estrategia: estCompleta.chave,
-    gatilhos: estCompleta.gatilhos || [],
-    qtd_hot: document.getElementById('configQtdHot').value !== "" ? parseInt(document.getElementById('configQtdHot').value) : 5,
-    qtd_cold: document.getElementById('configQtdCold').value !== "" ? parseInt(document.getElementById('configQtdCold').value) : 5,
-    vizinhos: document.getElementById('configVizinhos').value !== "" ? parseInt(document.getElementById('configVizinhos').value) : 0,
-    qtd_analise: parseInt(document.getElementById('configQtdAnalise').value) || 100
+  let config = {
+    email: emailLogado,
+    qtd_analise: parseInt(document.getElementById('configQtdAnalise').value) || 100,
+    valor_ficha: parseFloat(document.getElementById('valorFicha').value) || 1,
+    stop_win: parseFloat(document.getElementById('stopWin').value) || 0,
+    stop_loss: parseFloat(document.getElementById('stopLoss').value) || 0,
+    gales: parseInt(document.getElementById('gales').value) || 0,
+    ficha_g1: parseFloat(document.getElementById('configFichaG1').value) || 0,
+    ficha_g2: parseFloat(document.getElementById('configFichaG2').value) || 0
   };
 
-  // Se for Funcionário do Mês, pegar os campos específicos
-  if (isFuncionarioMes) {
-    config.numeros_fixos_fm = document.getElementById('configNumerosFixosFM')?.value || '';
-    config.tipo_progressao_fm = document.getElementById('configTipoProgressaoFM')?.value || 'simples';
-    config.vizinhos = 2; // Fixo para FM
-    
-    const tipoFM = config.tipo_progressao_fm;
-    if (tipoFM === 'gale' || tipoFM === 'ciclo') {
-      const qtdEtapas = parseInt(document.getElementById('sliderEtapasFM')?.value) || 2;
-      const multiplicadores = [];
-      for (let i = 1; i <= qtdEtapas; i++) {
-        const slider = document.getElementById(`sliderEtapaFM${i}`);
-        if (slider) multiplicadores.push(parseInt(slider.value));
-      }
-      if (tipoFM === 'gale') config.gales_multiplicadores_fm = multiplicadores;
-      else config.ciclo_multiplicadores_fm = multiplicadores;
+  if (estChave === 'modo_gatilho') {
+    // Caso especial: Modo Gatilho Personalizado
+    if (Object.keys(legendasLocais).length === 0 || gatilhosLocais.length === 0) {
+      mostrarMsg('msgErroEstrategia', '❌ Adicione legendas e gatilhos para o Modo Gatilho!');
+      return;
     }
+    config.estrategia = 'modo_gatilho';
+    config.estrategia_nome = '🎯 Modo Gatilho Personalizado';
+    config.legendas = legendasLocais;
+    config.gatilhos = gatilhosLocais;
+    config.qtd_hot = 0;
+    config.qtd_cold = 0;
+    config.vizinhos = 0;
   } else {
-    // Progressão para outras estratégias
-    const tipo = document.getElementById('configTipoProgressao')?.value || 'simples';
-    config.tipo_progressao = tipo;
-    if (tipo === 'gale' || tipo === 'ciclo') {
-      const qtdEtapas = parseInt(document.getElementById('sliderEtapas')?.value) || 2;
-      const multiplicadores = [];
-      for (let i = 1; i <= qtdEtapas; i++) {
-        const slider = document.getElementById(`sliderEtapa${i}`);
-        if (slider) multiplicadores.push(parseInt(slider.value));
+    // Estratégias normais da lista
+    let estCompleta = estrategiasDisponiveis.find(e => e.chave == estChave);
+    if (!estCompleta) {
+      mostrarMsg('msgErroEstrategia', '❌ Selecione uma estratégia!');
+      return;
+    }
+    
+    const nome = estCompleta.nome.toLowerCase();
+    const isFuncionarioMes = nome.includes('funcionário') || nome.includes('funcionario');
+    
+    config.estrategia_id = estCompleta.id;
+    config.estrategia_nome = estCompleta.nome;
+    config.estrategia = estCompleta.chave;
+    config.gatilhos = estCompleta.gatilhos || [];
+    config.qtd_hot = document.getElementById('configQtdHot').value !== "" ? parseInt(document.getElementById('configQtdHot').value) : 5;
+    config.qtd_cold = document.getElementById('configQtdCold').value !== "" ? parseInt(document.getElementById('configQtdCold').value) : 5;
+    config.vizinhos = document.getElementById('configVizinhos').value !== "" ? parseInt(document.getElementById('configVizinhos').value) : 0;
+
+    if (isFuncionarioMes) {
+      config.numeros_fixos_fm = document.getElementById('configNumerosFixosFM')?.value || '';
+      config.tipo_progressao_fm = document.getElementById('configTipoProgressaoFM')?.value || 'simples';
+      config.vizinhos = 2;
+      
+      const tipoFM = config.tipo_progressao_fm;
+      if (tipoFM === 'gale' || tipoFM === 'ciclo') {
+        const qtdEtapas = parseInt(document.getElementById('sliderEtapasFM')?.value) || 2;
+        const multiplicadores = [];
+        for (let i = 1; i <= qtdEtapas; i++) {
+          const slider = document.getElementById(`sliderEtapaFM${i}`);
+          if (slider) multiplicadores.push(parseInt(slider.value));
+        }
+        if (tipoFM === 'gale') config.gales_multiplicadores_fm = multiplicadores;
+        else config.ciclo_multiplicadores_fm = multiplicadores;
       }
-      if (tipo === 'gale') config.gales_multiplicadores = multiplicadores;
-      else config.ciclo_multiplicadores = multiplicadores;
+    } else {
+      const tipo = document.getElementById('configTipoProgressao')?.value || 'simples';
+      config.tipo_progressao = tipo;
+      if (tipo === 'gale' || tipo === 'ciclo') {
+        const qtdEtapas = parseInt(document.getElementById('sliderEtapas')?.value) || 2;
+        const multiplicadores = [];
+        for (let i = 1; i <= qtdEtapas; i++) {
+          const slider = document.getElementById(`sliderEtapa${i}`);
+          if (slider) multiplicadores.push(parseInt(slider.value));
+        }
+        if (tipo === 'gale') config.gales_multiplicadores = multiplicadores;
+        else config.ciclo_multiplicadores = multiplicadores;
+      }
     }
   }
-
-  // Manter valores de gestão atuais
-  config.valor_ficha = parseFloat(document.getElementById('valorFicha').value) || 1;
-  config.stop_win = parseFloat(document.getElementById('stopWin').value) || 0;
-  config.stop_loss = parseFloat(document.getElementById('stopLoss').value) || 0;
-  config.gales = parseInt(document.getElementById('gales').value) || 0;
-  config.ficha_g1 = parseFloat(document.getElementById('configFichaG1').value) || 0;
-  config.ficha_g2 = parseFloat(document.getElementById('configFichaG2').value) || 0;
 
   try {
     const res = await fetch(`${API}/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailLogado, ...config })
+      body: JSON.stringify(config)
     });
     
     if (!res.ok) throw new Error('Erro ao salvar');
     
-    mostrarMsg('msgSalvoEstrategia', '✅ Estratégia salva com sucesso!');
+    mostrarMsg('msgSalvoEstrategia', '✅ Configuração salva com sucesso!');
     setTimeout(() => fecharModalEstrategiasConfig(), 1500);
+    carregarConfig(); // Atualizar status na tela principal
   } catch (e) {
     mostrarMsg('msgErroEstrategia', '❌ Erro ao salvar.');
   }
