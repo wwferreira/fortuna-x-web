@@ -768,8 +768,11 @@ app.post('/api/reset-stats', async (req, res) => {
     const saldoAtual = userData?.stats?.saldo || 0;
     const saldoInicial = userData?.stats?.saldoInicial || saldoAtual;
     
+    // Se resetarSaldo for true, forçamos o novo saldo ser o saldo inicial
     const novoSaldo = resetarSaldo ? saldoInicial : saldoAtual;
     
+    console.log(`🔄 [RESET] ${email}: Saldo Atual: ${saldoAtual}, Saldo Inicial: ${saldoInicial}, Novo Saldo: ${novoSaldo}`);
+
     await supabase
       .from('usuarios_bot')
       .update({ 
@@ -786,7 +789,12 @@ app.post('/api/reset-stats', async (req, res) => {
     const ws = conexoesUsuario.get(email);
     if (ws && ws.readyState === WebSocket.OPEN) {
       // O comando reset_stats deve ser obedecido pela extensão independentemente do modo
-      ws.send(JSON.stringify({ tipo: 'comando', acao: 'reset_stats', novoSaldo: novoSaldo }));
+      ws.send(JSON.stringify({ 
+        tipo: 'comando', 
+        acao: 'reset_stats', 
+        novoSaldo: novoSaldo,
+        resetarSaldo: !!resetarSaldo 
+      }));
     }
     
     res.json({ ok: true });
