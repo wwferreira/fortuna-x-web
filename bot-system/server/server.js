@@ -194,20 +194,37 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Verificar se usuário está ativo e se pode usar o Bot Online
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('usuarios_bot')
       .select('ativo, bot_online')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
-    if (userData && !userData.ativo) {
+    if (userError) {
+      console.error('Erro ao buscar dados do usuário:', userError);
+    }
+
+    if (userData && userData.ativo === false) {
       return res.status(401).json({ erro: 'Conta inativa. Contate o administrador.' });
     }
 
     // Verificar se é uma requisição do site e se tem permissão (bloqueia apenas se for explicitamente false)
     const isBrowserRequest = req.headers.origin || req.headers.referer;
     if (isBrowserRequest && userData && userData.bot_online === false) {
+      console.log(`🚫 Acesso negado para ${email}: bot_online está como false`);
       return res.status(403).json({ erro: 'Acesso ao Bot Online não autorizado para esta conta.' });
+    }
+
+    // Se não encontrou na usuarios_bot, vamos verificar nos metadados do Auth (fallback)
+    if (!userData) {
+      const userMeta = data.user.user_metadata || {};
+      if (userMeta.ativo === false) {
+        return res.status(401).json({ erro: 'Conta inativa. Contate o administrador.' });
+      }
+      if (isBrowserRequest && userMeta.bot_online === false) {
+        console.log(`🚫 Acesso negado para ${email} via Auth Metadata: bot_online está como false`);
+        return res.status(403).json({ erro: 'Acesso ao Bot Online não autorizado para esta conta.' });
+      }
     }
 
     res.json({ 
