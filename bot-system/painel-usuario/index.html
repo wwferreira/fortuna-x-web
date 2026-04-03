@@ -464,11 +464,82 @@
       
       <button class="btn btn-success" onclick="salvarEstrategia()">💾 Salvar Estratégia</button>
       
+      <!-- BOTÃO MODO GATILHO -->
+      <button class="btn" style="background: linear-gradient(135deg, #FFD700, #b8860b); color: #000; border: none; margin-top: 10px;" onclick="abrirModalModoGatilho()">
+        🎯 Configurar Modo Gatilho (Legendas)
+      </button>
+
       <!-- BOTÃO VER TODAS ESTRATÉGIAS -->
       <button class="btn" style="background: #1a1a1a; color: #ffffff; border: 1px solid #ffffff; margin-top: 10px;" id="btnVerEstrategias">
         🎯 Ver Todas as Estratégias Disponíveis
       </button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL MODO GATILHO (LEGENDAS E GATILHOS PERSONALIZADOS) -->
+<div class="modal" id="modalModoGatilho">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">🎯 Modo Gatilho Personalizado</h2>
+      <button class="btn-close-modal" onclick="fecharModalModoGatilho()">✕ Fechar</button>
+    </div>
+    
+    <!-- SEÇÃO LEGENDAS -->
+    <div class="card" style="margin-bottom: 15px;">
+      <div style="font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px;">
+        1. CRIAR LEGENDAS (GRUPOS DE NÚMEROS)
+      </div>
+      
+      <label>Nome da Legenda (Ex: DZ1, MEUS_NUMEROS)</label>
+      <input type="text" id="inputNomeLegenda" placeholder="Apenas letras e números">
+      
+      <label>Números (0 a 36 separados por espaço)</label>
+      <input type="text" id="inputNumerosLegenda" placeholder="Ex: 0 32 15 19 4 21">
+      
+      <button class="btn btn-primary" style="background: #333; margin-bottom: 15px;" onclick="adicionarLegendaLocal()">➕ Adicionar Legenda</button>
+      
+      <label style="color: #888; font-size: 11px;">LEGENDAS ATIVAS:</label>
+      <div id="listaLegendasLocal" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+        <!-- Legendas aparecem aqui -->
+      </div>
+    </div>
+
+    <!-- SEÇÃO GATILHOS -->
+    <div class="card">
+      <div style="font-size: 14px; color: #FFD700; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px;">
+        2. CRIAR GATILHOS DE APOSTA
+      </div>
+      
+      <label>Sequência do Gatilho (Nomes das legendas separadas por espaço)</label>
+      <input type="text" id="inputSequenciaGatilho" placeholder="Ex: DZ1 DZ2 DZ1">
+      
+      <label>Aposta em (Ex: D1, C2, ou números puros)</label>
+      <input type="text" id="inputApostaGatilho" placeholder="Onde o bot deve apostar">
+      
+      <label>Tipo de Progressão</label>
+      <select id="selectTipoGatilhoLocal" onchange="toggleConfigGaleLocal()">
+        <option value="simples">🔹 Simples (Apenas entrada)</option>
+        <option value="gale">🎯 Gale</option>
+        <option value="ciclo">🔄 Ciclo</option>
+      </select>
+
+      <!-- Configuração Gale/Ciclo Local -->
+      <div id="configGaleLocal" style="display: none; background: #0f0f1a; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333;">
+        <label style="font-size: 11px; color: #888;">Quantidade de Etapas: <span id="valEtapasLocal" style="color:#fff; font-weight:bold;">1</span></label>
+        <input type="range" id="sliderEtapasLocal" min="1" max="10" value="1" style="width: 100%; margin-bottom: 10px;" oninput="atualizarSlidersFichasLocal()">
+        <div id="containerSlidersFichasLocal"></div>
+      </div>
+      
+      <button class="btn btn-success" onclick="adicionarGatilhoLocal()">➕ Adicionar Gatilho</button>
+      
+      <label style="color: #888; font-size: 11px; margin-top: 20px; display: block;">GATILHOS ATIVOS:</label>
+      <div id="listaGatilhosLocal" style="margin-top: 10px;">
+        <!-- Gatilhos aparecem aqui -->
+      </div>
+    </div>
+
+    <button class="btn btn-success" style="width: 100%; margin-top: 20px; height: 60px; font-size: 18px;" onclick="salvarModoGatilhoCompleto()">💾 SALVAR TUDO E ENVIAR PARA O BOT</button>
   </div>
 </div>
 
@@ -1460,6 +1531,198 @@ function abrirModalCasa() {
 
 function fecharModalCasa() {
   document.getElementById('modalCasa').style.display = 'none';
+}
+
+// ===== MODO GATILHO (LEGENDAS E GATILHOS) =====
+let legendasLocais = {};
+let gatilhosLocais = [];
+
+function abrirModalModoGatilho() {
+  document.getElementById('modalModoGatilho').style.display = 'block';
+  carregarModoGatilhoAtual();
+}
+
+function fecharModalModoGatilho() {
+  document.getElementById('modalModoGatilho').style.display = 'none';
+}
+
+async function carregarModoGatilhoAtual() {
+  try {
+    const res = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
+    const config = await res.json();
+    
+    legendasLocais = config.legendas || {};
+    gatilhosLocais = config.gatilhos || [];
+    
+    // Se a estratégia atual não for modo gatilho, mas tivermos dados, carregamos
+    // Se for modo gatilho, os dados já estarão lá
+    
+    atualizarListaLegendasLocal();
+    atualizarListaGatilhosLocal();
+  } catch (e) {
+    console.error('Erro ao carregar modo gatilho:', e);
+  }
+}
+
+function adicionarLegendaLocal() {
+  const nome = document.getElementById('inputNomeLegenda').value.trim().toUpperCase();
+  const numerosStr = document.getElementById('inputNumerosLegenda').value.trim();
+  
+  if (!nome || !numerosStr) {
+    alert('Preencha o nome e os números!');
+    return;
+  }
+  
+  const numeros = numerosStr.split(/\s+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+  
+  if (numeros.length === 0) {
+    alert('Informe números válidos de 0 a 36!');
+    return;
+  }
+  
+  legendasLocais[nome] = numeros;
+  document.getElementById('inputNomeLegenda').value = '';
+  document.getElementById('inputNumerosLegenda').value = '';
+  
+  atualizarListaLegendasLocal();
+}
+
+function removerLegendaLocal(nome) {
+  delete legendasLocais[nome];
+  atualizarListaLegendasLocal();
+}
+
+function atualizarListaLegendasLocal() {
+  const container = document.getElementById('listaLegendasLocal');
+  container.innerHTML = '';
+  
+  Object.keys(legendasLocais).forEach(nome => {
+    const tag = document.createElement('div');
+    tag.style = 'background: #333; border: 1px solid #FFD700; color: #FFD700; padding: 5px 10px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px;';
+    tag.innerHTML = `<span>${nome} (${legendasLocais[nome].length})</span> <span onclick="removerLegendaLocal('${nome}')" style="cursor:pointer; color:#ef4444; font-weight:bold;">✕</span>`;
+    container.appendChild(tag);
+  });
+}
+
+function toggleConfigGaleLocal() {
+  const tipo = document.getElementById('selectTipoGatilhoLocal').value;
+  document.getElementById('configGaleLocal').style.display = (tipo === 'gale' || tipo === 'ciclo') ? 'block' : 'none';
+  if (tipo === 'gale' || tipo === 'ciclo') atualizarSlidersFichasLocal();
+}
+
+function atualizarSlidersFichasLocal() {
+  const qtd = parseInt(document.getElementById('sliderEtapasLocal').value);
+  document.getElementById('valEtapasLocal').textContent = qtd;
+  
+  const container = document.getElementById('containerSlidersFichasLocal');
+  container.innerHTML = '';
+  
+  const tipo = document.getElementById('selectTipoGatilhoLocal').value;
+  const label = tipo === 'gale' ? 'Multiplicador Gale' : 'Ficha Ciclo';
+  
+  for (let i = 1; i <= qtd; i++) {
+    const div = document.createElement('div');
+    div.style = 'margin-bottom: 8px;';
+    div.innerHTML = `
+      <label style="font-size: 10px; color: #666;">${label} ${i}: <span id="valEtapaLocal${i}" style="color:#fff;">2</span>x</label>
+      <input type="range" id="sliderEtapaLocal${i}" min="1" max="100" value="2" style="width: 100%;" oninput="document.getElementById('valEtapaLocal${i}').textContent = this.value">
+    `;
+    container.appendChild(div);
+  }
+}
+
+function adicionarGatilhoLocal() {
+  const sequencia = document.getElementById('inputSequenciaGatilho').value.trim().toUpperCase();
+  const aposta = document.getElementById('inputApostaGatilho').value.trim().toUpperCase();
+  const tipo = document.getElementById('selectTipoGatilhoLocal').value;
+  
+  if (!sequencia || !aposta) {
+    alert('Preencha a sequência e a aposta!');
+    return;
+  }
+  
+  const gatilho = {
+    legenda: sequencia,
+    aposta: aposta,
+    tipo: tipo
+  };
+  
+  if (tipo === 'gale' || tipo === 'ciclo') {
+    const qtd = parseInt(document.getElementById('sliderEtapasLocal').value);
+    const mults = [];
+    for (let i = 1; i <= qtd; i++) {
+      mults.push(parseInt(document.getElementById(`sliderEtapaLocal${i}`).value));
+    }
+    if (tipo === 'gale') gatilho.gales_multiplicadores = mults;
+    else gatilho.ciclo_multiplicadores = mults;
+  }
+  
+  gatilhosLocais.push(gatilho);
+  atualizarListaGatilhosLocal();
+}
+
+function removerGatilhoLocal(index) {
+  gatilhosLocais.splice(index, 1);
+  atualizarListaGatilhosLocal();
+}
+
+function atualizarListaGatilhosLocal() {
+  const container = document.getElementById('listaGatilhosLocal');
+  container.innerHTML = '';
+  
+  gatilhosLocais.forEach((g, i) => {
+    const item = document.createElement('div');
+    item.style = 'background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; position: relative;';
+    item.innerHTML = `
+      <div style="color: #FFD700; font-weight: bold; margin-bottom: 4px;">Gatilho #${i+1}</div>
+      <div style="margin-bottom: 2px;"><span style="color:#666;">SEQUE:</span> ${g.legenda}</div>
+      <div style="margin-bottom: 2px;"><span style="color:#666;">APOSTA:</span> ${g.aposta}</div>
+      <div><span style="color:#666;">TIPO:</span> ${g.tipo.toUpperCase()} ${g.gales_multiplicadores ? '('+g.gales_multiplicadores.length+' etapas)' : ''}</div>
+      <button onclick="removerGatilhoLocal(${i})" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer;">REMOVER</button>
+    `;
+    container.appendChild(item);
+  });
+}
+
+async function salvarModoGatilhoCompleto() {
+  if (Object.keys(legendasLocais).length === 0 || gatilhosLocais.length === 0) {
+    alert('Adicione pelo menos uma legenda e um gatilho!');
+    return;
+  }
+  
+  // Pegar config atual para manter valores de banca
+  try {
+    const resGet = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
+    const currentConfig = await resGet.json();
+    
+    const config = {
+      ...currentConfig,
+      estrategia: 'modo_gatilho',
+      estrategia_nome: '🎯 Modo Gatilho Personalizado',
+      legendas: legendasLocais,
+      gatilhos: gatilhosLocais,
+      // Resetar campos de estratégias dinâmicas
+      qtd_hot: 0,
+      qtd_cold: 0,
+      vizinhos: 0
+    };
+
+    const res = await fetch(`${API}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailLogado, ...config })
+    });
+    
+    if (!res.ok) throw new Error('Erro ao salvar');
+    
+    alert('✅ Modo Gatilho ativado e enviado para o Bot!');
+    fecharModalModoGatilho();
+    
+    // Atualizar interface principal
+    carregarConfig();
+  } catch (e) {
+    alert('Erro ao salvar modo gatilho');
+  }
 }
 
 async function abrirModalEstrategiasConfig() {

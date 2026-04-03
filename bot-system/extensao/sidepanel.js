@@ -4256,7 +4256,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const valorSliderHistorico = document.getElementById('valorSliderHistorico');
       if (sliderHistorico) sliderHistorico.value = message.config.qtd_analise;
       if (valorSliderHistorico) valorSliderHistorico.textContent = message.config.qtd_analise;
+      state.maxRodadasHistorico = message.config.qtd_analise;
       console.log('✅ [SIDEPANEL] Quantidade de análise atualizada para:', message.config.qtd_analise);
+    }
+
+    // Sincronizar Legendas e Gatilhos do Servidor
+    if (message.config.legendas) {
+      state.legendas = message.config.legendas;
+      renderLegendas();
+      console.log('📚 [SIDEPANEL] Legendas sincronizadas:', Object.keys(state.legendas).length);
+    }
+    if (message.config.gatilhos) {
+      state.gatilhos = message.config.gatilhos;
+      renderGatilhosLegendas();
+      console.log('🎯 [SIDEPANEL] Gatilhos sincronizados:', state.gatilhos.length);
     }
     
     // Atualizar campos específicos do Funcionário do Mês

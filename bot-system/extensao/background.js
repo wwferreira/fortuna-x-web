@@ -1975,6 +1975,16 @@ function conectarServidorLocal() {
                         botState.vizinhos = (msg.vizinhos !== undefined && msg.vizinhos !== null) ? msg.vizinhos : 0;
                         botState.qtdAnalise = msg.qtd_analise || 100;
                         botState.maxRodadasHistorico = msg.qtd_analise || 100; // Sincronizar com a variável usada nos cálculos
+                        
+                        // Sincronizar Legendas e Gatilhos (Modo Gatilho)
+                        if (msg.legendas) {
+                            botState.legendas = msg.legendas;
+                            console.log('📚 [WS] Legendas atualizadas:', Object.keys(msg.legendas).length);
+                        }
+                        if (msg.gatilhos) {
+                            botState.gatilhos = msg.gatilhos;
+                            console.log('🎯 [WS] Gatilhos atualizados:', msg.gatilhos.length);
+                        }
 
                         
                         // Atualizar configurações específicas de Quentes e Frios
