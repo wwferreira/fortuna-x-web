@@ -980,13 +980,6 @@ function verificarGatilhosParaApostar(numero) {
             return;
         }
 
-        // --- CORREÇÃO: No modo Simulação, ignorar a contagem de 5 rodadas de análise e disparar imediatamente ---
-        if (modoSimulacaoAtivo) {
-            console.log('🧪 [BACKGROUND] Modo Simulação: Pulando contagem de rodadas de análise. Disparando imediatamente.');
-            gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
-            return;
-        }
-
         // Decrementar rodadas ANTES de verificar se está aguardando próxima rodada ou apostaAtiva
         const rodadasParaEsperar = (gatilhosDinamicos[0].configEspecial && gatilhosDinamicos[0].configEspecial.esperarRodadas) || 5;
 
@@ -1002,6 +995,11 @@ function verificarGatilhosParaApostar(numero) {
 
         if (botCountdownState.rodadasRestantes > 0) {
             console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
+            
+            // Enviar rodadas aguardando para o servidor
+            const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando' : 'Aguardando';
+            enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
+            
             chrome.runtime.sendMessage({ 
                 tipo: 'aposta_contagem_rodadas', 
                 rodadas: botCountdownState.rodadasRestantes,
@@ -1013,6 +1011,10 @@ function verificarGatilhosParaApostar(numero) {
 
         // Chegou a ZERO: Disparar apostas dinâmicas
         console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
+        
+        // Limpar rodadas aguardando no servidor
+        const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
+        enviarRodadasAguardandoParaServidor(0, statusBot);
         
         gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
         return; 
@@ -1111,6 +1113,10 @@ function processarMotorIAPleno(gatilhoIA, numero) {
     if (botCountdownState.rodadasRestantes > 0) {
         botCountdownState.rodadasRestantes--;
         chrome.storage.local.set({ botCountdownState });
+        
+        // Enviar rodadas aguardando para o servidor
+        const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
+        enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
         
         chrome.runtime.sendMessage({
             tipo: 'status_ia_atualizar',
@@ -2655,8 +2661,6 @@ async function redirecionarParaMesa(tabId) {
 
 // Função para enviar informações de rodadas aguardando para o servidor
 function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
-    // Temporariamente desabilitada para debug
-    /*
     if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
         wsServidor.send(JSON.stringify({
             tipo: 'rodadas_aguardando',
@@ -2665,7 +2669,6 @@ function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
         }));
         console.log(`📤 [WS-SERVIDOR] Rodadas aguardando enviadas: ${rodadas}`);
     }
-    */
 }
 
 // Enviar stats para o servidor a cada 3 segundos
