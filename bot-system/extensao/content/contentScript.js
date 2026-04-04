@@ -1213,24 +1213,59 @@ function atualizarPainelStatus() {
 function atualizarSaldoInicial() {
   console.log('🔃 [MINI PAINEL] Tentando atualizar saldo inicial...');
   
-  // Obter saldo atual
-  var saldoElement = document.querySelector("#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L");
-  
-  if (!saldoElement) {
-    // Tentar seletores alternativos
-    const seletoresAlternativos = [
-      '.fit-container__content',
-      '.balance-amount',
-      '.user-balance',
-      '.total-balance',
-      '.balance-value',
-      '[class*="balance"]'
-    ];
+  // Lista expandida de seletores para diferentes versões da plataforma
+  const seletoresAlternativos = [
+    // Seletor original específico
+    "#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L",
     
-    for (let seletor of seletoresAlternativos) {
+    // Seletores mais genéricos
+    '.fit-container__content--PZA2L',
+    '.fit-container__content',
+    '.balance__value .fit-container__content',
+    '.balance-value .fit-container__content',
+    '.account-panel__balance-section .fit-container__content',
+    
+    // Seletores de backup
+    '.balance-amount',
+    '.user-balance',
+    '.total-balance',
+    '.balance-value',
+    '.balance-amount__value',
+    '[class*="balance"]',
+    '[class*="fit-container__content"]',
+    
+    // Seletores por texto
+    '*[class*="balance"]:contains("R$")',
+    '*:contains("R$")'
+  ];
+  
+  let saldoElement = null;
+  let seletorUsado = '';
+  
+  // Tentar cada seletor
+  for (let seletor of seletoresAlternativos) {
+    try {
       saldoElement = document.querySelector(seletor);
-      if (saldoElement && saldoElement.textContent.includes('R$')) {
+      if (saldoElement && saldoElement.textContent && saldoElement.textContent.includes('R$')) {
+        seletorUsado = seletor;
         console.log(`🔃 [MINI PAINEL] Saldo encontrado com seletor: ${seletor}`);
+        break;
+      }
+    } catch (e) {
+      // Ignorar erros de seletor inválido
+    }
+  }
+  
+  // Se não encontrou, procurar por qualquer elemento que contenha R$ e números
+  if (!saldoElement) {
+    console.log('🔃 [MINI PAINEL] Procurando por qualquer elemento com R$...');
+    const todosElementos = document.querySelectorAll('*');
+    for (let el of todosElementos) {
+      const texto = el.textContent || '';
+      if (texto.includes('R$') && texto.match(/\d+[,\.]\d{2}/) && texto.length < 50) {
+        saldoElement = el;
+        seletorUsado = 'busca manual';
+        console.log(`🔃 [MINI PAINEL] Saldo encontrado por busca manual: "${texto}"`);
         break;
       }
     }
@@ -1238,14 +1273,41 @@ function atualizarSaldoInicial() {
   
   if (saldoElement) {
     var textoSaldo = saldoElement.textContent.trim();
-    console.log(`🔃 [MINI PAINEL] Texto do saldo encontrado: "${textoSaldo}"`);
+    console.log(`🔃 [MINI PAINEL] Texto do saldo encontrado: "${textoSaldo}" (seletor: ${seletorUsado})`);
     
-    var saldoLimpo = textoSaldo.replace(/R\$/g, '').replace(/&nbsp;/g, '').replace(/\s/g, '').trim();
-    var saldoNumerico = parseFloat(saldoLimpo.replace(',', '.'));
+    // Melhorar a limpeza do texto
+    var saldoLimpo = textoSaldo
+      .replace(/R\$/g, '')           // Remove R$
+      .replace(/&nbsp;/g, ' ')       // Substitui &nbsp; por espaço
+      .replace(/\s+/g, '')           // Remove todos os espaços
+      .replace(/[^\d,\.]/g, '')      // Remove tudo exceto números, vírgulas e pontos
+      .trim();
     
-    console.log(`🔃 [MINI PAINEL] Saldo numérico: ${saldoNumerico}`);
+    console.log(`🔃 [MINI PAINEL] Saldo limpo: "${saldoLimpo}"`);
     
-    if (!isNaN(saldoNumerico)) {
+    // Tentar diferentes formatos de número
+    let saldoNumerico = NaN;
+    
+    // Formato brasileiro: 1.234,56
+    if (saldoLimpo.includes(',') && saldoLimpo.lastIndexOf(',') > saldoLimpo.lastIndexOf('.')) {
+      saldoNumerico = parseFloat(saldoLimpo.replace(/\./g, '').replace(',', '.'));
+    }
+    // Formato americano: 1,234.56 ou apenas 1234.56
+    else if (saldoLimpo.includes('.')) {
+      saldoNumerico = parseFloat(saldoLimpo.replace(/,/g, ''));
+    }
+    // Apenas números com vírgula: 1234,56
+    else if (saldoLimpo.includes(',')) {
+      saldoNumerico = parseFloat(saldoLimpo.replace(',', '.'));
+    }
+    // Apenas números: 1234
+    else {
+      saldoNumerico = parseFloat(saldoLimpo);
+    }
+    
+    console.log(`🔃 [MINI PAINEL] Saldo numérico calculado: ${saldoNumerico}`);
+    
+    if (!isNaN(saldoNumerico) && saldoNumerico > 0) {
       statusBancaInicial = saldoNumerico;
       statusBancaAtual = saldoNumerico;
       ultimoSaldoMonitorado = saldoNumerico;
@@ -1255,12 +1317,23 @@ function atualizarSaldoInicial() {
       
       console.log(`🔃 [MINI PAINEL] ✅ Saldo atualizado para: R$ ${saldoNumerico.toFixed(2)}`);
     } else {
-      mostrarAlertaNaPagina('❌ Erro: Saldo inválido', '#f44336', 3000);
-      console.log('🔃 [MINI PAINEL] ❌ Erro: Saldo inválido');
+      mostrarAlertaNaPagina('❌ Erro: Saldo inválido ou zero', '#f44336', 3000);
+      console.log(`🔃 [MINI PAINEL] ❌ Erro: Saldo inválido (${saldoNumerico}) ou zero`);
     }
   } else {
     mostrarAlertaNaPagina('❌ Erro: Elemento de saldo não encontrado', '#f44336', 3000);
-    console.log('🔃 [MINI PAINEL] ❌ Erro: Elemento de saldo não encontrado');
+    console.log('🔃 [MINI PAINEL] ❌ Erro: Elemento de saldo não encontrado em nenhum seletor');
+    
+    // Debug: mostrar alguns elementos que contêm R$ para ajudar a identificar o seletor correto
+    console.log('🔍 [DEBUG] Elementos que contêm R$ na página:');
+    const elementosComRS = document.querySelectorAll('*');
+    let count = 0;
+    for (let el of elementosComRS) {
+      if (el.textContent && el.textContent.includes('R$') && count < 5) {
+        console.log(`  - ${el.tagName}.${el.className}: "${el.textContent.trim()}"`);
+        count++;
+      }
+    }
   }
 }
 

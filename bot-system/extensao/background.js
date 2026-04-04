@@ -2661,13 +2661,30 @@ async function redirecionarParaMesa(tabId) {
 
 // Função para enviar informações de rodadas aguardando para o servidor
 function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
-    if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+    console.log(`🔄 [WS-SERVIDOR] Tentando enviar rodadas aguardando: ${rodadas}, status: ${statusBot}`);
+    
+    if (!wsServidor) {
+        console.log('⚠️ [WS-SERVIDOR] wsServidor não inicializado');
+        return;
+    }
+    
+    console.log(`🔍 [WS-SERVIDOR] Estado da conexão: ${wsServidor.readyState} (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)`);
+    
+    if (wsServidor.readyState === WebSocket.OPEN) {
         wsServidor.send(JSON.stringify({
             tipo: 'rodadas_aguardando',
             rodadas: rodadas,
             statusBot: statusBot
         }));
-        console.log(`📤 [WS-SERVIDOR] Rodadas aguardando enviadas: ${rodadas}`);
+        console.log(`📤 [WS-SERVIDOR] ✅ Rodadas aguardando enviadas: ${rodadas}`);
+    } else {
+        console.log(`❌ [WS-SERVIDOR] Conexão não está aberta. ReadyState: ${wsServidor.readyState}`);
+        
+        // Tentar reconectar se a conexão estiver fechada
+        if (wsServidor.readyState === WebSocket.CLOSED) {
+            console.log('🔄 [WS-SERVIDOR] Tentando reconectar...');
+            setTimeout(conectarServidorLocal, 1000);
+        }
     }
 }
 
