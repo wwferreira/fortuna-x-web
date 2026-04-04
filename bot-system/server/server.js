@@ -164,6 +164,26 @@ wss.on('connection', (ws) => {
         console.log(`📍 Status do bot de ${msg.email || emailConectado}: ${msg.status}`);
       }
 
+      if (msg.tipo === 'rodadas_aguardando') {
+        // Atualizar informações de rodadas aguardando
+        const { data: userData } = await supabase
+          .from('usuarios_bot')
+          .select('stats')
+          .eq('email', emailConectado)
+          .single();
+
+        let stats = userData?.stats || {};
+        stats.rodadasAguardando = msg.rodadas;
+        stats.statusBot = msg.statusBot || 'Aguardando';
+
+        await supabase
+          .from('usuarios_bot')
+          .update({ stats })
+          .eq('email', emailConectado);
+        
+        console.log(`⏳ Rodadas aguardando de ${emailConectado}: ${msg.rodadas}`);
+      }
+
     } catch (e) {
       console.error('Erro WS:', e.message);
     }

@@ -519,8 +519,52 @@ async function tentarLoginComRetry(email, senha) {
   throw new Error('Erro 7002');
 }
 
+// Função para testar conectividade com Supabase
+async function testarConectividadeSupabase() {
+  try {
+    console.log('🔍 Testando conectividade com Supabase...');
+    
+    // Teste simples: Verificar se a URL base está acessível
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('📡 Status da resposta:', response.status);
+    
+    if (response.ok || response.status === 404) {
+      // 404 é normal para a rota raiz, significa que o servidor está respondendo
+      console.log('✅ Conectividade com Supabase OK');
+      return true;
+    } else {
+      console.warn('⚠️ Problema de conectividade com Supabase:', response.status, response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erro de conectividade com Supabase:', error);
+    
+    // Verificar se é erro de CORS ou rede
+    if (error.message.includes('Failed to fetch')) {
+      console.error('❌ Erro de rede ou CORS detectado');
+    }
+    
+    return false;
+  }
+}
+
 async function startHeartbeat(user, clientInstanceId) {
   if (heartbeatTimer) clearInterval(heartbeatTimer);
+  
+  // Testar conectividade antes de iniciar
+  const conectividade = await testarConectividadeSupabase();
+  if (!conectividade) {
+    console.warn('⚠️ Conectividade com Supabase falhou. Tentando novamente em 30s...');
+    setTimeout(() => startHeartbeat(user, clientInstanceId), 30000);
+    return;
+  }
   
   heartbeatTimer = setInterval(async () => {
     try {
@@ -530,7 +574,10 @@ async function startHeartbeat(user, clientInstanceId) {
         .select('active_client_id')
         .eq('id', user.id);
       
-      if (error) return; 
+      if (error) {
+        console.warn('⚠️ Erro ao verificar sessão no heartbeat:', error);
+        return;
+      }
 
       const res = Array.isArray(data) ? data : (data ? [data] : []);
       const dbClientId = res[0]?.active_client_id;
@@ -550,10 +597,26 @@ async function startHeartbeat(user, clientInstanceId) {
 
       // 2. Atualizar pulsação
       const now = new Date().toISOString();
-      await supabase.auth.updateUserMetadata({ active_updated_at: now });
-      await supabase.from('usuarios').update({ active_updated_at: now }).eq('id', user.id);
+      
+      // Tentar atualizar metadata do usuário
+      const metaResult = await supabase.auth.updateUserMetadata({ active_updated_at: now });
+      if (metaResult.error) {
+        console.warn('⚠️ Erro ao atualizar metadata do usuário:', metaResult.error);
+      }
+      
+      // Tentar atualizar tabela de usuários
+      const updateResult = await supabase.from('usuarios').update({ active_updated_at: now }).eq('id', user.id);
+      if (updateResult.error) {
+        console.warn('⚠️ Erro ao atualizar tabela de usuários:', updateResult.error);
+      }
+      
     } catch (e) {
       console.error('❌ Erro no heartbeat:', e);
+      
+      // Se for erro de conectividade, tentar reconectar na próxima iteração
+      if (e.message && e.message.includes('Failed to fetch')) {
+        console.warn('⚠️ Problema de conectividade detectado. Tentando novamente em 15s...');
+      }
     }
   }, 15000); // A cada 15 segundos
 }
@@ -4263,12 +4326,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Sincronizar Legendas e Gatilhos do Servidor
     if (message.config.legendas) {
       state.legendas = message.config.legendas;
-      renderLegendas();
+      atualizarListaLegendas();
       console.log('📚 [SIDEPANEL] Legendas sincronizadas:', Object.keys(state.legendas).length);
     }
     if (message.config.gatilhos) {
       state.gatilhos = message.config.gatilhos;
-      renderGatilhosLegendas();
+      atualizarListaGatilhos();
       console.log('🎯 [SIDEPANEL] Gatilhos sincronizados:', state.gatilhos.length);
     }
     
@@ -4359,6 +4422,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Mostrar notificação
     const statusTexto = message.modoSimulacao ? 'Simulação Ativa' : 'Modo Real';
     mostrarNotificacao(`🧪 ${statusTexto}`, message.modoSimulacao ? 'aviso' : 'sucesso', 2000);
+  }
+
+  // Novo: Resetar interface de placar
+  if (message.tipo === 'reset_stats_ui') {
+    console.log('🔄 [SIDEPANEL] Comando de reset UI recebido');
+    
+    // Resetar placar visual (botState local)
+    botState.wins = 0;
+    botState.losses = 0;
+    botState.lucro = 0;
+    botState.assertividade = 0;
+    
+    if (message.novoSaldo !== undefined) {
+      botState.saldo = message.novoSaldo;
+      botState.saldoInicial = message.novoSaldo;
+    }
+
+    // Se houver placarSimulacao local
+    if (typeof placarSimulacao !== 'undefined') {
+        placarSimulacao.wins = 0;
+        placarSimulacao.losses = 0;
+        placarSimulacao.lucro = 0;
+        placarSimulacao.saldo = 0;
+    }
+
+    // Forçar atualização do minipainel
+    atualizarMiniPainel();
+    renderizarHistoricoApostas();
+    
+    mostrarNotificacao('🔄 Placar e saldo resetados', 'sucesso', 2000);
   }
   
   return true; // Manter o canal de mensagem aberto

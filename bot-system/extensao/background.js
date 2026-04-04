@@ -370,6 +370,10 @@ function pararApostasBG(motivo) {
     botState.apostaAtiva = null;
     botState.aguardandoProximaRodada = true;
     
+    // Limpar rodadas aguardando quando o bot é parado
+    botCountdownState.rodadasRestantes = 0;
+    enviarRodadasAguardandoParaServidor(0, 'Parado');
+    
     chrome.storage.local.set({ 
         rouletteState: botState, 
         apostaAtiva: null 
@@ -653,7 +657,7 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
     console.log(`[GALE-DEBUG] isSimplesExplicito:`, isSimplesExplicito);
     
     // Fallback absoluto para multiplicadores
-    let listaMult = gatilho.multiplicadores || gatilho.gales || gatilho.ciclos || (isSimplesExplicito ? [1] : [1, 3]);
+    let listaMult = gatilho.multiplicadores || gatilho.gales || gatilho.ciclos || (isSimplesExplicito ? [1] : [1]);
     
     console.log(`[GALE-DEBUG] Lista de multiplicadores ANTES das regras:`, listaMult);
     
@@ -670,12 +674,12 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
             console.log(`[GALE-DEBUG] Funcionário do Mês - usando multiplicadores da nova config:`, listaMult);
         } else if (!gatilho.multiplicadores && !gatilho.gales && !gatilho.ciclos && !isSimplesExplicito) {
             // Fallback para configuração padrão
-            listaMult = [1, 3];
+            listaMult = [1];
         }
         console.log(`[GALE-DEBUG] É Funcionário do Mês, multiplicadores finais:`, listaMult);
     } else if (isHotCold) {
         if (!gatilho.multiplicadores && !gatilho.gales && !gatilho.ciclos && !isSimplesExplicito) {
-            listaMult = [1, 3];
+            listaMult = [1];
         }
         console.log(`[GALE-DEBUG] É Quentes/Frios, multiplicadores:`, listaMult);
     } else if (isIAPleno) {
@@ -886,6 +890,54 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
     }, 1000);
 }
 
+// --- LÓGICA DE SELEÇÃO DE GATILHO ÚNICO (PRIORIDADE POR ASSERTIVIDADE) ---
+function verificarGatilhoEmJanela(gatilho, janela) {
+    if (!janela || janela.length === 0) return false;
+    
+    // janela[0] é o número que acabou de sair naquela posição fictícia do histórico
+    if (gatilho.isSequencia && gatilho.legendasObjetos && gatilho.legendasObjetos.length > 0) {
+        const seqLen = gatilho.legendasObjetos.length;
+        if (janela.length < seqLen) return false;
+        return gatilho.legendasObjetos.every((legendaObj, idx) => isNumeroNaLegenda(janela[idx], legendaObj));
+    } else {
+        const acionadores = gatilho.acionadores || (gatilho.legenda ? gatilho.legenda.split(/[\s,]+/) : []);
+        const repeticoes = parseInt(gatilho.repeticoes) || 1;
+        if (janela.length < repeticoes) return false;
+        const ultimos = janela.slice(0, repeticoes);
+        return ultimos.every(num => {
+            const numStr = String(num);
+            if (acionadores.some(a => String(a) === numStr || obterAreasDoNumero(num).includes(a))) return true;
+            if (botState.legendas) {
+                const legendasCompativeis = botState.legendas.filter(l => acionadores.includes(l.nome));
+                return legendasCompativeis.some(l => isNumeroNaLegenda(num, l));
+            }
+            return false;
+        });
+    }
+}
+
+function calcularScoreAssertividade(gatilho, historico) {
+    let fires = 0;
+    let hits = 0;
+    const JANELA_ANALISE = 50; // Analisar as últimas 50 rodadas para ser rápido
+    
+    // Precisamos de pelo menos repeticoes + 1 números para testar um disparo
+    const repeticoes = parseInt(gatilho.repeticoes) || (gatilho.isSequencia ? gatilho.legendasObjetos.length : 1);
+    
+    for (let i = 1; i <= Math.min(JANELA_ANALISE, historico.length - repeticoes - 1); i++) {
+        const janela = historico.slice(i); // Janela terminando no índice i
+        if (verificarGatilhoEmJanela(gatilho, janela)) {
+            fires++;
+            const resultado = historico[i-1]; // O número que saiu DEPOIS dessa janela
+            const alvos = resolverItensAposta(gatilho.apostaEm || gatilho.numeros || []);
+            if (alvos.includes(resultado)) {
+                hits++;
+            }
+        }
+    }
+    return fires === 0 ? 0 : (hits / fires);
+}
+
 function verificarGatilhosParaApostar(numero) {
     if (botState.pauseWinAtivo || botState.stopAtivado) return;
 
@@ -917,6 +969,14 @@ function verificarGatilhosParaApostar(numero) {
             console.log('🛑 [BACKGROUND-DINAMICO] Bot em STOP, ignorando análise dinâmica.');
             return;
         }
+
+        // --- CORREÇÃO: No modo Simulação, ignorar a contagem de 5 rodadas de análise e disparar imediatamente ---
+        if (modoSimulacaoAtivo) {
+            console.log('🧪 [BACKGROUND] Modo Simulação: Pulando contagem de rodadas de análise. Disparando imediatamente.');
+            gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
+            return;
+        }
+
         // Decrementar rodadas ANTES de verificar se está aguardando próxima rodada ou apostaAtiva
         const rodadasParaEsperar = (gatilhosDinamicos[0].configEspecial && gatilhosDinamicos[0].configEspecial.esperarRodadas) || 5;
 
@@ -937,11 +997,19 @@ function verificarGatilhosParaApostar(numero) {
                 rodadas: botCountdownState.rodadasRestantes,
                 estrategia: botState.nomeEstrategiaSelecionada
             }).catch(() => {});
+            
+            // Enviar informações para o servidor
+            enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, `Aguardando ${botCountdownState.rodadasRestantes} rodada${botCountdownState.rodadasRestantes !== 1 ? 's' : ''}`);
+            
             return;
         }
 
         // Chegou a ZERO: Disparar apostas dinâmicas
         console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
+        
+        // Enviar informação de que não está mais aguardando
+        enviarRodadasAguardandoParaServidor(0, 'Ativo');
+        
         gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
         return; 
     }
@@ -950,71 +1018,39 @@ function verificarGatilhosParaApostar(numero) {
     // Esses NÃO precisam aguardar 5 rodadas, são baseados em legendas e repetições
     if (botState.stopAtivado || botState.aguardandoProximaRodada || botState.apostaAtiva) return;
 
-    const gatilhosAtivos = botState.gatilhos.filter(gatilho => {
+    const gatilhosCandidatos = botState.gatilhos.filter(gatilho => {
         if (gatilho.ativo === false) return false;
-
-        // --- NOVO SISTEMA DE SEQUÊNCIAS (Ex: SOL SOL -> APOSTAR) ---
-        if (gatilho.isSequencia && gatilho.legendasObjetos && gatilho.legendasObjetos.length > 0) {
-            const seqLen = gatilho.legendasObjetos.length;
-            if (botState.sequenciaAtual.length < seqLen) return false;
-
-            // O histórico botState.sequenciaAtual[0] é o MAIS RECENTE (extrema esquerda da mesa).
-            // Se o usuário cadastrou "DZ1 DZ2 DZ3" seguindo a ordem da mesa (Esquerda para Direita):
-            // DZ1 (1º item) -> Deve ser o mais recente (idx 0 no histórico)
-            // DZ2 (2º item) -> Deve ser o anterior (idx 1 no histórico)
-            // DZ3 (3º item) -> Deve ser o mais antigo (idx 2 no histórico)
-            const condicaoSequencia = gatilho.legendasObjetos.every((legendaObj, idx) => {
-                const numHistorico = botState.sequenciaAtual[idx];
-                return isNumeroNaLegenda(numHistorico, legendaObj);
-            });
-
-            if (condicaoSequencia) {
-                console.log(`✅ [SEQUÊNCIA] Gatilho "${gatilho.nome}" detectado! Apostando em: ${gatilho.apostaEm.join(', ')}`);
-                return true;
-            }
-            return false;
-        }
-
-        // --- SISTEMA LEGADO / ADMIN (REPETIÇÕES) ---
-        // Determinar o conjunto de acionadores (pode vir de acionadores ou numeros legados)
-        const acionadoresConfigurados = gatilho.acionadores || (gatilho.legenda ? gatilho.legenda.split(/[\s,]+/) : []);
-        
-        if (acionadoresConfigurados.length === 0) return false;
-
-        // Se for por repetição (ex: Vizinhos da C2 com 2 repetições)
-        const repeticoesNecessarias = parseInt(gatilho.repeticoes) || 1;
-        
-        if (botState.sequenciaAtual.length < repeticoesNecessarias) return false;
-        
-        // Pega os últimos N números (conforme repetições)
-        const ultimosNumeros = botState.sequenciaAtual.slice(0, repeticoesNecessarias);
-        
-        // Verifica se TODOS os últimos N números estão no conjunto de acionadores
-        const condicaoBatida = ultimosNumeros.every(num => {
-            const numStr = String(num);
-            
-            // 1. Tenta achar se o número ou área está nos acionadores
-            const estaNosAcionadores = acionadoresConfigurados.some(a => String(a) === numStr || obterAreasDoNumero(num).includes(a));
-            if (estaNosAcionadores) return true;
-
-            // 2. Tenta achar se o número pertence a alguma legenda configurada que tenha o nome igual a um dos acionadores
-            if (botState.legendas) {
-                const legendasCompativeis = botState.legendas.filter(l => acionadoresConfigurados.includes(l.nome));
-                return legendasCompativeis.some(l => isNumeroNaLegenda(num, l));
-            }
-
-            return false;
-        });
-
-        if (condicaoBatida) {
-            console.log(`✅ [REPETIÇÃO] Gatilho "${gatilho.nome || gatilho.legenda}" detectado! (Repetições: ${repeticoesNecessarias}). Apostando em: ${gatilho.apostaEm.join(', ')}`);
-            return true;
-        }
-
-        return false;
+        return verificarGatilhoEmJanela(gatilho, botState.sequenciaAtual);
     });
 
-    gatilhosAtivos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
+    if (gatilhosCandidatos.length === 0) return;
+
+    // Se houver mais de um gatilho ativo, escolher o melhor baseado no histórico recente
+    let gatilhoEscolhido = gatilhosCandidatos[0];
+    
+    if (gatilhosCandidatos.length > 1) {
+        console.log(`⚖️ [DECISÃO] Múltiplos gatilhos detectados (${gatilhosCandidatos.length}). Calculando assertividade...`);
+        
+        const gatilhosComScore = gatilhosCandidatos.map(g => ({
+            gatilho: g,
+            score: calcularScoreAssertividade(g, botState.sequenciaAtual)
+        }));
+        
+        // Ordenar por score descendente
+        gatilhosComScore.sort((a, b) => b.score - a.score);
+        
+        gatilhoEscolhido = gatilhosComScore[0].gatilho;
+        const melhorScore = (gatilhosComScore[0].score * 100).toFixed(1);
+        
+        console.log(`🎯 [DECISÃO] Gatilho "${gatilhoEscolhido.nome || gatilhoEscolhido.legenda}" escolhido com ${melhorScore}% de assertividade recente.`);
+        
+        // Logar os outros para debug
+        gatilhosComScore.slice(1).forEach(item => {
+            console.log(`   - Descartado: "${item.gatilho.nome || item.gatilho.legenda}" com ${(item.score * 100).toFixed(1)}%`);
+        });
+    }
+
+    enviarApostaParaMesa(gatilhoEscolhido, numero, gatilhoEscolhido.cicloAtual || 0);
 }
 
 // --- MOTOR DE IA PLENO (Straight Up) ---
@@ -1517,13 +1553,13 @@ function verificarResultado(numeroSaiu) {
             return; // Sai da função aqui
         }
         
-        let multiplicadores = gatilho.multiplicadores || gatilho.gales || gatilho.ciclos || (gatilho.tipo === 'GALE' || gatilho.estrategia === 'GALE' ? [1, 3] : null);
+        let multiplicadores = gatilho.multiplicadores || gatilho.gales || gatilho.ciclos || (gatilho.tipo === 'GALE' || gatilho.estrategia === 'GALE' ? [1] : null);
         
         // Reforço para dinâmicos etc
         const tags = Array.isArray(gatilho.apostaEm) ? gatilho.apostaEm : [];
         // Removido fallback hardcoded para FUNCIONARIO_MES - agora respeita configuração do usuário
         if (tags.some(t => ['QUENTES', 'FRIOS', 'AMBOS'].includes(t)) && (!multiplicadores || multiplicadores.length === 0)) {
-            multiplicadores = [1, 3];
+            multiplicadores = [1];
         }
 
         if (multiplicadores && proximoGaleIndex < multiplicadores.length) {
@@ -2046,11 +2082,34 @@ function conectarServidorLocal() {
                             await refreshPaginaMesa();
                         }
                         else if (msg.acao === 'reset_stats') {
-                            // Resetar stats
+                            // Resetar stats reais
                             botState.wins = 0;
                             botState.losses = 0;
-                            botState.saldoInicial = 0;
+                            
+                            // Se o servidor enviou um novo saldo, atualizar localmente
+                            if (msg.novoSaldo !== undefined) {
+                                botState.saldo = msg.novoSaldo;
+                                botState.saldoInicial = msg.novoSaldo;
+                            }
+                            
                             chrome.storage.local.set({ rouletteState: botState });
+
+                            // Resetar stats de simulação também
+                            chrome.storage.local.get(['placarSimulacao', 'saldoSimulacao'], (res) => {
+                                const novoSaldoSim = msg.novoSaldo || res.saldoSimulacao || 0;
+                                chrome.storage.local.set({
+                                    placarSimulacao: { wins: 0, losses: 0, saldo: 0, lucro: 0 },
+                                    saldoSimulacao: novoSaldoSim
+                                });
+                                
+                                // Notificar sidepanel para limpar minipainel
+                                chrome.runtime.sendMessage({
+                                    tipo: 'reset_stats_ui',
+                                    novoSaldo: novoSaldoSim
+                                }).catch(() => {});
+                            });
+
+                            console.log('🔄 [WS-SERVIDOR] Placar e saldo resetados via comando remoto');
                         }
                     }
                     
@@ -2192,6 +2251,10 @@ async function pararBotRemoto() {
     botState.stopAtivado = true;
     botState.apostaAtiva = null;
     botState.aguardandoProximaRodada = false;
+    
+    // Limpar rodadas aguardando quando o bot é desligado
+    botCountdownState.rodadasRestantes = 0;
+    enviarRodadasAguardandoParaServidor(0, 'Desligado');
     
     // Marcar que o logout está pendente
     chrome.storage.local.set({ 
@@ -2562,6 +2625,18 @@ async function pararBotRemoto() {
 async function redirecionarParaMesa(tabId) {
     console.log('🎰 [WS-SERVIDOR] Redirecionando para a mesa...');
     await chrome.tabs.update(tabId, { url: URL_MESA });
+}
+
+// Função para enviar informações de rodadas aguardando para o servidor
+function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
+    if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+        wsServidor.send(JSON.stringify({
+            tipo: 'rodadas_aguardando',
+            rodadas: rodadas,
+            statusBot: statusBot
+        }));
+        console.log(`📤 [WS-SERVIDOR] Rodadas aguardando enviadas: ${rodadas}`);
+    }
 }
 
 // Enviar stats para o servidor a cada 3 segundos
