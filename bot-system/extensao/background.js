@@ -823,7 +823,6 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
     
     // Notificação inicial imediata
     const prefixoStatus = modoSimulacaoAtivo ? 'Simulando' : 'Apostando';
-    const isTipoCiclo = gatilho.tipo === 'CICLO' || gatilho.tipo === 'ciclo' || gatilho.estrategia === 'CICLO';
     const tipoEntrada = galeIndex > 0 ? (isTipoCiclo ? `ciclo ${galeIndex}` : `gale ${galeIndex}`) : 'entrada inicial';
     const labelAposta = `${prefixoStatus} ${tipoEntrada}`;
     
