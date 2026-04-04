@@ -979,16 +979,25 @@ function verificarGatilhosParaApostar(numero) {
 
         // Decrementar rodadas ANTES de verificar se está aguardando próxima rodada ou apostaAtiva
         const rodadasParaEsperar = (gatilhosDinamicos[0].configEspecial && gatilhosDinamicos[0].configEspecial.esperarRodadas) || 5;
+        
+        console.log(`🔍 [DEBUG] Estratégia dinâmica detectada. Rodadas para esperar configuradas: ${rodadasParaEsperar}`);
+        console.log(`🔍 [DEBUG] Estado atual botCountdownState.rodadasRestantes: ${botCountdownState.rodadasRestantes}`);
 
         if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null || botCountdownState.rodadasRestantes <= 0) {
             botCountdownState.rodadasRestantes = rodadasParaEsperar;
+            console.log(`🔍 [DEBUG] Inicializando contador de rodadas: ${botCountdownState.rodadasRestantes}`);
         }
 
         botCountdownState.rodadasRestantes--;
         chrome.storage.local.set({ botCountdownState });
+        
+        console.log(`🔍 [DEBUG] Após decrementar: ${botCountdownState.rodadasRestantes} rodadas restantes`);
 
         // Se houver aposta ativa, não processamos novos disparos dinâmicos
-        if (botState.apostaAtiva) return;
+        if (botState.apostaAtiva) {
+            console.log(`🔍 [DEBUG] Aposta ativa detectada, aguardando conclusão`);
+            return;
+        }
 
         if (botCountdownState.rodadasRestantes > 0) {
             console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
