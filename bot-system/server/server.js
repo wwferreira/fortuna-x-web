@@ -184,6 +184,33 @@ wss.on('connection', (ws) => {
         console.log(`⏳ Rodadas aguardando de ${emailConectado}: ${msg.rodadas}`);
       }
 
+      if (msg.tipo === 'status_aposta') {
+        // Atualizar status de aposta em andamento
+        const { data: userData } = await supabase
+          .from('usuarios_bot')
+          .select('stats')
+          .eq('email', emailConectado)
+          .single();
+
+        let stats = userData?.stats || {};
+        stats.statusBot = msg.statusBot || 'Aguardando';
+        stats.tipoAposta = msg.tipoAposta || '';
+        stats.estrategiaAtiva = msg.estrategia || '';
+        
+        // Se a aposta finalizou, limpar informações de aposta
+        if (msg.tipoAposta === 'Finalizada') {
+          stats.tipoAposta = '';
+          stats.rodadasAguardando = 0;
+        }
+
+        await supabase
+          .from('usuarios_bot')
+          .update({ stats })
+          .eq('email', emailConectado);
+        
+        console.log(`🎯 Status de aposta de ${emailConectado}: ${msg.statusBot} (${msg.tipoAposta})`);
+      }
+
     } catch (e) {
       console.error('Erro WS:', e.message);
     }

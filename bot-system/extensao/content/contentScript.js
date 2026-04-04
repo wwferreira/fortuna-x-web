@@ -1213,61 +1213,90 @@ function atualizarPainelStatus() {
 function atualizarSaldoInicial() {
   console.log('🔃 [MINI PAINEL] Tentando atualizar saldo inicial...');
   
-  // Lista expandida de seletores para diferentes versões da plataforma
-  const seletoresAlternativos = [
-    // Seletor original específico
+  // Lista de seletores mais específicos para saldo da conta
+  const seletoresEspecificos = [
+    // Seletores específicos para saldo da conta (não fichas ou outros valores)
     "#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L",
     
-    // Seletores mais genéricos
-    '.fit-container__content--PZA2L',
-    '.fit-container__content',
-    '.balance__value .fit-container__content',
-    '.balance-value .fit-container__content',
+    // Seletores para área de conta/balance
     '.account-panel__balance-section .fit-container__content',
+    '.balance-section .fit-container__content',
+    '.account-panel .balance .fit-container__content',
+    '.controls-panel__account .balance .fit-container__content',
     
-    // Seletores de backup
-    '.balance-amount',
-    '.user-balance',
-    '.total-balance',
-    '.balance-value',
-    '.balance-amount__value',
-    '[class*="balance"]',
-    '[class*="fit-container__content"]',
-    
-    // Seletores por texto
-    '*[class*="balance"]:contains("R$")',
-    '*:contains("R$")'
+    // Seletores mais genéricos mas ainda específicos para balance
+    '.balance__value .fit-container__content',
+    '.account-balance .fit-container__content',
+    '.user-balance .fit-container__content'
   ];
   
   let saldoElement = null;
   let seletorUsado = '';
   
-  // Tentar cada seletor
-  for (let seletor of seletoresAlternativos) {
+  // Tentar seletores específicos primeiro
+  for (let seletor of seletoresEspecificos) {
     try {
       saldoElement = document.querySelector(seletor);
       if (saldoElement && saldoElement.textContent && saldoElement.textContent.includes('R$')) {
-        seletorUsado = seletor;
-        console.log(`🔃 [MINI PAINEL] Saldo encontrado com seletor: ${seletor}`);
-        break;
+        const texto = saldoElement.textContent.trim();
+        // Verificar se não é um valor muito baixo (provavelmente ficha ou outro elemento)
+        const valorTeste = parseFloat(texto.replace(/[^\d,\.]/g, '').replace(',', '.'));
+        if (!isNaN(valorTeste) && valorTeste >= 0) { // Aceitar até saldo zero
+          seletorUsado = seletor;
+          console.log(`🔃 [MINI PAINEL] Saldo encontrado com seletor específico: ${seletor}`);
+          break;
+        }
       }
     } catch (e) {
       // Ignorar erros de seletor inválido
     }
   }
   
-  // Se não encontrou, procurar por qualquer elemento que contenha R$ e números
+  // Se não encontrou com seletores específicos, procurar na área de conta
   if (!saldoElement) {
-    console.log('🔃 [MINI PAINEL] Procurando por qualquer elemento com R$...');
+    console.log('🔃 [MINI PAINEL] Procurando na área de conta...');
+    
+    // Procurar primeiro por elementos que contenham "account" ou "balance" na classe
+    const elementosAccount = document.querySelectorAll('[class*="account"], [class*="balance"]');
+    for (let el of elementosAccount) {
+      const texto = el.textContent || '';
+      if (texto.includes('R$') && texto.match(/\d+[,\.]\d{2}/) && texto.length < 50) {
+        // Verificar se é um valor razoável (não muito baixo como 0,50 de ficha)
+        const valorTeste = parseFloat(texto.replace(/[^\d,\.]/g, '').replace(',', '.'));
+        if (!isNaN(valorTeste) && valorTeste !== 0.5 && valorTeste !== 0.50) { // Ignorar 0,50 especificamente
+          saldoElement = el;
+          seletorUsado = 'busca por account/balance';
+          console.log(`🔃 [MINI PAINEL] Saldo encontrado na área de conta: "${texto}"`);
+          break;
+        }
+      }
+    }
+  }
+  
+  // Se ainda não encontrou, busca mais ampla mas com filtros
+  if (!saldoElement) {
+    console.log('🔃 [MINI PAINEL] Busca ampla com filtros...');
     const todosElementos = document.querySelectorAll('*');
+    const candidatos = [];
+    
     for (let el of todosElementos) {
       const texto = el.textContent || '';
       if (texto.includes('R$') && texto.match(/\d+[,\.]\d{2}/) && texto.length < 50) {
-        saldoElement = el;
-        seletorUsado = 'busca manual';
-        console.log(`🔃 [MINI PAINEL] Saldo encontrado por busca manual: "${texto}"`);
-        break;
+        const valorTeste = parseFloat(texto.replace(/[^\d,\.]/g, '').replace(',', '.'));
+        if (!isNaN(valorTeste) && valorTeste !== 0.5 && valorTeste !== 0.50) {
+          candidatos.push({ elemento: el, valor: valorTeste, texto: texto });
+        }
       }
+    }
+    
+    // Ordenar candidatos por valor (maior primeiro, assumindo que saldo da conta é maior que fichas)
+    candidatos.sort((a, b) => b.valor - a.valor);
+    
+    if (candidatos.length > 0) {
+      saldoElement = candidatos[0].elemento;
+      seletorUsado = 'busca ampla filtrada';
+      console.log(`🔃 [MINI PAINEL] Melhor candidato encontrado: "${candidatos[0].texto}" (valor: ${candidatos[0].valor})`);
+      console.log('🔍 [DEBUG] Outros candidatos encontrados:', candidatos.slice(1, 3));
     }
   }
   
@@ -1307,7 +1336,8 @@ function atualizarSaldoInicial() {
     
     console.log(`🔃 [MINI PAINEL] Saldo numérico calculado: ${saldoNumerico}`);
     
-    if (!isNaN(saldoNumerico) && saldoNumerico > 0) {
+    // Verificar se é um valor válido (não NaN e não 0,50)
+    if (!isNaN(saldoNumerico) && saldoNumerico !== 0.5 && saldoNumerico !== 0.50) {
       statusBancaInicial = saldoNumerico;
       statusBancaAtual = saldoNumerico;
       ultimoSaldoMonitorado = saldoNumerico;
@@ -1317,20 +1347,21 @@ function atualizarSaldoInicial() {
       
       console.log(`🔃 [MINI PAINEL] ✅ Saldo atualizado para: R$ ${saldoNumerico.toFixed(2)}`);
     } else {
-      mostrarAlertaNaPagina('❌ Erro: Saldo inválido ou zero', '#f44336', 3000);
-      console.log(`🔃 [MINI PAINEL] ❌ Erro: Saldo inválido (${saldoNumerico}) ou zero`);
+      mostrarAlertaNaPagina('❌ Erro: Saldo inválido (0,50 ignorado)', '#f44336', 3000);
+      console.log(`🔃 [MINI PAINEL] ❌ Erro: Saldo inválido (${saldoNumerico}) - provavelmente valor de ficha`);
     }
   } else {
-    mostrarAlertaNaPagina('❌ Erro: Elemento de saldo não encontrado', '#f44336', 3000);
-    console.log('🔃 [MINI PAINEL] ❌ Erro: Elemento de saldo não encontrado em nenhum seletor');
+    mostrarAlertaNaPagina('❌ Erro: Saldo da conta não encontrado', '#f44336', 3000);
+    console.log('🔃 [MINI PAINEL] ❌ Erro: Saldo da conta não encontrado');
     
-    // Debug: mostrar alguns elementos que contêm R$ para ajudar a identificar o seletor correto
+    // Debug: mostrar elementos que contêm R$ para ajudar a identificar o seletor correto
     console.log('🔍 [DEBUG] Elementos que contêm R$ na página:');
     const elementosComRS = document.querySelectorAll('*');
     let count = 0;
     for (let el of elementosComRS) {
-      if (el.textContent && el.textContent.includes('R$') && count < 5) {
-        console.log(`  - ${el.tagName}.${el.className}: "${el.textContent.trim()}"`);
+      if (el.textContent && el.textContent.includes('R$') && count < 10) {
+        const valor = parseFloat(el.textContent.replace(/[^\d,\.]/g, '').replace(',', '.'));
+        console.log(`  - ${el.tagName}.${el.className}: "${el.textContent.trim()}" (valor: ${valor})`);
         count++;
       }
     }

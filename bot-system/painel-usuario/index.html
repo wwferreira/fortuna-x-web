@@ -1169,18 +1169,26 @@ async function atualizarStats() {
       if (s.statusBot) {
         statusEl.textContent = s.statusBot;
         // Cores baseadas no status
-        if (s.statusBot.includes('Aguardando')) {
-          statusEl.style.color = '#ff9800';
+        if (s.statusBot.includes('Em aposta')) {
+          statusEl.style.color = '#60a5fa'; // Azul para apostas
+          statusEl.style.fontWeight = 'bold';
+        } else if (s.statusBot.includes('Simulando')) {
+          statusEl.style.color = '#00bcd4'; // Ciano para simulação
+          statusEl.style.fontWeight = 'bold';
+        } else if (s.statusBot.includes('Aguardando')) {
+          statusEl.style.color = '#ff9800'; // Laranja para aguardando
+          statusEl.style.fontWeight = 'normal';
         } else if (s.statusBot.includes('Ativo') || s.statusBot.includes('Ligado')) {
-          statusEl.style.color = '#22c55e';
-        } else if (s.statusBot.includes('Apostando')) {
-          statusEl.style.color = '#60a5fa';
+          statusEl.style.color = '#22c55e'; // Verde para ativo
+          statusEl.style.fontWeight = 'normal';
         } else {
-          statusEl.style.color = '#888';
+          statusEl.style.color = '#888'; // Cinza para outros
+          statusEl.style.fontWeight = 'normal';
         }
       } else {
         statusEl.textContent = botLigado ? 'Ligado' : 'Parado';
         statusEl.style.color = botLigado ? '#22c55e' : '#888';
+        statusEl.style.fontWeight = 'normal';
       }
     }
     

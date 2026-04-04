@@ -781,6 +781,22 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
 
     chrome.storage.local.set({ apostaAtiva: botState.apostaAtiva });
     
+    // Enviar status de aposta para o servidor
+    const isTipoCiclo = gatilho.tipo === 'CICLO' || gatilho.tipo === 'ciclo' || gatilho.estrategia === 'CICLO';
+    const tipoAposta = galeIndex > 0 ? (isTipoCiclo ? `Ciclo ${galeIndex}` : `Gale ${galeIndex}`) : 'Entrada';
+    const statusBot = modoSimulacaoAtivo ? `Simulando - ${tipoAposta}` : `Em aposta - ${tipoAposta}`;
+    
+    if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+        wsServidor.send(JSON.stringify({
+            tipo: 'status_aposta',
+            statusBot: statusBot,
+            tipoAposta: tipoAposta,
+            estrategia: botState.apostaAtiva.nomeEstrategia,
+            galeIndex: galeIndex
+        }));
+        console.log(`📤 [WS-SERVIDOR] Status de aposta enviado: ${statusBot}`);
+    }
+    
     // Salvar informações desta aposta/gale para usar no resultado
     if (!botState.apostaAtiva.historicoGales) {
         botState.apostaAtiva.historicoGales = [];
@@ -1511,6 +1527,18 @@ function verificarResultado(numeroSaiu) {
             });
         }
         chrome.storage.local.set({ botCountdownState, apostaAtiva: null });
+        
+        // Enviar status de fim de aposta para o servidor
+        const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando' : 'Aguardando';
+        if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+            wsServidor.send(JSON.stringify({
+                tipo: 'status_aposta',
+                statusBot: statusBot,
+                tipoAposta: 'Finalizada',
+                resultado: 'WIN'
+            }));
+            console.log(`📤 [WS-SERVIDOR] Status de fim de aposta enviado: ${statusBot} (WIN)`);
+        }
 
     } else {
         // --- LOGICA DE PERDA ---
@@ -1574,6 +1602,18 @@ function verificarResultado(numeroSaiu) {
             botState.apostaAtiva = null;
             botState.aguardandoProximaRodada = true;
             chrome.storage.local.set({ apostaAtiva: null });
+            
+            // Enviar status de fim de aposta para o servidor
+            const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando' : 'Aguardando';
+            if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
+                wsServidor.send(JSON.stringify({
+                    tipo: 'status_aposta',
+                    statusBot: statusBot,
+                    tipoAposta: 'Finalizada',
+                    resultado: 'LOSS'
+                }));
+                console.log(`📤 [WS-SERVIDOR] Status de fim de aposta enviado: ${statusBot} (LOSS)`);
+            }
             
             if (modoSimulacaoAtivo) {
                 placarSimulacao.losses++;
