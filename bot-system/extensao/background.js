@@ -866,7 +866,18 @@ function enviarApostaParaMesa(gatilho, numeroAcionador, galeIndex = 0) {
                 console.log('🧪 [BACKGROUND] Modo Simulação Ativo: Aposta fictícia registrada. Sem cliques reais.');
                 // Na simulação, o saldo "sai" da banca no momento da aposta
                 const custoAposta = valorFichaSimulacao * numerosParaApostar.length * multiplicador;
+                
+                console.log('🧪 [SIMULAÇÃO] Descontando aposta...');
+                console.log('🧪 [SIMULAÇÃO] Valor da ficha:', valorFichaSimulacao);
+                console.log('🧪 [SIMULAÇÃO] Quantidade de números:', numerosParaApostar.length);
+                console.log('🧪 [SIMULAÇÃO] Multiplicador:', multiplicador);
+                console.log('🧪 [SIMULAÇÃO] Custo total da aposta: R$', custoAposta.toFixed(2));
+                console.log('🧪 [SIMULAÇÃO] Saldo antes do desconto: R$', saldoSimulacao.toFixed(2));
+                
                 saldoSimulacao -= custoAposta;
+                
+                console.log('🧪 [SIMULAÇÃO] Saldo após desconto: R$', saldoSimulacao.toFixed(2));
+                
                 chrome.storage.local.set({ saldoSimulacao });
                 
                 // Notificar painel para atualizar saldo simulado
@@ -1374,21 +1385,41 @@ function verificarResultado(numeroSaiu) {
         if (modoSimulacaoAtivo) {
             placarSimulacao.wins++;
             let ganhoTotalSimulado = 0;
+            
+            console.log('🧪 [SIMULAÇÃO] Calculando ganho...');
+            console.log('🧪 [SIMULAÇÃO] Números apostados:', aposta.numeros);
+            console.log('🧪 [SIMULAÇÃO] Número que saiu:', numeroSaiuInt);
+            console.log('🧪 [SIMULAÇÃO] Multiplicador da aposta:', aposta.multiplicador);
+            console.log('🧪 [SIMULAÇÃO] Valor da ficha:', valorFichaSimulacao);
+            
             // Calcular o ganho baseado nos itens apostados
             aposta.numeros.forEach(item => {
-                let payoutRatio = 36; 
+                let payoutRatio = 36; // Pleno por padrão
                 const u = String(item).toUpperCase();
+                
                 if (u === 'D1' || u === 'D2' || u === 'D3' || u === 'C1' || u === 'C2' || u === 'C3') {
-                    payoutRatio = 3;
+                    payoutRatio = 3; // Dúzias e Colunas pagam 3:1
                 } else if (u === 'VERMELHO' || u === 'PRETO' || u === 'PAR' || u === 'IMPAR' || u === 'BAIXO' || u === 'ALTO') {
-                    payoutRatio = 2;
+                    payoutRatio = 2; // Chances simples pagam 2:1
                 }
+                
                 const numerosDesteItem = expandirItemParaNumeros(item);
+                console.log(`🧪 [SIMULAÇÃO] Item: ${item}, Números cobertos:`, numerosDesteItem, `Payout: ${payoutRatio}:1`);
+                
                 if (numerosDesteItem.includes(numeroSaiuInt)) {
-                    ganhoTotalSimulado += valorFichaSimulacao * aposta.multiplicador * payoutRatio;
+                    const ganhoItem = valorFichaSimulacao * aposta.multiplicador * payoutRatio;
+                    ganhoTotalSimulado += ganhoItem;
+                    console.log(`🧪 [SIMULAÇÃO] ✅ Item ${item} ganhou! Ganho: R$ ${ganhoItem.toFixed(2)}`);
                 }
             });
+            
+            console.log(`🧪 [SIMULAÇÃO] Ganho total calculado: R$ ${ganhoTotalSimulado.toFixed(2)}`);
+            console.log(`🧪 [SIMULAÇÃO] Saldo antes: R$ ${saldoSimulacao.toFixed(2)}`);
+            
             saldoSimulacao += ganhoTotalSimulado;
+            
+            console.log(`🧪 [SIMULAÇÃO] Saldo depois: R$ ${saldoSimulacao.toFixed(2)}`);
+            
             chrome.storage.local.set({ placarSimulacao, saldoSimulacao });
             
             // Sincronizar mini painel
