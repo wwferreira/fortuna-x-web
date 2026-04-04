@@ -372,7 +372,6 @@ function pararApostasBG(motivo) {
     
     // Limpar rodadas aguardando quando o bot é parado
     botCountdownState.rodadasRestantes = 0;
-    enviarRodadasAguardandoParaServidor(0, 'Parado');
     
     chrome.storage.local.set({ 
         rouletteState: botState, 
@@ -979,25 +978,16 @@ function verificarGatilhosParaApostar(numero) {
 
         // Decrementar rodadas ANTES de verificar se está aguardando próxima rodada ou apostaAtiva
         const rodadasParaEsperar = (gatilhosDinamicos[0].configEspecial && gatilhosDinamicos[0].configEspecial.esperarRodadas) || 5;
-        
-        console.log(`🔍 [DEBUG] Estratégia dinâmica detectada. Rodadas para esperar configuradas: ${rodadasParaEsperar}`);
-        console.log(`🔍 [DEBUG] Estado atual botCountdownState.rodadasRestantes: ${botCountdownState.rodadasRestantes}`);
 
         if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null || botCountdownState.rodadasRestantes <= 0) {
             botCountdownState.rodadasRestantes = rodadasParaEsperar;
-            console.log(`🔍 [DEBUG] Inicializando contador de rodadas: ${botCountdownState.rodadasRestantes}`);
         }
 
         botCountdownState.rodadasRestantes--;
         chrome.storage.local.set({ botCountdownState });
-        
-        console.log(`🔍 [DEBUG] Após decrementar: ${botCountdownState.rodadasRestantes} rodadas restantes`);
 
         // Se houver aposta ativa, não processamos novos disparos dinâmicos
-        if (botState.apostaAtiva) {
-            console.log(`🔍 [DEBUG] Aposta ativa detectada, aguardando conclusão`);
-            return;
-        }
+        if (botState.apostaAtiva) return;
 
         if (botCountdownState.rodadasRestantes > 0) {
             console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
@@ -1007,17 +997,11 @@ function verificarGatilhosParaApostar(numero) {
                 estrategia: botState.nomeEstrategiaSelecionada
             }).catch(() => {});
             
-            // Enviar informações para o servidor
-            enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, `Aguardando ${botCountdownState.rodadasRestantes} rodada${botCountdownState.rodadasRestantes !== 1 ? 's' : ''}`);
-            
             return;
         }
 
         // Chegou a ZERO: Disparar apostas dinâmicas
         console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
-        
-        // Enviar informação de que não está mais aguardando
-        enviarRodadasAguardandoParaServidor(0, 'Ativo');
         
         gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
         return; 
@@ -2263,7 +2247,6 @@ async function pararBotRemoto() {
     
     // Limpar rodadas aguardando quando o bot é desligado
     botCountdownState.rodadasRestantes = 0;
-    enviarRodadasAguardandoParaServidor(0, 'Desligado');
     
     // Marcar que o logout está pendente
     chrome.storage.local.set({ 
@@ -2638,6 +2621,8 @@ async function redirecionarParaMesa(tabId) {
 
 // Função para enviar informações de rodadas aguardando para o servidor
 function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
+    // Temporariamente desabilitada para debug
+    /*
     if (wsServidor && wsServidor.readyState === WebSocket.OPEN) {
         wsServidor.send(JSON.stringify({
             tipo: 'rodadas_aguardando',
@@ -2646,6 +2631,7 @@ function enviarRodadasAguardandoParaServidor(rodadas, statusBot) {
         }));
         console.log(`📤 [WS-SERVIDOR] Rodadas aguardando enviadas: ${rodadas}`);
     }
+    */
 }
 
 // Enviar stats para o servidor a cada 3 segundos
