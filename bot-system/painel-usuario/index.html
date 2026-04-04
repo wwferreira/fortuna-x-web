@@ -1194,7 +1194,27 @@ async function atualizarStats() {
     
     // Atualizar Saldo e Lucro
     const saldo = (s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null;
-    const saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
+    let saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
+    
+    // Se não há saldoInicial definido, mas há saldo atual, definir saldoInicial = saldo atual
+    // Isso faz com que o lucro comece em 0
+    if (saldoInicial === null && saldo !== null) {
+      saldoInicial = saldo;
+      console.log(`💡 [PAINEL] Definindo saldoInicial como saldo atual: R$ ${saldo.toFixed(2)}`);
+      
+      // Enviar para o servidor para salvar o saldoInicial
+      fetch(`${API}/stats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: emailLogado, 
+          saldoInicial: saldo,
+          saldo: saldo,
+          greens: s.greens || 0,
+          reds: s.reds || 0
+        })
+      }).catch(e => console.log('Erro ao salvar saldoInicial:', e));
+    }
     
     document.getElementById('statSaldo').textContent = saldo !== null ? `R$ ${saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '—';
     
@@ -1204,7 +1224,9 @@ async function atualizarStats() {
       el.textContent = (lucro >= 0 ? '+' : '') + `R$ ${lucro.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
       el.style.color = lucro >= 0 ? '#22c55e' : '#ef4444';
     } else {
-      document.getElementById('statLucro').textContent = '—';
+      const el = document.getElementById('statLucro');
+      el.textContent = 'R$ 0,00';
+      el.style.color = '#e0e0e0';
     }
   } catch (e) { /* servidor offline */ }
 }

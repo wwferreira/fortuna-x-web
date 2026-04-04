@@ -728,12 +728,32 @@ app.post('/api/stats', async (req, res) => {
   if (!email) return res.status(400).json({ erro: 'Email obrigatório' });
 
   try {
+    // Buscar dados atuais do usuário
+    const { data: userData } = await supabase
+      .from('usuarios_bot')
+      .select('stats')
+      .eq('email', email)
+      .single();
+
+    const statsAtuais = userData?.stats || {};
+    
+    // Se não há saldoInicial nos dados atuais e está sendo enviado um saldo, definir saldoInicial = saldo
+    let saldoInicialFinal = saldoInicial;
+    if (!statsAtuais.saldoInicial && saldo !== null && saldo !== undefined && !saldoInicial) {
+      saldoInicialFinal = saldo;
+      console.log(`💡 [STATS] Definindo saldoInicial para ${email}: R$ ${saldo}`);
+    } else if (saldoInicial !== undefined) {
+      saldoInicialFinal = saldoInicial;
+    } else {
+      saldoInicialFinal = statsAtuais.saldoInicial;
+    }
+
     const updateData = {
       stats: { 
         greens, 
         reds, 
         saldo, 
-        saldoInicial, 
+        saldoInicial: saldoInicialFinal, 
         atualizado: Date.now() 
       },
       updated_at: new Date().toISOString()
