@@ -1420,7 +1420,10 @@ function verificarResultado(numeroSaiu) {
             
             console.log(`🧪 [SIMULAÇÃO] Saldo depois: R$ ${saldoSimulacao.toFixed(2)}`);
             
-            chrome.storage.local.set({ placarSimulacao, saldoSimulacao });
+            // Salvar no storage com callback para confirmar
+            chrome.storage.local.set({ placarSimulacao, saldoSimulacao }, () => {
+                console.log(`🧪 [SIMULAÇÃO] ✅ Saldo salvo no storage: R$ ${saldoSimulacao.toFixed(2)}`);
+            });
             
             // Sincronizar mini painel
             chrome.tabs.query({}, (tabs) => {

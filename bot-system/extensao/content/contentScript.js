@@ -795,6 +795,13 @@ function monitorarEEnviarSaldo() {
     if (saldo !== null && saldo > 0 && saldo !== ultimoSaldoMonitorado) {
             console.log(`💰 [FORTUNA X] SALDO ATUALIZADO: R$ ${saldo}`);
             ultimoSaldoMonitorado = saldo;
+            
+            // Atualizar variáveis do mini painel
+            statusBancaAtual = saldo;
+            
+            // Atualizar display do mini painel
+            atualizarPainelStatus();
+            
             try {
                 if (chrome.runtime && chrome.runtime.id) {
                     chrome.runtime.sendMessage({ tipo: 'atualizar_saldo', saldo: saldo })
@@ -1204,20 +1211,56 @@ function atualizarPainelStatus() {
 }
 
 function atualizarSaldoInicial() {
+  console.log('🔃 [MINI PAINEL] Tentando atualizar saldo inicial...');
+  
   // Obter saldo atual
   var saldoElement = document.querySelector("#root > div > div.app-container > div.games-slots--bcT1C > div > div.game-node--Lwk1Y > div > div > div.game-table > div.game-table__controls-panel > div > div.controls-panel__account > div > div.account-panel__section.account-panel__balance-section > div.balance > div.balance__value > div > div.fit-container__content--PZA2L");
   
+  if (!saldoElement) {
+    // Tentar seletores alternativos
+    const seletoresAlternativos = [
+      '.fit-container__content',
+      '.balance-amount',
+      '.user-balance',
+      '.total-balance',
+      '.balance-value',
+      '[class*="balance"]'
+    ];
+    
+    for (let seletor of seletoresAlternativos) {
+      saldoElement = document.querySelector(seletor);
+      if (saldoElement && saldoElement.textContent.includes('R$')) {
+        console.log(`🔃 [MINI PAINEL] Saldo encontrado com seletor: ${seletor}`);
+        break;
+      }
+    }
+  }
+  
   if (saldoElement) {
     var textoSaldo = saldoElement.textContent.trim();
+    console.log(`🔃 [MINI PAINEL] Texto do saldo encontrado: "${textoSaldo}"`);
+    
     var saldoLimpo = textoSaldo.replace(/R\$/g, '').replace(/&nbsp;/g, '').replace(/\s/g, '').trim();
     var saldoNumerico = parseFloat(saldoLimpo.replace(',', '.'));
+    
+    console.log(`🔃 [MINI PAINEL] Saldo numérico: ${saldoNumerico}`);
     
     if (!isNaN(saldoNumerico)) {
       statusBancaInicial = saldoNumerico;
       statusBancaAtual = saldoNumerico;
+      ultimoSaldoMonitorado = saldoNumerico;
+      
       atualizarPainelStatus();
       mostrarAlertaNaPagina('✅ Saldo inicial atualizado!', '#4CAF50', 2000);
+      
+      console.log(`🔃 [MINI PAINEL] ✅ Saldo atualizado para: R$ ${saldoNumerico.toFixed(2)}`);
+    } else {
+      mostrarAlertaNaPagina('❌ Erro: Saldo inválido', '#f44336', 3000);
+      console.log('🔃 [MINI PAINEL] ❌ Erro: Saldo inválido');
     }
+  } else {
+    mostrarAlertaNaPagina('❌ Erro: Elemento de saldo não encontrado', '#f44336', 3000);
+    console.log('🔃 [MINI PAINEL] ❌ Erro: Elemento de saldo não encontrado');
   }
 }
 
