@@ -191,6 +191,18 @@
         <div class="stat-val stat-blue" id="statAssert">—</div>
       </div>
     </div>
+    
+    <!-- Nova linha para Rodadas Aguardando -->
+    <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
+      <div class="stat-box">
+        <div class="stat-label">Aguardando</div>
+        <div class="stat-val" style="color: #ff9800;" id="statRodadasAguardando">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Status</div>
+        <div class="stat-val" style="color: #888; font-size: 14px;" id="statStatusBot">Parado</div>
+      </div>
+    </div>
     <div class="saldo-box">
       <div>
         <div class="saldo-label">Saldo Atual</div>
@@ -363,12 +375,12 @@
             <!-- Legendas -->
             <div style="margin-bottom:15px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
                 <label style="font-size:11px; color:#aaa;">1. CRIAR LEGENDAS (GRUPOS DE NÚMEROS)</label>
-                <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <input type="text" id="inputNomeLegenda" placeholder="Nome (Ex: DZ1)" style="flex: 1; font-size: 11px; padding: 8px; margin-bottom: 0;">
-                    <input type="text" id="inputNumerosLegenda" placeholder="Números (Ex: 1 2 3)" style="flex: 2; font-size: 11px; padding: 8px; margin-bottom: 0;">
-                    <button class="btn" style="width: auto; padding: 0 15px; background: #333; margin-bottom: 0;" onclick="adicionarLegendaLocal()">➕</button>
-                </div>
-                <div id="listaLegendasLocal" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;"></div>
+                <input type="text" id="inputNomeLegenda" placeholder="Nome (Ex: DZ1)" style="font-size: 11px; padding: 8px; margin-top: 5px;">
+                <input type="text" id="inputNumerosLegenda" placeholder="Números (Ex: 1 2 3)" style="font-size: 11px; padding: 8px;">
+                
+                <button class="btn btn-success" style="font-size: 12px; padding: 10px; background: #333;" onclick="adicionarLegendaLocal()">➕ Adicionar Legenda</button>
+                
+                <div id="listaLegendasLocal" style="margin-top: 10px;"></div>
             </div>
 
             <!-- Gatilhos -->
@@ -781,9 +793,10 @@ async function carregarEstrategias() {
     const sel = document.getElementById('selectEstrategia');
     
     // Usar 'chave' como value e manter o id no data-id
-    sel.innerHTML = '<option value="">Selecione uma estratégia...</option>' + 
-      estrategiasDisponiveis.map(e => `<option value="${e.chave}" data-id="${e.id}">${e.nome}</option>`).join('') +
-      '<option value="modo_gatilho" style="color:#FFD700; font-weight:bold;">🎯 MODO GATILHO (Personalizado)</option>';
+    sel.innerHTML = '<option value="">Selecione uma estratégia...</option>' + estrategiasDisponiveis.map(e => `<option value="${e.chave}" data-id="${e.id}">${e.nome}</option>`).join('');
+    
+    // A opção "Modo Gatilho (Personalizado)" foi removida daqui para não aparecer no mobile.
+    // Se precisar reativar, adicione de volta: + '<option value="modo_gatilho" style="color:#FFD700; font-weight:bold;">🎯 MODO GATILHO (Personalizado)</option>';
     
     sel.addEventListener('change', () => {
         mostrarDescEstrategia();
@@ -911,6 +924,14 @@ function toggleCamposEspeciais() {
     const rowProgressaoGeral = document.getElementById('campoProgressaoGeral');
     const rowModoGatilho = document.getElementById('campoModoGatilho');
 
+    // Resetar todos os campos especiais antes de mostrar o correto
+    if (rowModoGatilho) rowModoGatilho.style.display = 'none';
+    if (rowHot) rowHot.style.display = 'none';
+    if (rowCold) rowCold.style.display = 'none';
+    if (rowViz) rowViz.style.display = 'none';
+    if (rowFuncionario) rowFuncionario.style.display = 'none';
+    if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
+
     // Buscar estratégia selecionada
     const estObj = estrategiasDisponiveis.find(e => e.chave == est);
     
@@ -918,11 +939,6 @@ function toggleCamposEspeciais() {
     if (est === 'modo_gatilho') {
         container.style.display = 'block';
         if (rowModoGatilho) rowModoGatilho.style.display = 'block';
-        if (rowHot) rowHot.style.display = 'none';
-        if (rowCold) rowCold.style.display = 'none';
-        if (rowViz) rowViz.style.display = 'none';
-        if (rowFuncionario) rowFuncionario.style.display = 'none';
-        if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
         
         carregarModoGatilhoAtual(); // Carregar legendas/gatilhos existentes
         return;
@@ -940,23 +956,15 @@ function toggleCamposEspeciais() {
         const isDinamica = isQuente || isFrio;
 
         if (isFunc) {
-            if (rowHot) rowHot.style.display = 'none';
-            if (rowCold) rowCold.style.display = 'none';
-            if (rowViz) rowViz.style.display = 'none';
             if (rowFuncionario) rowFuncionario.style.display = 'block';
-            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
         } else if (isDinamica) {
             if (rowHot) rowHot.style.display = isQuente ? 'block' : 'none';
             if (rowCold) rowCold.style.display = isFrio ? 'block' : 'none';
             if (rowViz) rowViz.style.display = 'block';
-            if (rowFuncionario) rowFuncionario.style.display = 'none';
             if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block';
         } else {
             // Estratégia normal (gatilhos fixos)
-            if (rowHot) rowHot.style.display = 'none';
-            if (rowCold) rowCold.style.display = 'none';
             if (rowViz) rowViz.style.display = 'block'; // Vizinhos sempre útil
-            if (rowFuncionario) rowFuncionario.style.display = 'none';
             if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block';
         }
     } else {
@@ -1145,6 +1153,37 @@ async function atualizarStats() {
     const total = (s.greens || 0) + (s.reds || 0);
     document.getElementById('statAssert').textContent = total > 0 ? ((s.greens / total * 100).toFixed(0) + '%') : '—';
     
+    // Atualizar Rodadas Aguardando
+    const rodadasEl = document.getElementById('statRodadasAguardando');
+    if (rodadasEl) {
+      if (s.rodadasAguardando !== undefined && s.rodadasAguardando > 0) {
+        rodadasEl.textContent = `${s.rodadasAguardando} rodada${s.rodadasAguardando !== 1 ? 's' : ''}`;
+      } else {
+        rodadasEl.textContent = '—';
+      }
+    }
+    
+    // Atualizar Status do Bot
+    const statusEl = document.getElementById('statStatusBot');
+    if (statusEl) {
+      if (s.statusBot) {
+        statusEl.textContent = s.statusBot;
+        // Cores baseadas no status
+        if (s.statusBot.includes('Aguardando')) {
+          statusEl.style.color = '#ff9800';
+        } else if (s.statusBot.includes('Ativo') || s.statusBot.includes('Ligado')) {
+          statusEl.style.color = '#22c55e';
+        } else if (s.statusBot.includes('Apostando')) {
+          statusEl.style.color = '#60a5fa';
+        } else {
+          statusEl.style.color = '#888';
+        }
+      } else {
+        statusEl.textContent = botLigado ? 'Ligado' : 'Parado';
+        statusEl.style.color = botLigado ? '#22c55e' : '#888';
+      }
+    }
+    
     // Atualizar Saldo e Lucro
     const saldo = (s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null;
     const saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
@@ -1163,7 +1202,7 @@ async function atualizarStats() {
 }
 
 async function resetarPlacar() {
-  if (!confirm('Deseja zerar o placar e reiniciar a contagem do lucro a partir do saldo atual?')) return;
+  if (!confirm('Deseja zerar o placar e retornar o saldo ao valor inicial?')) return;
   try {
     // Zerar visualmente na hora para feedback instantâneo
     document.getElementById('statGreens').textContent = '0';
@@ -1174,10 +1213,13 @@ async function resetarPlacar() {
 
     const res = await fetch(`${API}/reset-stats`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailLogado })
+      body: JSON.stringify({ 
+        email: emailLogado,
+        resetarSaldo: true // Novo parâmetro para o servidor
+      })
     });
     if (res.ok) {
-      mostrarMsg('msgSalvo', '🔄 Placar zerado com sucesso!');
+      mostrarMsg('msgSalvo', '🔄 Placar e saldo resetados!');
       setTimeout(atualizarStats, 1000);
     }
   } catch (e) {
@@ -1537,14 +1579,21 @@ async function carregarModoGatilhoAtual() {
     const res = await fetch(`${API}/config/${encodeURIComponent(emailLogado)}`);
     const config = await res.json();
     
-    legendasLocais = config.legendas || {};
-    gatilhosLocais = config.gatilhos || [];
+    // Sincronizar dados do servidor para o painel
+    if (config.legendas) {
+      legendasLocais = config.legendas;
+      atualizarListaLegendasLocal();
+    }
     
-    // Se a estratégia atual não for modo gatilho, mas tivermos dados, carregamos
-    // Se for modo gatilho, os dados já estarão lá
+    if (config.gatilhos && config.estrategia === 'modo_gatilho') {
+      gatilhosLocais = config.gatilhos;
+      atualizarListaGatilhosLocal();
+    }
     
-    atualizarListaLegendasLocal();
-    atualizarListaGatilhosLocal();
+    console.log('🔄 Modo Gatilho sincronizado do servidor:', { 
+      legendas: Object.keys(legendasLocais).length, 
+      gatilhos: gatilhosLocais.length 
+    });
   } catch (e) {
     console.error('Erro ao carregar modo gatilho:', e);
   }
@@ -1583,10 +1632,14 @@ function atualizarListaLegendasLocal() {
   container.innerHTML = '';
   
   Object.keys(legendasLocais).forEach(nome => {
-    const tag = document.createElement('div');
-    tag.style = 'background: #333; border: 1px solid #FFD700; color: #FFD700; padding: 5px 10px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px;';
-    tag.innerHTML = `<span>${nome} (${legendasLocais[nome].length})</span> <span onclick="removerLegendaLocal('${nome}')" style="cursor:pointer; color:#ef4444; font-weight:bold;">✕</span>`;
-    container.appendChild(tag);
+    const item = document.createElement('div');
+    item.style = 'background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; position: relative;';
+    item.innerHTML = `
+      <div style="color: #FFD700; font-weight: bold; margin-bottom: 4px;">Legenda: ${nome}</div>
+      <div style="color: #888; word-break: break-all;">Números: ${legendasLocais[nome].join(' ')}</div>
+      <button onclick="removerLegendaLocal('${nome}')" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer;">REMOVER</button>
+    `;
+    container.appendChild(item);
   });
 }
 
