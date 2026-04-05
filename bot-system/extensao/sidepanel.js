@@ -4308,6 +4308,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     }
     
+    // Atualizar modo IA Fortuna
+    if (message.config.modo_ia !== undefined && modoIAPlenoInput) {
+      modoIAPlenoInput.value = message.config.modo_ia;
+      state.modoIAPleno = message.config.modo_ia;
+      console.log('✅ [SIDEPANEL] Modo IA atualizado para:', message.config.modo_ia);
+    }
+    
     // Atualizar campos específicos de Quentes e Frios
     const inputQtdQuentes = document.getElementById('inputQtdQuentes');
     const inputQtdFrios = document.getElementById('inputQtdFrios');
