@@ -295,9 +295,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
             const oldEstrategia = botState.estrategiaSelecionada;
             botState = { ...botState, ...changes.rouletteState.newValue };
             
-            // Resetar contador se a estratégia mudou
-            if (oldEstrategia !== botState.estrategiaSelecionada) {
-                console.log('🔄 [BACKGROUND] Estratégia mudou, resetando contador de rodadas.');
+            // Resetar contador APENAS se a estratégia mudou de fato (não apenas atualizações)
+            if (oldEstrategia && oldEstrategia !== botState.estrategiaSelecionada && botState.estrategiaSelecionada) {
+                console.log(`🔄 [BACKGROUND] Estratégia mudou de "${oldEstrategia}" para "${botState.estrategiaSelecionada}", resetando contador de rodadas.`);
                 botCountdownState.rodadasRestantes = null;
                 chrome.storage.local.set({ botCountdownState });
                 
@@ -1147,6 +1147,13 @@ function processarMotorIAPleno(gatilhoIA, numero) {
         const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
         enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
         
+        // Enviar para o mini painel também
+        chrome.runtime.sendMessage({ 
+            tipo: 'aposta_contagem_rodadas', 
+            rodadas: botCountdownState.rodadasRestantes,
+            estrategia: botState.nomeEstrategiaSelecionada || 'IA Fortuna X Pleno'
+        }).catch(() => {});
+        
         chrome.runtime.sendMessage({
             tipo: 'status_ia_atualizar',
             texto: `${statusBase} | ⏳ Pausa: ${botCountdownState.rodadasRestantes} rod.`
@@ -1218,6 +1225,13 @@ function processarMotorIA(gatilhoIA, numero) {
         // Enviar rodadas aguardando para o servidor
         const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
         enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
+        
+        // Enviar para o mini painel também
+        chrome.runtime.sendMessage({ 
+            tipo: 'aposta_contagem_rodadas', 
+            rodadas: botCountdownState.rodadasRestantes,
+            estrategia: botState.nomeEstrategiaSelecionada || 'IA Fortuna X'
+        }).catch(() => {});
         
         chrome.runtime.sendMessage({
             tipo: 'status_ia_atualizar',
