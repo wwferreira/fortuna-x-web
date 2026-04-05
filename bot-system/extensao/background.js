@@ -2135,6 +2135,9 @@ function conectarServidorLocal() {
                         botState.qtdAnalise = msg.qtd_analise || 100;
                         botState.maxRodadasHistorico = msg.qtd_analise || 100; // Sincronizar com a variável usada nos cálculos
                         
+                        // IA Forttuna X
+                        botState.modoIA = msg.modo_ia || 'moderado';
+                        
                         // Sincronizar Legendas e Gatilhos (Modo Gatilho)
                         if (msg.legendas) {
                             botState.legendas = msg.legendas;

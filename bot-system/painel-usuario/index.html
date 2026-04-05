@@ -469,6 +469,17 @@
             </div>
         </div>
         
+        <!-- IA FORTTUNA X -->
+        <div id="campoIAForttuna" style="display:none; margin-bottom:15px">
+            <label style="font-size:12px;color:#ffffff; display:block; margin-bottom:5px">🤖 Modo de Operação (IA Fortuna)</label>
+            <select id="configModoIAForttuna" style="width:100%; padding:8px; background:#0f0f1a; border:1px solid #333; border-radius:6px; color:#e0e0e0;">
+                <option value="moderado">🟢 Moderado (Menos entradas, mais assertivo)</option>
+                <option value="intermediario">🟡 Intermediário (Equilibrado)</option>
+                <option value="agressivo">🔴 Agressivo (Mais entradas)</option>
+            </select>
+            <div style="font-size:10px; color:#888; margin-top:5px;">Selecione o nível de agressividade da inteligência artificial.</div>
+        </div>
+        
         <!-- VIZINHOS -->
         <div id="campoVizinhos" style="margin-bottom:15px">
             <label style="font-size:12px;color:#ffffff; display:block; margin-bottom:5px">⭕ Vizinhos da Racetrack (para cada nº)</label>
@@ -876,6 +887,10 @@ async function carregarConfig() {
       document.getElementById('configFichaG1').value = config.ficha_g1 ?? 2;
       document.getElementById('configFichaG2').value = config.ficha_g2 ?? 4;
       
+      if (document.getElementById('configModoIAForttuna')) {
+          document.getElementById('configModoIAForttuna').value = config.modo_ia || 'moderado';
+      }
+      
       if (config.qtd_analise !== undefined) {
           document.getElementById('configQtdAnalise').value = config.qtd_analise;
           if (document.getElementById('valAnalise')) document.getElementById('valAnalise').textContent = config.qtd_analise;
@@ -923,6 +938,7 @@ function toggleCamposEspeciais() {
     const rowFuncionario = document.getElementById('campoFuncionarioMes');
     const rowProgressaoGeral = document.getElementById('campoProgressaoGeral');
     const rowModoGatilho = document.getElementById('campoModoGatilho');
+    const rowIAForttuna = document.getElementById('campoIAForttuna');
 
     // Resetar todos os campos especiais antes de mostrar o correto
     if (rowModoGatilho) rowModoGatilho.style.display = 'none';
@@ -931,6 +947,7 @@ function toggleCamposEspeciais() {
     if (rowViz) rowViz.style.display = 'none';
     if (rowFuncionario) rowFuncionario.style.display = 'none';
     if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'none';
+    if (rowIAForttuna) rowIAForttuna.style.display = 'none';
 
     // Buscar estratégia selecionada
     const estObj = estrategiasDisponiveis.find(e => e.chave == est);
@@ -950,12 +967,17 @@ function toggleCamposEspeciais() {
         
         container.style.display = 'block';
         
+        const isIA = nome.includes('ia forttuna');
         const isFunc = nome.includes('funcionário') || nome.includes('funcionario');
         const isQuente = nome.includes('quente');
         const isFrio = nome.includes('frio');
         const isDinamica = isQuente || isFrio;
 
-        if (isFunc) {
+        if (isIA) {
+            if (rowIAForttuna) rowIAForttuna.style.display = 'block';
+            if (rowViz) rowViz.style.display = 'block';
+            if (rowProgressaoGeral) rowProgressaoGeral.style.display = 'block';
+        } else if (isFunc) {
             if (rowFuncionario) rowFuncionario.style.display = 'block';
         } else if (isDinamica) {
             if (rowHot) rowHot.style.display = isQuente ? 'block' : 'none';
@@ -1938,6 +1960,7 @@ async function salvarEstrategia() {
     }
     
     const nome = estCompleta.nome.toLowerCase();
+    const isIA = nome.includes('ia forttuna');
     const isFuncionarioMes = nome.includes('funcionário') || nome.includes('funcionario');
     
     config.estrategia_id = estCompleta.id;
@@ -1947,6 +1970,10 @@ async function salvarEstrategia() {
     config.qtd_hot = document.getElementById('configQtdHot').value !== "" ? parseInt(document.getElementById('configQtdHot').value) : 5;
     config.qtd_cold = document.getElementById('configQtdCold').value !== "" ? parseInt(document.getElementById('configQtdCold').value) : 5;
     config.vizinhos = document.getElementById('configVizinhos').value !== "" ? parseInt(document.getElementById('configVizinhos').value) : 0;
+
+    if (isIA) {
+      config.modo_ia = document.getElementById('configModoIAForttuna')?.value || 'moderado';
+    }
 
     if (isFuncionarioMes) {
       config.numeros_fixos_fm = document.getElementById('configNumerosFixosFM')?.value || '';

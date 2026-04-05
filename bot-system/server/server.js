@@ -340,7 +340,9 @@ app.post('/api/config', async (req, res) => {
     qtd_hot, qtd_cold, vizinhos, qtd_analise, ficha_g1, ficha_g2,
     tipo_progressao, gales_multiplicadores, ciclo_multiplicadores,
     // Novos campos do Funcionário do Mês
-    numeros_fixos_fm, tipo_progressao_fm, gales_multiplicadores_fm, ciclo_multiplicadores_fm
+    numeros_fixos_fm, tipo_progressao_fm, gales_multiplicadores_fm, ciclo_multiplicadores_fm,
+    // Modo IA Fortuna
+    modo_ia
   } = req.body;
   
   try {
@@ -366,7 +368,9 @@ app.post('/api/config', async (req, res) => {
       numeros_fixos_fm: numeros_fixos_fm || '',
       tipo_progressao_fm: tipo_progressao_fm || 'simples',
       gales_multiplicadores_fm: gales_multiplicadores_fm || [],
-      ciclo_multiplicadores_fm: ciclo_multiplicadores_fm || []
+      ciclo_multiplicadores_fm: ciclo_multiplicadores_fm || [],
+      // IA Fortuna
+      modo_ia: modo_ia || 'moderado'
     };
 
     console.log('💾 Salvando config para', email, ':', config);
