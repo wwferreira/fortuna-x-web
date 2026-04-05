@@ -1960,7 +1960,7 @@ async function salvarEstrategia() {
     }
     
     const nome = estCompleta.nome.toLowerCase();
-    const isIA = nome.includes('ia forttuna');
+    const isIA = nome.includes('fortuna') || nome.includes('forttuna');
     const isFuncionarioMes = nome.includes('funcionário') || nome.includes('funcionario');
     
     config.estrategia_id = estCompleta.id;
