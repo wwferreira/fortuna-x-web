@@ -242,12 +242,13 @@ const RACETRACK = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8
 // Variáveis de Simulação (Background)
 let modoSimulacaoAtivo = false;
 let saldoSimulacao = 1000.00;
+let saldoInicialSimulacao = 1000.00;
 let valorFichaSimulacao = 1.00;
 let placarSimulacao = { wins: 0, losses: 0 };
 
 let stateLoaded = false;
 const stateLoadedPromise = new Promise((resolve) => {
-    chrome.storage.local.get(['rouletteState', 'historicoRodadas', 'apostaAtiva', 'botCountdownState', 'modoSimulacaoAtivo', 'saldoSimulacao', 'valorFichaSimulacao', 'placarSimulacao'], (result) => {
+    chrome.storage.local.get(['rouletteState', 'historicoRodadas', 'apostaAtiva', 'botCountdownState', 'modoSimulacaoAtivo', 'saldoSimulacao', 'saldoInicialSimulacao', 'valorFichaSimulacao', 'placarSimulacao'], (result) => {
         if (result.rouletteState) {
             botState = { ...botState, ...result.rouletteState };
         }
@@ -264,6 +265,7 @@ const stateLoadedPromise = new Promise((resolve) => {
         // Simulação
         modoSimulacaoAtivo = result.modoSimulacaoAtivo || false;
         saldoSimulacao = result.saldoSimulacao !== undefined ? result.saldoSimulacao : 1000.00;
+        saldoInicialSimulacao = result.saldoInicialSimulacao !== undefined ? result.saldoInicialSimulacao : 1000.00;
         valorFichaSimulacao = result.valorFichaSimulacao !== undefined ? result.valorFichaSimulacao : 1.00;
         placarSimulacao = result.placarSimulacao || { wins: 0, losses: 0 };
 
@@ -285,6 +287,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local') {
         if (changes.modoSimulacaoAtivo) modoSimulacaoAtivo = changes.modoSimulacaoAtivo.newValue;
         if (changes.saldoSimulacao) saldoSimulacao = changes.saldoSimulacao.newValue;
+        if (changes.saldoInicialSimulacao) saldoInicialSimulacao = changes.saldoInicialSimulacao.newValue;
         if (changes.valorFichaSimulacao) valorFichaSimulacao = changes.valorFichaSimulacao.newValue;
         if (changes.placarSimulacao) placarSimulacao = changes.placarSimulacao.newValue;
         
@@ -1027,11 +1030,13 @@ function verificarGatilhosParaApostar(numero) {
         // Chegou a ZERO: Disparar apostas dinâmicas
         console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
         
-        // Limpar rodadas aguardando no servidor
-        const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
-        enviarRodadasAguardandoParaServidor(0, statusBot);
-        
         gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
+        
+        // Limpar rodadas aguardando no servidor após um delay para dar tempo de ver
+        setTimeout(() => {
+            const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
+            enviarRodadasAguardandoParaServidor(0, statusBot);
+        }, 3000); // 3 segundos de delay
         return; 
     }
 
@@ -1444,6 +1449,14 @@ function verificarResultado(numeroSaiu) {
             // Salvar no storage com callback para confirmar
             chrome.storage.local.set({ placarSimulacao, saldoSimulacao }, () => {
                 console.log(`🧪 [SIMULAÇÃO] ✅ Saldo salvo no storage: R$ ${saldoSimulacao.toFixed(2)}`);
+                
+                // Se é a primeira vez que está salvando saldo de simulação, definir como inicial
+                chrome.storage.local.get(['saldoInicialSimulacao'], (result) => {
+                    if (result.saldoInicialSimulacao === undefined) {
+                        chrome.storage.local.set({ saldoInicialSimulacao: 1000.00 });
+                        console.log(`🧪 [SIMULAÇÃO] Saldo inicial definido: R$ 1000.00`);
+                    }
+                });
             });
             
             // Sincronizar mini painel
@@ -2745,7 +2758,8 @@ setInterval(() => {
                 wins = placarSim.wins || 0;
                 losses = placarSim.losses || 0;
                 saldo = result.saldoSimulacao || 1000.00;
-                saldoInicial = 1000.00; 
+                // Para simulação, usar o saldo inicial salvo ou 1000 como padrão
+                saldoInicial = result.saldoInicialSimulacao || 1000.00; 
             } else {
                 // Usar dados reais - priorizar storage do sidepanel
                 const rState = result.rouletteState || {};
