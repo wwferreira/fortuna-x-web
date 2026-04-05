@@ -2879,12 +2879,18 @@ if (selecaoEstrategia) {
 
     // Armazenar o nome da estratégia selecionada
     if (selectedOption) {
-      state.nomeEstrategiaSelecionada = selectedOption.dataset.nome || selectedOption.textContent;
+      state.nomeEstrategiaSelecionada = (selectedOption.dataset.nome || selectedOption.textContent).trim();
     }
 
     // Resetar status da IA ao trocar de estratégia
     if (statusIA) statusIA.style.display = 'none';
     if (containerIAPleno) containerIAPleno.style.display = 'none';
+
+    // Mostrar IA se o nome contiver "IA Forttuna"
+    if (state.nomeEstrategiaSelecionada.toLowerCase().includes('ia forttuna')) {
+      if (containerIAPleno) containerIAPleno.style.display = 'block';
+      if (modoIAPlenoInput) modoIAPlenoInput.value = state.modoIAPleno || 'moderado';
+    }
 
     // Se for modo manual (selecionado vazio), restaurar os arrays do cache manual
     if (!estrategiaId) {
@@ -3328,6 +3334,14 @@ function atualizarSlidersFichas(quantidade) {
     div.appendChild(slider);
     slidersFichas.appendChild(div);
   }
+}
+
+if (modoIAPlenoInput) {
+  modoIAPlenoInput.addEventListener('change', (e) => {
+    state.modoIAPleno = e.target.value;
+    saveState();
+    marcarAlteracao();
+  });
 }
 
 if (resetBtn) {
