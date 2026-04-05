@@ -1127,7 +1127,7 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
         if (data && data.melhorCandidato) {
             melhorCandidato = data.melhorCandidato;
             candidatos = data.candidatos;
-            scoreAtual = Math.floor(melhorCandidato.score || 0);
+            scoreAtual = Math.floor(melhorCandidato.porcentagem || 0); // Agora usamos PORCENTAGEM (0-100%)
         }
     } catch (e) {
         console.warn('⚠️ [IA-SEGURANÇA] Servidor offline. Usando lógica local de emergência.');
@@ -1135,21 +1135,22 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
         historico.slice(0, 100).forEach(n => contagem[n] = (contagem[n] || 0) + 1);
         candidatos = Object.keys(contagem).map(n => ({
             num: parseInt(n),
-            score: contagem[n] * 4
+            score: contagem[n] * 4,
+            porcentagem: Math.min(60, contagem[n] * 5)
         })).sort((a,b) => b.score - a.score);
         melhorCandidato = candidatos[0];
-        scoreAtual = Math.floor(melhorCandidato?.score || 0);
+        scoreAtual = Math.floor(melhorCandidato?.porcentagem || 0);
     }
 
     if (!melhorCandidato) return;
 
-    // 3. Definir Alvos de Pontuação por Modo
-    let gatilhoAposta = 15; 
-    if (modo === 'moderado') gatilhoAposta = 20; 
-    if (modo === 'intermediario') gatilhoAposta = 15;
-    if (modo === 'agressivo') gatilhoAposta = 12;
+    // 3. Definir Alvos de Confiança (%) por Modo
+    let gatilhoAposta = 75; 
+    if (modo === 'moderado') gatilhoAposta = 90; // Aposta apenas a partir de 90% de confiança
+    if (modo === 'intermediario') gatilhoAposta = 80;
+    if (modo === 'agressivo') gatilhoAposta = 65;
 
-    const statusBase = `🎯 I.A Fortuna X: ${scoreAtual}/${gatilhoAposta}${scoreAtual >= gatilhoAposta * 1.5 ? ' 🔥' : ''}`;
+    const statusBase = `🎯 I.A Fortuna X: ${scoreAtual}% / ${gatilhoAposta}%${scoreAtual >= 100 ? ' 🔥' : ''}`;
 
     // --- SISTEMA DE PAUSA OBRIGATÓRIA (ADMIN) ---
     if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null) {

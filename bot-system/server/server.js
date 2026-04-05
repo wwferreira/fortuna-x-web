@@ -255,12 +255,16 @@ app.post('/api/ia-thinking', (req, res) => {
         }
     });
 
-    // 2. Calcular Score Final (Logica Protegida)
+    // 2. Calcular Score Final e Normalizar para Porcentagem (0-100%)
     const candidatos = Object.keys(contagem).map(n => {
         const num = parseInt(n);
-        // Multiplicadores ajustados para dar mais peso às sequências imediatas
-        const score = (contagem[n] * 1.8) + (sequencias[n] || 0) * 8.5;
-        return { num, score };
+        // Multiplicadores ajustados
+        const rawScore = (contagem[n] * 1.8) + (sequencias[n] || 0) * 8.5;
+        
+        // Normalização: definimos que um score de 22 a 25 é o "100%" (ponta máxima de confiança)
+        let porcentagem = Math.min(100, Math.floor((rawScore / 25) * 100));
+        
+        return { num, score: rawScore, porcentagem };
     }).sort((a,b) => b.score - a.score);
 
     res.json({
