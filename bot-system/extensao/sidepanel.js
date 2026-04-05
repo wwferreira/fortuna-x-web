@@ -1408,6 +1408,11 @@ chrome.storage.local.get(['rouletteState', 'historicoRodadas'], (result) => {
       pauseWinInput.value = pauseWinConfig;
     }
 
+    // Carregar mode IA Fortuna
+    if (state.modoIAPleno !== undefined && modoIAPlenoInput) {
+      modoIAPlenoInput.value = state.modoIAPleno;
+    }
+
     // Carregar Números Fixos (Funcionário) se existir
     if (result.rouletteState.numerosFixosFuncionario !== undefined && inputNumerosFixos) {
       inputNumerosFixos.value = result.rouletteState.numerosFixosFuncionario;
