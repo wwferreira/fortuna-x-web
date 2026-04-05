@@ -1089,12 +1089,12 @@ function verificarGatilhosParaApostar(numero) {
 }
 
 // --- MOTOR DE IA PLENO (Straight Up) ---
-function processarMotorIAPleno(gatilhoIA, numero) {
+async function processarMotorIAPleno(gatilhoIA, numero) {
     if (botState.apostaAtiva) return;
 
     const modo = botState.modoIAPleno || 'moderado';
     const totalRodadasAnalise = botState.maxRodadasHistorico || 500;
-    const historico = botState.historicoRodadas.slice(0, totalRodadasAnalise);
+    const historico = botState.historicoRodadas;
 
     if (historico.length < 10) {
         chrome.runtime.sendMessage({
@@ -1103,27 +1103,41 @@ function processarMotorIAPleno(gatilhoIA, numero) {
         }).catch(() => {});
         return;
     }
+    let melhorCandidato = null;
+    let candidatos = [];
+    let scoreAtual = 0;
 
-    // 1. Identificar Números Quentes e Sequências
-    const contagem = {};
-    historico.forEach(n => contagem[n] = (contagem[n] || 0) + 1);
-    
-    const sequencias = {};
-    for (let i = 0; i < historico.length - 1; i++) {
-        if (historico[i+1] === numero) {
-            const posterior = historico[i];
-            sequencias[posterior] = (sequencias[posterior] || 0) + 1;
+    try {
+        // --- CÉREBRO NO SERVIDOR (SEGURANÇA EXTREMA) ---
+        const response = await fetch('https://fortuna-x-web.onrender.com/api/ia-thinking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                historico: historico.slice(0, totalRodadasAnalise), 
+                modo: modo, 
+                totalRodadasAnalise: totalRodadasAnalise 
+            })
+        });
+        
+        const data = await response.json();
+        if (data && data.melhorCandidato) {
+            melhorCandidato = data.melhorCandidato;
+            candidatos = data.candidatos;
+            scoreAtual = Math.floor(melhorCandidato.score || 0);
         }
+    } catch (e) {
+        console.warn('⚠️ [IA-SEGURANÇA] Servidor offline. Usando lógica local de emergência.');
+        const contagem = {};
+        historico.slice(0, 100).forEach(n => contagem[n] = (contagem[n] || 0) + 1);
+        candidatos = Object.keys(contagem).map(n => ({
+            num: parseInt(n),
+            score: contagem[n] * 4
+        })).sort((a,b) => b.score - a.score);
+        melhorCandidato = candidatos[0];
+        scoreAtual = Math.floor(melhorCandidato?.score || 0);
     }
 
-    // 2. Calcular Score
-    const candidatos = Object.keys(contagem).map(n => ({
-        num: parseInt(n),
-        score: (contagem[n] * 2.0) + (sequencias[n] || 0) * 8
-    })).sort((a,b) => b.score - a.score);
-
-    const melhorCandidato = candidatos[0];
-    const scoreAtual = Math.floor(melhorCandidato?.score || 0);
+    if (!melhorCandidato) return;
 
     // 3. Definir Alvos de Pontuação por Modo
     let gatilhoAposta = 15; 
@@ -2136,7 +2150,7 @@ function conectarServidorLocal() {
                         botState.maxRodadasHistorico = msg.qtd_analise || 100; // Sincronizar com a variável usada nos cálculos
                         
                         // IA Forttuna X
-                        botState.modoIA = msg.modo_ia || 'moderado';
+                        botState.modoIAPleno = msg.modo_ia || 'moderado';
                         
                         // Sincronizar Legendas e Gatilhos (Modo Gatilho)
                         if (msg.legendas) {

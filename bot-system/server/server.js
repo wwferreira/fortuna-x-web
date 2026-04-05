@@ -224,6 +224,51 @@ wss.on('connection', (ws) => {
   });
 });
 
+// ===== IA THINKING ENGINE (PROTEGIDO NO SERVIDOR) =====
+app.post('/api/ia-thinking', (req, res) => {
+    const { historico, modo, totalRodadasAnalise } = req.body;
+    
+    if (!historico || !Array.isArray(historico)) {
+        return res.status(400).json({ error: 'Histórico inválido' });
+    }
+
+    const analise = historico.slice(0, totalRodadasAnalise || 500);
+    if (analise.length === 0) return res.json({ melhorCandidato: null, candidatos: [] });
+
+    const numeroRecente = analise[0];
+
+    // 1. Contagem com Peso por Recência (Decaimento)
+    // Isso faz a IA dar mais importância para o que aconteceu AGORA.
+    const contagem = {};
+    const sequencias = {};
+    
+    analise.forEach((n, i) => {
+        // Peso diminui linearmente: a mais recente (index 0) vale 1.0, a última (index N) vale 0.1
+        const pesoRecencia = Math.max(0.1, 1 - (i / analise.length));
+        
+        contagem[n] = (contagem[n] || 0) + (1 * pesoRecencia);
+        
+        // Se este número veio depois do número atual no histórico...
+        if (i > 0 && analise[i] === numeroRecente) {
+          const anteriorAoRecente = analise[i-1];
+          sequencias[anteriorAoRecente] = (sequencias[anteriorAoRecente] || 0) + (1.2 * pesoRecencia);
+        }
+    });
+
+    // 2. Calcular Score Final (Logica Protegida)
+    const candidatos = Object.keys(contagem).map(n => {
+        const num = parseInt(n);
+        // Multiplicadores ajustados para dar mais peso às sequências imediatas
+        const score = (contagem[n] * 1.8) + (sequencias[n] || 0) * 8.5;
+        return { num, score };
+    }).sort((a,b) => b.score - a.score);
+
+    res.json({
+        melhorCandidato: candidatos[0],
+        candidatos: candidatos.slice(0, 25)
+    });
+});
+
 // ===== API =====
 
 // Login usuário (Supabase Auth)
