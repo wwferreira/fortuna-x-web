@@ -1957,17 +1957,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             
             chrome.tabs.query({ url: ["*://*.bet365.com/*", "*://*.bet365.bet.br/*", "*://*.bet365.com.br/*", "*://*.bet365.net.br/*", "*://*.onegameslink.com/*", "*://*.twogameslink.com/*", "*://*.gambling-malta.com/*", "*://*.c365play.com/*", "*://*.bfcdl.com/*"] }, (tabs) => {
+                // Pegar status atual da IA para enviar para o mini-painel
+                let statusIA = null;
+                if (botCountdownState.rodadasRestantes > 0) {
+                    statusIA = `🛡️ Pausa: ${botCountdownState.rodadasRestantes} rod.`;
+                }
+
                 tabs.forEach(tab => {
                     chrome.tabs.sendMessage(tab.id, {
                         action: 'atualizarStatusPainel',
                         ativo: !botState.stopAtivado,
                         estrategia: botState.nomeEstrategiaSelecionada || 'Manual',
+                        statusIA: statusIA,
+                        saldo: botState.saldo || botState.ultimoSaldoPush ? `R$ ${(botState.saldo || botState.ultimoSaldoPush).toFixed(2)}` : 'R$ 0,00',
                         placar: { wins: botState.wins, losses: botState.losses },
                         stopWin: botState.stopWin || 0,
                         stopLoss: botState.stopLoss || 0
-                    }).catch(() => {
-                        // Silenciar erro se a aba não estiver pronta para receber
-                    });
+                    }).catch(() => {});
                 });
             });
             enviarDadosQuentesFriosParaMesa();

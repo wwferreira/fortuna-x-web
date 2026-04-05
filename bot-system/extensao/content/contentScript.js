@@ -1450,6 +1450,28 @@ setInterval(() => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (!chrome.runtime || !chrome.runtime.id) return;
 
+  if (request.action === 'atualizarStatusPainel') {
+    const statusDot = document.getElementById('status-bot-dot');
+    const statusText = document.getElementById('status-bot-text');
+    const saldoEl = document.getElementById('painel-saldo-valor');
+    const greensEl = document.getElementById('painel-greens');
+    const redsEl = document.getElementById('painel-reds');
+    
+    if (statusDot) statusDot.style.background = request.ativo ? '#00ff00' : '#ff0000';
+    if (statusText) {
+        // Se houver status da IA (pausa), mostrar com prioridade no mini-painel
+        if (request.statusIA) {
+            statusText.textContent = request.statusIA;
+        } else {
+            statusText.textContent = request.ativo ? `Ligado (${request.estrategia})` : 'Pausado';
+        }
+    }
+    if (saldoEl && request.saldo) saldoEl.textContent = request.saldo;
+    if (greensEl && request.placar) greensEl.textContent = request.placar.wins;
+    if (redsEl && request.placar) redsEl.textContent = request.placar.losses;
+    return;
+  }
+
   if (request.tipo === 'atualizar_quentes_frios') {
     atualizarPainelQuentesFrios(request.quentes, request.frios, request.estrategiaAtual, request.maxRodadas);
   }
