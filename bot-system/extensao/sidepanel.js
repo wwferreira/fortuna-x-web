@@ -598,8 +598,11 @@ async function startHeartbeat(user, clientInstanceId) {
       // 2. Atualizar pulsação
       const now = new Date().toISOString();
       
-      // Tentar atualizar metadata do usuário (Silencioso para evitar warnings no DevTools)
+      // Tentar atualizar metadata do usuário
       const metaResult = await supabase.auth.updateUserMetadata({ active_updated_at: now });
+      if (metaResult.error) {
+        console.warn('⚠️ Erro ao atualizar metadata do usuário:', metaResult.error);
+      }
       
       // Tentar atualizar tabela de usuários
       const updateResult = await supabase.from('usuarios').update({ active_updated_at: now }).eq('id', user.id);
@@ -1403,11 +1406,6 @@ chrome.storage.local.get(['rouletteState', 'historicoRodadas'], (result) => {
     if (result.rouletteState.pauseWin && pauseWinInput) {
       pauseWinConfig = result.rouletteState.pauseWin;
       pauseWinInput.value = pauseWinConfig;
-    }
-
-    // Carregar mode IA Fortuna
-    if (state.modoIAPleno !== undefined && modoIAPlenoInput) {
-      modoIAPlenoInput.value = state.modoIAPleno;
     }
 
     // Carregar Números Fixos (Funcionário) se existir

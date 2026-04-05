@@ -296,10 +296,13 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
             botState = { ...botState, ...changes.rouletteState.newValue };
             
             // Resetar contador se a estratégia mudou
-            // Removido o reset automático do contador ao mudar estratégia para evitar looping infinito
-            // O contador agora é persistente até a mesa mudar ou terminar por conta própria
             if (oldEstrategia !== botState.estrategiaSelecionada) {
-                console.log('🔄 [BACKGROUND] Estratégia mudou, mantendo contador atual para segurança.');
+                console.log('🔄 [BACKGROUND] Estratégia mudou, resetando contador de rodadas.');
+                botCountdownState.rodadasRestantes = null;
+                chrome.storage.local.set({ botCountdownState });
+                
+                // Forçar atualização do painel de quentes/frios na mesa
+                enviarDadosQuentesFriosParaMesa();
             }
             
         // Sempre enviar se a config mudar (mesmo sem mudar o nome da estratégia)
@@ -963,31 +966,19 @@ function calcularScoreAssertividade(gatilho, historico) {
     return fires === 0 ? 0 : (hits / fires);
 }
 
-async function verificarGatilhosParaApostar(numero) {
+function verificarGatilhosParaApostar(numero) {
     if (botState.pauseWinAtivo || botState.stopAtivado) return;
 
     // 1. Verificar se existe estratégia de IA ativa
-    // Prioridade Para: Nome da estratégia (para cobrir estratégias customizadas)
-    const isEstrategiaIA = botState.nomeEstrategiaSelecionada && 
-                           (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || 
-                            botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna'));
-
-    let gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
-
-    // Se não achou na lista mas o nome diz que é IA, criamos um gatilho virtual para o motor rodar
-    if (!gatilhoIA && isEstrategiaIA) {
-        gatilhoIA = { nome: botState.nomeEstrategiaSelecionada, ativo: true, configEspecial: { tipo: 'IA_PLENO' } };
-    }
-
+    const gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
     if (gatilhoIA) {
         if (botState.stopAtivado) {
             console.log('🛑 [BACKGROUND-IA] Bot em STOP, ignorando motor de IA.');
             return;
         }
-        if (gatilhoIA.configEspecial && gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
+        if (gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
             processarMotorIA(gatilhoIA, numero);
-        } else {
-            // Se for IA (por nome ou tipo PLENO), usa o motor Pleno (Termômetro)
+        } else if (gatilhoIA.configEspecial.tipo === 'IA_PLENO') {
             processarMotorIAPleno(gatilhoIA, numero);
         }
         return;
@@ -1098,12 +1089,12 @@ async function verificarGatilhosParaApostar(numero) {
 }
 
 // --- MOTOR DE IA PLENO (Straight Up) ---
-async function processarMotorIAPleno(gatilhoIA, numero) {
+function processarMotorIAPleno(gatilhoIA, numero) {
     if (botState.apostaAtiva) return;
 
     const modo = botState.modoIAPleno || 'moderado';
     const totalRodadasAnalise = botState.maxRodadasHistorico || 500;
-    const historico = botState.historicoRodadas;
+    const historico = botState.historicoRodadas.slice(0, totalRodadasAnalise);
 
     if (historico.length < 10) {
         chrome.runtime.sendMessage({
@@ -1112,63 +1103,35 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
         }).catch(() => {});
         return;
     }
-    let melhorCandidato = null;
-    let candidatos = [];
-    let scoreAtual = 0;
 
-    try {
-        // --- CÉREBRO NO SERVIDOR (SEGURANÇA EXTREMA) ---
-        const response = await fetch('https://fortuna-x-web.onrender.com/api/ia-thinking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                historico: historico.slice(0, totalRodadasAnalise), 
-                modo: modo, 
-                totalRodadasAnalise: totalRodadasAnalise 
-            })
-        });
-        
-        const data = await response.json();
-        if (data && data.melhorCandidato) {
-            melhorCandidato = data.melhorCandidato;
-            candidatos = data.candidatos;
-            scoreAtual = Math.floor(melhorCandidato.porcentagem || 0); // Agora usamos PORCENTAGEM (0-100%)
+    // 1. Identificar Números Quentes e Sequências
+    const contagem = {};
+    historico.forEach(n => contagem[n] = (contagem[n] || 0) + 1);
+    
+    const sequencias = {};
+    for (let i = 0; i < historico.length - 1; i++) {
+        if (historico[i+1] === numero) {
+            const posterior = historico[i];
+            sequencias[posterior] = (sequencias[posterior] || 0) + 1;
         }
-    } catch (e) {
-        console.warn('⚠️ [IA-SEGURANÇA] Servidor offline. Usando lógica local de emergência.');
-        const contagem = {};
-        historico.slice(0, 100).forEach(n => contagem[n] = (contagem[n] || 0) + 1);
-        candidatos = Object.keys(contagem).map(n => ({
-            num: parseInt(n),
-            score: contagem[n] * 4,
-            porcentagem: Math.min(60, contagem[n] * 5)
-        })).sort((a,b) => b.score - a.score);
-        melhorCandidato = candidatos[0];
-        scoreAtual = Math.floor(melhorCandidato?.porcentagem || 0);
     }
 
-    if (!melhorCandidato) return;
+    // 2. Calcular Score
+    const candidatos = Object.keys(contagem).map(n => ({
+        num: parseInt(n),
+        score: (contagem[n] * 2.0) + (sequencias[n] || 0) * 8
+    })).sort((a,b) => b.score - a.score);
 
-    // --- BLOQUEIO ABSOLUTO DE SESSÃO (PROTEÇÃO CONTRA APOSTAS SEGUIDAS) ---
-    const ultimaAposta = botState.iaUltimaRodadaApostada || 0;
-    const rodadasDesdeUltima = botState.iaRodadasSessao - ultimaAposta;
-    const cooldownMinimo = 5; 
+    const melhorCandidato = candidatos[0];
+    const scoreAtual = Math.floor(melhorCandidato?.score || 0);
 
-    if (ultimaAposta > 0 && rodadasDesdeUltima < cooldownMinimo) {
-        chrome.runtime.sendMessage({
-            tipo: 'status_ia_atualizar',
-            texto: `🛡️ Pausa de Segurança: ${cooldownMinimo - rodadasDesdeUltima} rod. (${scoreAtual}%)`
-        }).catch(() => {});
-        return;
-    }
+    // 3. Definir Alvos de Pontuação por Modo
+    let gatilhoAposta = 15; 
+    if (modo === 'moderado') gatilhoAposta = 20; 
+    if (modo === 'intermediario') gatilhoAposta = 15;
+    if (modo === 'agressivo') gatilhoAposta = 12;
 
-    // 3. Definir Alvos de Confiança (%) por Modo
-    let gatilhoAposta = 75; 
-    if (modo === 'moderado') gatilhoAposta = 90; // Aposta apenas a partir de 90% de confiança
-    if (modo === 'intermediario') gatilhoAposta = 80;
-    if (modo === 'agressivo') gatilhoAposta = 65;
-
-    const statusBase = `🎯 I.A Fortuna X: ${scoreAtual}% / ${gatilhoAposta}%${scoreAtual >= 100 ? ' 🔥' : ''}`;
+    const statusBase = `🎯 I.A Fortuna X: ${scoreAtual}/${gatilhoAposta}${scoreAtual >= gatilhoAposta * 1.5 ? ' 🔥' : ''}`;
 
     // --- SISTEMA DE PAUSA OBRIGATÓRIA (ADMIN) ---
     if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null) {
@@ -1193,32 +1156,22 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
 
     // 4. LÓGICA DE DECISÃO: IA DECIDE QUANDO APOSTAR PELO SCORE
     if (scoreAtual >= gatilhoAposta) {
-        // Reduzi DRASTICAMENTE a quantidade de bases para ser cirúrgico
-        let qtdPivos = 3; 
-        if (modo === 'moderado') qtdPivos = 2; // Apenas as 2 melhores bases
-        if (modo === 'intermediario') qtdPivos = 4;
-        if (modo === 'agressivo') qtdPivos = 6;
+        let qtdPivos = 4; 
+        if (modo === 'moderado') qtdPivos = 6;
+        if (modo === 'intermediario') qtdPivos = 9;
+        if (modo === 'agressivo') qtdPivos = 15;
 
         const pivosSelecionados = candidatos.slice(0, qtdPivos).map(c => c.num);
         
-        // --- ADICIONAR PAUSA OBRIGATÓRIA AUTOMÁTICA APÓS APOSTA ---
-        // Forçar 5 rodadas de espera para não ficar "desesperado" uma após a outra
-        botCountdownState.rodadasRestantes = 5;
-        chrome.storage.local.set({ botCountdownState });
-
         let numerosApostar = [];
         pivosSelecionados.forEach(pivo => {
             const idx = RACETRACK.indexOf(pivo);
             if (idx !== -1) {
                 numerosApostar.push(pivo);
-                // Vizinhos (1 de cada lado para ser certeiro)
-                const qtdVizinhos = botState.vizinhos || 1;
-                for (let i = 1; i <= qtdVizinhos; i++) {
-                    const vizinhoEsq = RACETRACK[(idx - i + 37) % 37];
-                    const vizinhoDir = RACETRACK[(idx + i) % 37];
-                    if (!numerosApostar.includes(vizinhoEsq)) numerosApostar.push(vizinhoEsq);
-                    if (!numerosApostar.includes(vizinhoDir)) numerosApostar.push(vizinhoDir);
-                }
+                let idxDir = (idx + 1) % RACETRACK.length;
+                numerosApostar.push(RACETRACK[idxDir]);
+                let idxEsq = (idx - 1 + RACETRACK.length) % RACETRACK.length;
+                numerosApostar.push(RACETRACK[idxEsq]);
             }
         });
         numerosApostar = [...new Set(numerosApostar)];
@@ -1227,20 +1180,16 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
             ...gatilhoIA,
             apostaEm: numerosApostar.map(n => `PLENO ${n}`),
             numeros: numerosApostar,
-            nome: `I.A Fortuna X (${modo.toUpperCase()}): ${scoreAtual}% Confiança`,
+            nome: `I.A Fortuna X (${modo.toUpperCase()}): ${pivosSelecionados.length} Bases`,
             tipo: 'IA_PLENO_ENGINE'
         };
         
-        console.log(`🚀 [IA-PLENO] DISPARANDO APOSTA! Confiança: ${scoreAtual}% | Bases: ${pivosSelecionados.join(',')}`);
+        console.log(`🎯 [IA-DEBUG] ENTRADA! Score: ${scoreAtual} (Alvo: ${gatilhoAposta})`);
         
         chrome.runtime.sendMessage({
             tipo: 'status_ia_atualizar',
-            texto: `🔥 IA: Apostando com ${scoreAtual}% confiança...`
+            texto: `🚀 I.A Fortuna X: Apostando em ${pivosSelecionados.length} Bases...`
         }).catch(() => {});
-
-        // Salvar a rodada em que a aposta foi feita para o bloqueio de sessão (Proteção Anti-Vício)
-        botState.iaUltimaRodadaApostada = botState.iaRodadasSessao;
-        chrome.storage.local.set({ rouletteState: botState });
 
         enviarApostaParaMesa(gatilhoTemp, numero);
     } else {
@@ -1255,6 +1204,27 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
 // --- MOTOR DE IA ---
 function processarMotorIA(gatilhoIA, numero) {
     if (botState.apostaAtiva) return;
+
+    // --- SISTEMA DE PAUSA OBRIGATÓRIA (ADMIN) ---
+    if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null) {
+        const configEspecial = gatilhoIA.configEspecial || {};
+        botCountdownState.rodadasRestantes = configEspecial.esperarRodadas || 0;
+    }
+
+    if (botCountdownState.rodadasRestantes > 0) {
+        botCountdownState.rodadasRestantes--;
+        chrome.storage.local.set({ botCountdownState });
+        
+        // Enviar rodadas aguardando para o servidor
+        const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
+        enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
+        
+        chrome.runtime.sendMessage({
+            tipo: 'status_ia_atualizar',
+            texto: `🎯 I.A Fortuna X: ⏳ Pausa: ${botCountdownState.rodadasRestantes} rod.`
+        }).catch(() => {});
+        return;
+    }
 
     // Usar botState diretamente para evitar latência do storage
     const totalRodadasAnalise = botState.maxRodadasHistorico || 500;
@@ -1409,7 +1379,7 @@ function expandirItemParaNumeros(item) {
     return [];
 }
 
-async function verificarResultado(numeroSaiu) {
+function verificarResultado(numeroSaiu) {
     if (!botState.apostaAtiva) return;
     
     // Verificação de segurança: se a aposta foi feita há mais de 4 minutos, provavelmente é lixo de estado
@@ -1923,45 +1893,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }));
                 }
 
-                // --- 1. PROCESSAR CONTAGEM DE SEGURANÇA IMEDIATAMENTE ---
-                if (botCountdownState.rodadasRestantes !== null && botCountdownState.rodadasRestantes > 0) {
-                    botCountdownState.rodadasRestantes--;
-                    chrome.storage.local.set({ botCountdownState });
-                    
-                    const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
-                    enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
-                    
-                    // Notificar Sidepanel
-                    chrome.runtime.sendMessage({
-                        tipo: 'status_ia_atualizar',
-                        texto: `🛡️ Pausa: Aguardando ${botCountdownState.rodadasRestantes} rodadas...`
-                    }).catch(() => {});
-
-                    // Notificar Mini Painel na Mesa (Tabs)
-                    chrome.tabs.query({ url: ["*://*.bet365.com/*", "*://*.bet365.bet.br/*", "*://*.bet365.com.br/*", "*://*.bet365.net.br/*", "*://*.onegameslink.com/*", "*://*.twogameslink.com/*", "*://*.gambling-malta.com/*", "*://*.c365play.com/*", "*://*.bfcdl.com/*"] }, (tabs) => {
-                        tabs.forEach(tab => {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: 'atualizarStatusPainel',
-                                ativo: !botState.stopAtivado,
-                                estrategia: botState.nomeEstrategiaSelecionada || 'Manual',
-                                statusIA: `Pausa: ${botCountdownState.rodadasRestantes} rod.`,
-                                saldo: botState.saldo || botState.ultimoSaldoPush ? `R$ ${(botState.saldo || botState.ultimoSaldoPush).toFixed(2)}` : 'R$ 0,00',
-                                placar: { wins: botState.wins, losses: botState.losses }
-                            }).catch(() => {});
-                        });
-                    });
+                // Primeiro verificar o resultado da aposta anterior
+                verificarResultado(numero);
+                
+                // AGORA resetar a trava apenas se o bot NÃO estiver em STOP
+                if (!botState.stopAtivado) {
+                    botState.aguardandoProximaRodada = false; 
                 }
-
-                // --- 2. VERIFICAR RESULTADO E GATILHOS EM SEQUÊNCIA ---
-                verificarResultado(numero).then(() => {
-                    // Resetar a trava de uma rodada se não estiver em stop
-                    if (!botState.stopAtivado) {
-                        botState.aguardandoProximaRodada = false; 
-                    }
-                    return verificarGatilhosParaApostar(numero);
-                }).then(() => {
-                    console.log('✅ [BACKGROUND] Ciclo completo para o número:', numero);
-                });
+                
+                verificarGatilhosParaApostar(numero);
                 
                 // Notificar TODOS os componentes do novo número (Sidepanel E Mini-Painel na mesa)
             chrome.runtime.sendMessage({ tipo: 'atualizarHistorico', numero }).catch(() => {
@@ -1969,23 +1909,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             
             chrome.tabs.query({ url: ["*://*.bet365.com/*", "*://*.bet365.bet.br/*", "*://*.bet365.com.br/*", "*://*.bet365.net.br/*", "*://*.onegameslink.com/*", "*://*.twogameslink.com/*", "*://*.gambling-malta.com/*", "*://*.c365play.com/*", "*://*.bfcdl.com/*"] }, (tabs) => {
-                // Pegar status atual da IA para enviar para o mini-painel
-                let statusIA = null;
-                if (botCountdownState.rodadasRestantes > 0) {
-                    statusIA = `🛡️ Pausa: ${botCountdownState.rodadasRestantes} rod.`;
-                }
-
                 tabs.forEach(tab => {
                     chrome.tabs.sendMessage(tab.id, {
                         action: 'atualizarStatusPainel',
                         ativo: !botState.stopAtivado,
                         estrategia: botState.nomeEstrategiaSelecionada || 'Manual',
-                        statusIA: statusIA,
-                        saldo: botState.saldo || botState.ultimoSaldoPush ? `R$ ${(botState.saldo || botState.ultimoSaldoPush).toFixed(2)}` : 'R$ 0,00',
                         placar: { wins: botState.wins, losses: botState.losses },
                         stopWin: botState.stopWin || 0,
                         stopLoss: botState.stopLoss || 0
-                    }).catch(() => {});
+                    }).catch(() => {
+                        // Silenciar erro se a aba não estiver pronta para receber
+                    });
                 });
             });
             enviarDadosQuentesFriosParaMesa();
@@ -2034,33 +1968,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             botState.nomeMesa = request.nome;
             
             // --- TRAVA DE SEGURANÇA AO ENTRAR NA MESA ---
-            // Se a mesa mudou E já tínhamos uma mesa anterior (troca real de mesa)
-            // Ou se nunca tivemos uma mesa (primeira vez que abre o bot deslogado)
-            if (mesaAnterior && mesaAnterior !== request.nome) {
-                console.log(`🔄 [BACKGROUND] TROCA DE MESA detectada: ${mesaAnterior} -> ${request.nome}. Aplicando trava de segurança.`);
+            // Se a mesa mudou OU se é a primeira vez que recebemos o nome (abriu o bot agora)
+            if (!mesaAnterior || mesaAnterior !== request.nome) {
+                console.log(`🔄 [BACKGROUND] Nova mesa detectada ou Bot iniciado: ${request.nome}. Aplicando trava de segurança.`);
                 
-                // 1. Limpar aposta ativa para evitar disparos involuntários
+                // 1. Limpar aposta ativa para evitar disparos involuntários do cache
                 botState.apostaAtiva = null;
                 botState.aguardandoProximaRodada = true;
                 
-                // 2. Forçar aguardar 3 rodadas para estabilizar a leitura
+                // 2. Forçar aguardar 3 rodadas para estabilizar a leitura, independente da estratégia
                 botCountdownState.rodadasRestantes = 3; 
                 
                 chrome.storage.local.set({ 
                     apostaAtiva: null,
                     botCountdownState: botCountdownState,
-                    rouletteState: botState
+                    // Limpar também o comando de aposta do cache do content script
+                    numerosParaApostar: null,
+                    timestamp: 0 
                 });
 
                 chrome.runtime.sendMessage({
                     tipo: 'status_ia_atualizar',
-                    texto: `🛡️ Segurança: Mesa trocada. Aguardando 3 rodadas...`
+                    texto: `🛡️ Segurança: Aguardando 3 rodadas iniciais...`
                 }).catch(() => {});
-            } else if (!mesaAnterior) {
-                // Primeira vez que entra na mesa após login/abrir navegador
-                console.log(`🌐 [BACKGROUND] Entrando na mesa pela primeira vez: ${request.nome}`);
-                botState.nomeMesa = request.nome;
-                chrome.storage.local.set({ rouletteState: botState });
             }
             
             chrome.storage.local.set({ rouletteState: botState });
@@ -2913,7 +2843,6 @@ setInterval(() => {
                 greens: wins,
                 reds: losses,
                 saldo: saldo,
-                saldoReal: botState.saldo || botState.ultimoSaldoPush || null,
                 saldoInicial: saldoInicial,
                 modo_simulacao: isSimulacao,
                 estrategia_nome: result.rouletteState?.nomeEstrategiaSelecionada || result.rouletteState?.estrategia_nome || botState.estrategia_nome || 'Nenhuma'

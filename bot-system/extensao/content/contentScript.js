@@ -4,7 +4,6 @@ console.log('🖼️ É iframe?', window !== window.top);
 console.log('⏰ Timestamp:', new Date().toLocaleTimeString());
 
 let ultimoNumeroEnviado = null;
-let ultimaSequenciaHash = ""; // Hash das últimas rodadas para detectar repetições legítimas
 let numerosJaApostados = new Set();
 let ultimaApostaTimestamp = 0;
 
@@ -430,28 +429,10 @@ function encontrarUltimoNumeroNoDOM(documento) {
     return null;
 }
 
-// Função para gerar um hash único das últimas rodadas (detectar repetições)
-function gerarHashHistorico(doc) {
-    const seletores = [
-        '.history-item-value__text--H6oCX',
-        '.history-item-value__text--n5cYB',
-        '[class*="history-item-value__text"]'
-    ];
-    for (const seletor of seletores) {
-        const elementos = doc.querySelectorAll(seletor);
-        if (elementos.length >= 2) {
-            // Pegar os 4 primeiros para formar um "ID" único do momento da mesa
-            return Array.from(elementos).slice(0, 4).map(el => el.textContent.trim()).join('|');
-        }
-    }
-    return "";
-}
-
 function processarDeteccaoNumeros() {
     try {
         // 1. Procurar no documento atual
         let numeroDetectado = encontrarUltimoNumeroNoDOM(document);
-        let hashAtual = gerarHashHistorico(document);
 
         // 2. Se não achou, procurar em todos os iframes acessíveis
         if (numeroDetectado === null) {
@@ -460,23 +441,18 @@ function processarDeteccaoNumeros() {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     numeroDetectado = encontrarUltimoNumeroNoDOM(iframeDoc);
-                    if (numeroDetectado !== null) {
-                       hashAtual = gerarHashHistorico(iframeDoc);
-                       break;
-                    }
-                } catch (e) { }
+                    if (numeroDetectado !== null) break;
+                } catch (e) {
+                    // Cross-origin iframe, ignorar
+                }
             }
         }
 
-        // 3. Lógica de detecção: NOVO NÚMERO ou REPETIÇÃO (Hash mudou)
-        const isNovoNumero = (numeroDetectado !== null && numeroDetectado !== ultimoNumeroEnviado);
-        const isRepeticaoLegitima = (numeroDetectado !== null && numeroDetectado === ultimoNumeroEnviado && hashAtual !== "" && hashAtual !== ultimaSequenciaHash);
-
-        if (isNovoNumero || isRepeticaoLegitima) {
-            console.log('🎰 [FORTUNA X] NOVO EVENTO RECONHECIDO:', isRepeticaoLegitima ? `REPETIÇÃO DO ${numeroDetectado}` : `NOVO NÚMERO ${numeroDetectado}`);
+        // 3. Se detectou um número e ele é novo, enviar
+        if (numeroDetectado !== null && numeroDetectado !== ultimoNumeroEnviado) {
+            console.log('🎰 [FORTUNA X] NOVO NÚMERO DETECTADO:', numeroDetectado);
             
             ultimoNumeroEnviado = numeroDetectado;
-            ultimaSequenciaHash = hashAtual;
             
             if (chrome.runtime && chrome.runtime.id) {
                 // Notificar usuário na página (apenas se autorizado)
@@ -790,16 +766,9 @@ function lerSaldoDaPagina() {
         for (const seletor of seletores) {
             const elementos = document.querySelectorAll(seletor);
             for (let el of elementos) {
-                // EXCLUSÃO: Ignorar se estiver dentro da área de fichas/chips
-                if (el.closest('[class*="chip"], [class*="chips"], [class*="selector"]')) continue;
-                
                 const txt = el.textContent || '';
-                // Melhorado: detectar qualquer sequência de números que pareça saldo
-                if (txt.includes('R$') || txt.match(/\d+,\d{2}/) || txt.match(/\d+\.\d{2}/)) {
+                if (txt.includes('R$') || txt.match(/\d+,\d{2}/)) {
                     const num = parseSaldoPagina(txt);
-                    // Adensar: o saldo real costuma ser maior que os valores das fichas comuns (0.50, 1.00, etc)
-                    // mas não podemos bloquear valores pequenos se o usuário tiver pouco dinheiro.
-                    // A regra de exclusão 'closest' acima já resolve 90% dos casos.
                     if (!isNaN(num) && num > 0) return num;
                 }
             }
@@ -1455,39 +1424,6 @@ setInterval(() => {
 // Listener para receber atualizações do sidepanel e background
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (!chrome.runtime || !chrome.runtime.id) return;
-
-  if (request.action === 'atualizarStatusPainel') {
-    const statusDot = document.getElementById('status-bot-dot');
-    const statusEstrat = document.getElementById('status-estrategia');
-    const statusIAHighlight = document.getElementById('status-ia-painel');
-    const countdownEl = document.getElementById('status-countdown');
-    const saldoEl = document.getElementById('status-banca-atual');
-    const winsEl = document.getElementById('status-wins');
-    const lossesEl = document.getElementById('status-losses');
-    
-    if (statusDot) statusDot.style.background = request.ativo ? '#00ff00' : '#ff0000';
-    if (statusEstrat) statusEstrat.textContent = `👔 ${request.estrategia}`;
-    
-    if (request.statusIA) {
-        if (statusIAHighlight) {
-            statusIAHighlight.style.display = 'block';
-            statusIAHighlight.textContent = `🎯 ${request.statusIA}`;
-        }
-        if (countdownEl) {
-            countdownEl.style.display = 'block';
-            countdownEl.textContent = `⏳ ${request.statusIA}`;
-            countdownEl.style.color = '#ff9800';
-        }
-    } else {
-        if (statusIAHighlight) statusIAHighlight.style.display = 'none';
-        if (countdownEl) countdownEl.style.display = 'none';
-    }
-
-    if (saldoEl && request.saldo) saldoEl.textContent = request.saldo;
-    if (winsEl && request.placar) winsEl.textContent = request.placar.wins;
-    if (lossesEl && request.placar) lossesEl.textContent = request.placar.losses;
-    return;
-  }
 
   if (request.tipo === 'atualizar_quentes_frios') {
     atualizarPainelQuentesFrios(request.quentes, request.frios, request.estrategiaAtual, request.maxRodadas);

@@ -155,25 +155,13 @@ wss.on('connection', (ws) => {
       }
 
       if (msg.tipo === 'status_bot') {
-        const updateData = { 
-            status_bot: msg.status,
-            updated_at: new Date().toISOString()
-        };
-
-        // Se vier saldo real, atualizar nos stats
-        if (msg.saldo !== undefined) {
-            const { data: userCurrent } = await supabase.from('usuarios_bot').select('stats').eq('email', emailConectado).single();
-            let stats = userCurrent?.stats || {};
-            stats.saldoReal = msg.saldo; // Salvar como saldoReal para diferenciar
-            updateData.stats = stats;
-        }
-
+        // Atualizar status no Supabase
         await supabase
           .from('usuarios_bot')
-          .update(updateData)
-          .eq('email', emailConectado);
+          .update({ status_bot: msg.status })
+          .eq('email', msg.email || emailConectado);
         
-        console.log(`📍 Status/Saldo de ${emailConectado}: ${msg.status} (R$ ${msg.saldo || 0})`);
+        console.log(`📍 Status do bot de ${msg.email || emailConectado}: ${msg.status}`);
       }
 
       if (msg.tipo === 'rodadas_aguardando') {
@@ -234,55 +222,6 @@ wss.on('connection', (ws) => {
       console.log(`🔌 Desconectado: ${emailConectado}`);
     }
   });
-});
-
-// ===== IA THINKING ENGINE (PROTEGIDO NO SERVIDOR) =====
-app.post('/api/ia-thinking', (req, res) => {
-    const { historico, modo, totalRodadasAnalise } = req.body;
-    
-    if (!historico || !Array.isArray(historico)) {
-        return res.status(400).json({ error: 'Histórico inválido' });
-    }
-
-    const analise = historico.slice(0, totalRodadasAnalise || 500);
-    if (analise.length === 0) return res.json({ melhorCandidato: null, candidatos: [] });
-
-    const numeroRecente = analise[0];
-
-    // 1. Contagem com Peso por Recência (Decaimento)
-    // Isso faz a IA dar mais importância para o que aconteceu AGORA.
-    const contagem = {};
-    const sequencias = {};
-    
-    analise.forEach((n, i) => {
-        // Peso diminui linearmente: a mais recente (index 0) vale 1.0, a última (index N) vale 0.1
-        const pesoRecencia = Math.max(0.1, 1 - (i / analise.length));
-        
-        contagem[n] = (contagem[n] || 0) + (1 * pesoRecencia);
-        
-        // Se este número veio depois do número atual no histórico...
-        if (i > 0 && analise[i] === numeroRecente) {
-          const anteriorAoRecente = analise[i-1];
-          sequencias[anteriorAoRecente] = (sequencias[anteriorAoRecente] || 0) + (1.2 * pesoRecencia);
-        }
-    });
-
-    // 2. Calcular Score Final e Normalizar para Porcentagem (0-100%)
-    const candidatos = Object.keys(contagem).map(n => {
-        const num = parseInt(n);
-        // Multiplicadores ajustados
-        const rawScore = (contagem[n] * 1.8) + (sequencias[n] || 0) * 8.5;
-        
-        // Normalização: definimos que um score de 22 a 25 é o "100%" (ponta máxima de confiança)
-        let porcentagem = Math.min(100, Math.floor((rawScore / 25) * 100));
-        
-        return { num, score: rawScore, porcentagem };
-    }).sort((a,b) => b.score - a.score);
-
-    res.json({
-        melhorCandidato: candidatos[0],
-        candidatos: candidatos.slice(0, 25)
-    });
 });
 
 // ===== API =====
@@ -789,7 +728,7 @@ app.post('/api/comando', async (req, res) => {
 
 // Status do bot (greens, reds, saldo)
 app.post('/api/stats', async (req, res) => {
-  const { email, greens, reds, saldo, saldoReal, saldoInicial, modo_simulacao, estrategia_nome } = req.body;
+  const { email, greens, reds, saldo, saldoInicial, modo_simulacao, estrategia_nome } = req.body;
   if (!email) return res.status(400).json({ erro: 'Email obrigatório' });
 
   try {
@@ -818,7 +757,6 @@ app.post('/api/stats', async (req, res) => {
       greens: greens !== undefined ? greens : (statsAtuais.greens || 0),
       reds: reds !== undefined ? reds : (statsAtuais.reds || 0),
       saldo: saldo !== undefined ? saldo : (statsAtuais.saldo || null),
-      saldoReal: saldoReal !== undefined ? saldoReal : (statsAtuais.saldoReal || null), // SALDO REAL SEMPRE
       saldoInicial: saldoInicialFinal,
       atualizado: Date.now()
     };
