@@ -790,10 +790,16 @@ function lerSaldoDaPagina() {
         for (const seletor of seletores) {
             const elementos = document.querySelectorAll(seletor);
             for (let el of elementos) {
+                // EXCLUSÃO: Ignorar se estiver dentro da área de fichas/chips
+                if (el.closest('[class*="chip"], [class*="chips"], [class*="selector"]')) continue;
+                
                 const txt = el.textContent || '';
                 // Melhorado: detectar qualquer sequência de números que pareça saldo
                 if (txt.includes('R$') || txt.match(/\d+,\d{2}/) || txt.match(/\d+\.\d{2}/)) {
                     const num = parseSaldoPagina(txt);
+                    // Adensar: o saldo real costuma ser maior que os valores das fichas comuns (0.50, 1.00, etc)
+                    // mas não podemos bloquear valores pequenos se o usuário tiver pouco dinheiro.
+                    // A regra de exclusão 'closest' acima já resolve 90% dos casos.
                     if (!isNaN(num) && num > 0) return num;
                 }
             }
@@ -1452,23 +1458,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'atualizarStatusPainel') {
     const statusDot = document.getElementById('status-bot-dot');
-    const statusText = document.getElementById('status-bot-text');
-    const saldoEl = document.getElementById('painel-saldo-valor');
-    const greensEl = document.getElementById('painel-greens');
-    const redsEl = document.getElementById('painel-reds');
+    const statusEstrat = document.getElementById('status-estrategia');
+    const statusIAHighlight = document.getElementById('status-ia-painel');
+    const countdownEl = document.getElementById('status-countdown');
+    const saldoEl = document.getElementById('status-banca-atual');
+    const winsEl = document.getElementById('status-wins');
+    const lossesEl = document.getElementById('status-losses');
     
     if (statusDot) statusDot.style.background = request.ativo ? '#00ff00' : '#ff0000';
-    if (statusText) {
-        // Se houver status da IA (pausa), mostrar com prioridade no mini-painel
-        if (request.statusIA) {
-            statusText.textContent = request.statusIA;
-        } else {
-            statusText.textContent = request.ativo ? `Ligado (${request.estrategia})` : 'Pausado';
+    if (statusEstrat) statusEstrat.textContent = `👔 ${request.estrategia}`;
+    
+    if (request.statusIA) {
+        if (statusIAHighlight) {
+            statusIAHighlight.style.display = 'block';
+            statusIAHighlight.textContent = `🎯 ${request.statusIA}`;
         }
+    } else {
+        if (statusIAHighlight) statusIAHighlight.style.display = 'none';
     }
+
     if (saldoEl && request.saldo) saldoEl.textContent = request.saldo;
-    if (greensEl && request.placar) greensEl.textContent = request.placar.wins;
-    if (redsEl && request.placar) redsEl.textContent = request.placar.losses;
+    if (winsEl && request.placar) winsEl.textContent = request.placar.wins;
+    if (lossesEl && request.placar) lossesEl.textContent = request.placar.losses;
     return;
   }
 
