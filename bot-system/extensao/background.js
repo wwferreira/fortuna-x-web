@@ -296,13 +296,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
             botState = { ...botState, ...changes.rouletteState.newValue };
             
             // Resetar contador se a estratégia mudou
+            // Removido o reset automático do contador ao mudar estratégia para evitar looping infinito
+            // O contador agora é persistente até a mesa mudar ou terminar por conta própria
             if (oldEstrategia !== botState.estrategiaSelecionada) {
-                console.log('🔄 [BACKGROUND] Estratégia mudou, resetando contador de rodadas.');
-                botCountdownState.rodadasRestantes = null;
-                chrome.storage.local.set({ botCountdownState });
-                
-                // Forçar atualização do painel de quentes/frios na mesa
-                enviarDadosQuentesFriosParaMesa();
+                console.log('🔄 [BACKGROUND] Estratégia mudou, mantendo contador atual para segurança.');
             }
             
         // Sempre enviar se a config mudar (mesmo sem mudar o nome da estratégia)
@@ -975,8 +972,6 @@ async function verificarGatilhosParaApostar(numero) {
                            (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || 
                             botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna'));
 
-    let gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
-    
     // Se não achou na lista mas o nome diz que é IA, criamos um gatilho virtual para o motor rodar
     if (!gatilhoIA && isEstrategiaIA) {
         gatilhoIA = { nome: botState.nomeEstrategiaSelecionada, ativo: true, configEspecial: { tipo: 'IA_PLENO' } };
@@ -1934,10 +1929,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
                     enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
                     
+                    // Notificar Sidepanel
                     chrome.runtime.sendMessage({
                         tipo: 'status_ia_atualizar',
-                        texto: `🛡️ Segurança: Aguardando ${botCountdownState.rodadasRestantes} rodadas...`
+                        texto: `🛡️ Pausa: Aguardando ${botCountdownState.rodadasRestantes} rodadas...`
                     }).catch(() => {});
+
+                    // Notificar Mini Painel na Mesa (Tabs)
+                    chrome.tabs.query({ url: ["*://*.bet365.com/*", "*://*.bet365.bet.br/*", "*://*.bet365.com.br/*", "*://*.bet365.net.br/*", "*://*.onegameslink.com/*", "*://*.twogameslink.com/*", "*://*.gambling-malta.com/*", "*://*.c365play.com/*", "*://*.bfcdl.com/*"] }, (tabs) => {
+                        tabs.forEach(tab => {
+                            chrome.tabs.sendMessage(tab.id, {
+                                action: 'atualizarStatusPainel',
+                                ativo: !botState.stopAtivado,
+                                estrategia: botState.nomeEstrategiaSelecionada || 'Manual',
+                                statusIA: `Pausa: ${botCountdownState.rodadasRestantes} rod.`,
+                                saldo: botState.saldo || botState.ultimoSaldoPush ? `R$ ${(botState.saldo || botState.ultimoSaldoPush).toFixed(2)}` : 'R$ 0,00',
+                                placar: { wins: botState.wins, losses: botState.losses }
+                            }).catch(() => {});
+                        });
+                    });
                 }
 
                 // --- 2. VERIFICAR RESULTADO E GATILHOS EM SEQUÊNCIA ---

@@ -1473,8 +1473,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             statusIAHighlight.style.display = 'block';
             statusIAHighlight.textContent = `🎯 ${request.statusIA}`;
         }
+        if (countdownEl) {
+            countdownEl.style.display = 'block';
+            countdownEl.textContent = `⏳ ${request.statusIA}`;
+            countdownEl.style.color = '#ff9800';
+        }
     } else {
         if (statusIAHighlight) statusIAHighlight.style.display = 'none';
+        if (countdownEl) countdownEl.style.display = 'none';
     }
 
     if (saldoEl && request.saldo) saldoEl.textContent = request.saldo;
