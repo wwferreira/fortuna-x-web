@@ -966,14 +966,22 @@ function calcularScoreAssertividade(gatilho, historico) {
     return fires === 0 ? 0 : (hits / fires);
 }
 
-function verificarGatilhosParaApostar(numero) {
+async function verificarGatilhosParaApostar(numero) {
     if (botState.pauseWinAtivo || botState.stopAtivado) return;
 
     // 1. Verificar se existe estratégia de IA ativa
-    const gatilhoIA = botState.gatilhos.find(g => 
-        (g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO')) ||
-        (botState.nomeEstrategiaSelecionada && (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna')))
-    );
+    // Prioridade Para: Nome da estratégia (para cobrir estratégias customizadas)
+    const isEstrategiaIA = botState.nomeEstrategiaSelecionada && 
+                           (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || 
+                            botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna'));
+
+    let gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
+    
+    // Se não achou na lista mas o nome diz que é IA, criamos um gatilho virtual para o motor rodar
+    if (!gatilhoIA && isEstrategiaIA) {
+        gatilhoIA = { nome: botState.nomeEstrategiaSelecionada, ativo: true, configEspecial: { tipo: 'IA_PLENO' } };
+    }
+
     if (gatilhoIA) {
         if (botState.stopAtivado) {
             console.log('🛑 [BACKGROUND-IA] Bot em STOP, ignorando motor de IA.');
@@ -982,7 +990,7 @@ function verificarGatilhosParaApostar(numero) {
         if (gatilhoIA.configEspecial && gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
             processarMotorIA(gatilhoIA, numero);
         } else {
-            // Se não for o motor antigo, o padrão para a Fortuna X é o motor Pleno (termômetro)
+            // Se for IA (por nome ou tipo PLENO), usa o motor Pleno (Termômetro)
             processarMotorIAPleno(gatilhoIA, numero);
         }
         return;
@@ -1377,7 +1385,7 @@ function expandirItemParaNumeros(item) {
     return [];
 }
 
-function verificarResultado(numeroSaiu) {
+async function verificarResultado(numeroSaiu) {
     if (!botState.apostaAtiva) return;
     
     // Verificação de segurança: se a aposta foi feita há mais de 4 minutos, provavelmente é lixo de estado
@@ -1892,14 +1900,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
 
                 // Primeiro verificar o resultado da aposta anterior
-                verificarResultado(numero);
-                
-                // AGORA resetar a trava apenas se o bot NÃO estiver em STOP
-                if (!botState.stopAtivado) {
-                    botState.aguardandoProximaRodada = false; 
-                }
-                
-                verificarGatilhosParaApostar(numero);
+                verificarResultado(numero).then(() => {
+                    // AGORA resetar a trava apenas se o bot NÃO estiver em STOP
+                    if (!botState.stopAtivado) {
+                        botState.aguardandoProximaRodada = false; 
+                    }
+                    return verificarGatilhosParaApostar(numero);
+                }).then(() => {
+                    console.log('✅ [BACKGROUND] Ciclo de processamento completo para o número:', numero);
+                });
                 
                 // Notificar TODOS os componentes do novo número (Sidepanel E Mini-Painel na mesa)
             chrome.runtime.sendMessage({ tipo: 'atualizarHistorico', numero }).catch(() => {
