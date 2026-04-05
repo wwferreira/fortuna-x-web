@@ -2002,29 +2002,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             botState.nomeMesa = request.nome;
             
             // --- TRAVA DE SEGURANÇA AO ENTRAR NA MESA ---
-            // Se a mesa mudou OU se é a primeira vez que recebemos o nome (abriu o bot agora)
-            if (!mesaAnterior || mesaAnterior !== request.nome) {
-                console.log(`🔄 [BACKGROUND] Nova mesa detectada ou Bot iniciado: ${request.nome}. Aplicando trava de segurança.`);
+            // Se a mesa mudou E já tínhamos uma mesa anterior (troca real de mesa)
+            // Ou se nunca tivemos uma mesa (primeira vez que abre o bot deslogado)
+            if (mesaAnterior && mesaAnterior !== request.nome) {
+                console.log(`🔄 [BACKGROUND] TROCA DE MESA detectada: ${mesaAnterior} -> ${request.nome}. Aplicando trava de segurança.`);
                 
-                // 1. Limpar aposta ativa para evitar disparos involuntários do cache
+                // 1. Limpar aposta ativa para evitar disparos involuntários
                 botState.apostaAtiva = null;
                 botState.aguardandoProximaRodada = true;
                 
-                // 2. Forçar aguardar 3 rodadas para estabilizar a leitura, independente da estratégia
+                // 2. Forçar aguardar 3 rodadas para estabilizar a leitura
                 botCountdownState.rodadasRestantes = 3; 
                 
                 chrome.storage.local.set({ 
                     apostaAtiva: null,
                     botCountdownState: botCountdownState,
-                    // Limpar também o comando de aposta do cache do content script
-                    numerosParaApostar: null,
-                    timestamp: 0 
+                    rouletteState: botState
                 });
 
                 chrome.runtime.sendMessage({
                     tipo: 'status_ia_atualizar',
-                    texto: `🛡️ Segurança: Aguardando 3 rodadas iniciais...`
+                    texto: `🛡️ Segurança: Mesa trocada. Aguardando 3 rodadas...`
                 }).catch(() => {});
+            } else if (!mesaAnterior) {
+                // Primeira vez que entra na mesa após login/abrir navegador
+                console.log(`🌐 [BACKGROUND] Entrando na mesa pela primeira vez: ${request.nome}`);
+                botState.nomeMesa = request.nome;
+                chrome.storage.local.set({ rouletteState: botState });
             }
             
             chrome.storage.local.set({ rouletteState: botState });
