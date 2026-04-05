@@ -970,15 +970,19 @@ function verificarGatilhosParaApostar(numero) {
     if (botState.pauseWinAtivo || botState.stopAtivado) return;
 
     // 1. Verificar se existe estratégia de IA ativa
-    const gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
+    const gatilhoIA = botState.gatilhos.find(g => 
+        (g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO')) ||
+        (botState.nomeEstrategiaSelecionada && (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna')))
+    );
     if (gatilhoIA) {
         if (botState.stopAtivado) {
             console.log('🛑 [BACKGROUND-IA] Bot em STOP, ignorando motor de IA.');
             return;
         }
-        if (gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
+        if (gatilhoIA.configEspecial && gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
             processarMotorIA(gatilhoIA, numero);
-        } else if (gatilhoIA.configEspecial.tipo === 'IA_PLENO') {
+        } else {
+            // Se não for o motor antigo, o padrão para a Fortuna X é o motor Pleno (termômetro)
             processarMotorIAPleno(gatilhoIA, numero);
         }
         return;
