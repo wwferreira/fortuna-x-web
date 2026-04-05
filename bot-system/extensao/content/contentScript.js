@@ -791,7 +791,8 @@ function lerSaldoDaPagina() {
             const elementos = document.querySelectorAll(seletor);
             for (let el of elementos) {
                 const txt = el.textContent || '';
-                if (txt.includes('R$') || txt.match(/\d+,\d{2}/)) {
+                // Melhorado: detectar qualquer sequência de números que pareça saldo
+                if (txt.includes('R$') || txt.match(/\d+,\d{2}/) || txt.match(/\d+\.\d{2}/)) {
                     const num = parseSaldoPagina(txt);
                     if (!isNaN(num) && num > 0) return num;
                 }

@@ -1926,15 +1926,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }));
                 }
 
-                // Primeiro verificar o resultado da aposta anterior
+                // --- 1. PROCESSAR CONTAGEM DE SEGURANÇA IMEDIATAMENTE ---
+                if (botCountdownState.rodadasRestantes !== null && botCountdownState.rodadasRestantes > 0) {
+                    botCountdownState.rodadasRestantes--;
+                    chrome.storage.local.set({ botCountdownState });
+                    
+                    const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando IA' : 'Aguardando IA';
+                    enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
+                    
+                    chrome.runtime.sendMessage({
+                        tipo: 'status_ia_atualizar',
+                        texto: `🛡️ Segurança: Aguardando ${botCountdownState.rodadasRestantes} rodadas...`
+                    }).catch(() => {});
+                }
+
+                // --- 2. VERIFICAR RESULTADO E GATILHOS EM SEQUÊNCIA ---
                 verificarResultado(numero).then(() => {
-                    // AGORA resetar a trava apenas se o bot NÃO estiver em STOP
+                    // Resetar a trava de uma rodada se não estiver em stop
                     if (!botState.stopAtivado) {
                         botState.aguardandoProximaRodada = false; 
                     }
                     return verificarGatilhosParaApostar(numero);
                 }).then(() => {
-                    console.log('✅ [BACKGROUND] Ciclo de processamento completo para o número:', numero);
+                    console.log('✅ [BACKGROUND] Ciclo completo para o número:', numero);
                 });
                 
                 // Notificar TODOS os componentes do novo número (Sidepanel E Mini-Painel na mesa)
