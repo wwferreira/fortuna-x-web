@@ -2886,8 +2886,9 @@ if (selecaoEstrategia) {
     if (statusIA) statusIA.style.display = 'none';
     if (containerIAPleno) containerIAPleno.style.display = 'none';
 
-    // Mostrar IA se o nome contiver "IA Forttuna"
-    if (state.nomeEstrategiaSelecionada.toLowerCase().includes('ia forttuna')) {
+    // Mostrar IA se o nome contiver "Fortuna" ou "Forttuna"
+    if (state.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || 
+        state.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna')) {
       if (containerIAPleno) containerIAPleno.style.display = 'block';
       if (modoIAPlenoInput) modoIAPlenoInput.value = state.modoIAPleno || 'moderado';
     }
