@@ -2863,6 +2863,12 @@ if (btnExportarHistorico) {
 
 if (selecaoEstrategia) {
   selecaoEstrategia.addEventListener('change', (e) => {
+    // Verificar se é uma mudança programática (não do usuário)
+    if (e.isTrusted === false) {
+      console.log('🔄 [ESTRATÉGIA] Mudança programática detectada, não salvando automaticamente.');
+      return;
+    }
+    
     const estrategiaId = e.target.value;
 
     // Antes de aplicar a nova seleção, se a antiga era Manual, vamos CACHEAR a configuração atual
@@ -3057,14 +3063,15 @@ if (selecaoEstrategia) {
         // Atualizar UI
         atualizarListaLegendas();
         atualizarListaGatilhos();
-        mostrarNotificacao(`Estratégia "${selectedOption.dataset.nome}" ativada!`, 'sucesso', 3000);
+        mostrarNotificacao(`Estratégia "${selectedOption.dataset.nome}" selecionada! Clique em SALVAR para aplicar.`, 'info', 5000);
       } catch (error) {
         console.error('❌ Erro ao parsear dados da estratégia:', error);
       }
     }
 
+    // Apenas marcar alteração, não salvar automaticamente
     marcarAlteracao();
-    saveState();
+    // saveState(); // Removido - só salva quando clicar em SALVAR
 
     // Mostrar/esconder campos dinâmicos baseado na estratégia selecionada
     console.log('📋 Nome para visibilidade:', state.nomeEstrategiaSelecionada);
