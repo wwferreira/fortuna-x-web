@@ -1196,9 +1196,9 @@ async function atualizarStats() {
     const saldo = (s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null;
     let saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
     
-    // Se não há saldoInicial definido, mas há saldo atual, definir saldoInicial = saldo atual
+    // Se não há saldoInicial definido (ou se for 0), mas há saldo atual, definir saldoInicial = saldo atual
     // Isso faz com que o lucro comece em 0
-    if (saldoInicial === null && saldo !== null) {
+    if ((saldoInicial === null || saldoInicial === 0) && (saldo !== null && saldo > 0)) {
       saldoInicial = saldo;
       console.log(`💡 [PAINEL] Definindo saldoInicial como saldo atual: R$ ${saldo.toFixed(2)}`);
       

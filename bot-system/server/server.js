@@ -728,7 +728,7 @@ app.post('/api/stats', async (req, res) => {
   if (!email) return res.status(400).json({ erro: 'Email obrigatório' });
 
   try {
-    // Buscar dados atuais do usuário
+    // Buscar dados atuais do usuário para obter o saldoInicial gravado
     const { data: userData } = await supabase
       .from('usuarios_bot')
       .select('stats')
@@ -736,32 +736,35 @@ app.post('/api/stats', async (req, res) => {
       .single();
 
     const statsAtuais = userData?.stats || {};
-    
-    // Se não há saldoInicial nos dados atuais e está sendo enviado um saldo, definir saldoInicial = saldo
-    let saldoInicialFinal = saldoInicial;
-    if (!statsAtuais.saldoInicial && saldo !== null && saldo !== undefined && !saldoInicial) {
-      saldoInicialFinal = saldo;
-      console.log(`💡 [STATS] Definindo saldoInicial para ${email}: R$ ${saldo}`);
-    } else if (saldoInicial !== undefined) {
-      saldoInicialFinal = saldoInicial;
-    } else {
-      saldoInicialFinal = statsAtuais.saldoInicial;
+    let saldoInicialFinal = statsAtuais.saldoInicial;
+
+    // Lógica para determinar o saldo inicial:
+    // 1. Se for enviado um saldo inicial válido (maior que 0), priorizamos ele (útil para Simulação)
+    if (saldoInicial !== undefined && saldoInicial !== null && parseFloat(saldoInicial) > 0) {
+      saldoInicialFinal = parseFloat(saldoInicial);
+    } 
+    // 2. Se não houver um saldo inicial gravado (ou for 0) e recebermos um saldo atual válido, capturamos como inicial
+    else if ((!saldoInicialFinal || parseFloat(saldoInicialFinal) === 0) && saldo !== null && saldo !== undefined && parseFloat(saldo) > 0) {
+      saldoInicialFinal = parseFloat(saldo);
+      console.log(`💡 [STATS] Capturando saldo inicial para ${email}: R$ ${saldoInicialFinal}`);
     }
 
+    const statsParaSalvar = {
+      greens: greens !== undefined ? greens : (statsAtuais.greens || 0),
+      reds: reds !== undefined ? reds : (statsAtuais.reds || 0),
+      saldo: saldo !== undefined ? saldo : (statsAtuais.saldo || null),
+      saldoInicial: saldoInicialFinal,
+      atualizado: Date.now()
+    };
+
     const updateData = {
-      stats: { 
-        greens, 
-        reds, 
-        saldo, 
-        saldoInicial: saldoInicialFinal, 
-        atualizado: Date.now() 
-      },
+      stats: statsParaSalvar,
       updated_at: new Date().toISOString()
     };
 
     if (modo_simulacao !== undefined) updateData.modo_simulacao = modo_simulacao;
     
-    // Buscar config atual para não perder outros dados
+    // Buscar config atual para não perder outros dados (ex: estrategia_nome)
     const { data: user } = await supabase.from('usuarios_bot').select('config').eq('email', email).single();
     let newConfig = user?.config || {};
     
@@ -826,19 +829,21 @@ app.post('/api/reset-stats', async (req, res) => {
   try {
     const { data: userData } = await supabase
       .from('usuarios_bot')
-      .select('stats')
+      .select('stats, modo_simulacao')
       .eq('email', email)
       .single();
     
-    // Se resetarSaldo for true, voltamos o saldo para o saldoInicial
-    // Caso contrário, mantemos o saldo atual (comportamento antigo)
+    // Obter saldo atual (Real ou Simulado)
     const saldoAtual = userData?.stats?.saldo || 0;
-    const saldoInicial = userData?.stats?.saldoInicial || saldoAtual;
     
-    // Se resetarSaldo for true, forçamos o novo saldo ser o saldo inicial
-    const novoSaldo = resetarSaldo ? saldoInicial : saldoAtual;
+    // Se for modo real, o 'resetarSaldo' na verdade significa 'resetar lucro',
+    // então o novo saldoInicial deve ser o saldoAtual.
+    // Se for modo simulação e resetarSaldo for true, podemos manter a lógica de voltar pro inicial se preferir,
+    // mas o pedido do usuário é focar no 'base 0'.
     
-    console.log(`🔄 [RESET] ${email}: Saldo Atual: ${saldoAtual}, Saldo Inicial: ${saldoInicial}, Novo Saldo: ${novoSaldo}`);
+    const novoSaldoInicial = (saldoAtual > 0) ? saldoAtual : (userData?.stats?.saldoInicial || 0);
+
+    console.log(`🔄 [RESET] ${email}: Resetando placar. Novo saldo de base: ${novoSaldoInicial}`);
 
     await supabase
       .from('usuarios_bot')
@@ -846,8 +851,8 @@ app.post('/api/reset-stats', async (req, res) => {
         stats: { 
           greens: 0, 
           reds: 0, 
-          saldo: novoSaldo, 
-          saldoInicial: saldoInicial, 
+          saldo: saldoAtual, 
+          saldoInicial: novoSaldoInicial, 
           atualizado: Date.now() 
         }
       })

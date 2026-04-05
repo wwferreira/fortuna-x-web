@@ -985,11 +985,13 @@ function verificarGatilhosParaApostar(numero) {
     }
 
     // 2. Filtrar gatilhos da estratégia atual que são dinâmicos/autônomos (FUNCIONARIO_MES, QUENTES, FRIOS, AMBOS)
-    // Esses precisam aguardar as 5 rodadas de análise
+    // Esses precisam aguardar as rodadas de análise definidas no Admin (ou 5 por padrão se for uma dinâmica nova)
     const gatilhosDinamicos = botState.gatilhos.filter(g => 
-        (g.apostaEm && Array.isArray(g.apostaEm) && g.apostaEm.some(a => 
-            ['FUNCIONARIO_MES', 'QUENTES', 'FRIOS', 'AMBOS'].includes(a)
-        )) || (g.configEspecial && g.configEspecial.tipo === 'AUTONOMO' && !g.isSequencia && !g.numeros)
+        g.ativo !== false && (
+            (g.apostaEm && Array.isArray(g.apostaEm) && g.apostaEm.some(a => 
+                ['FUNCIONARIO_MES', 'QUENTES', 'FRIOS', 'AMBOS'].includes(a)
+            )) || (g.configEspecial && g.configEspecial.tipo === 'AUTONOMO' && !g.isSequencia && !g.numeros)
+        )
     );
 
     if (gatilhosDinamicos.length > 0) {
@@ -998,8 +1000,10 @@ function verificarGatilhosParaApostar(numero) {
             return;
         }
 
-        // Decrementar rodadas ANTES de verificar se está aguardando próxima rodada ou apostaAtiva
-        const rodadasParaEsperar = (gatilhosDinamicos[0].configEspecial && gatilhosDinamicos[0].configEspecial.esperarRodadas) || 5;
+        // Tentar obter rodadas do Admin (esperarRodadas ou rodadasEntrada)
+        const configEsp = gatilhosDinamicos[0].configEspecial || {};
+        const rodadasParaEsperar = configEsp.esperarRodadas || configEsp.rodadasEntrada || 
+                                   gatilhosDinamicos[0].esperarRodadas || gatilhosDinamicos[0].rodadasEntrada || 5;
 
         if (botCountdownState.rodadasRestantes === undefined || botCountdownState.rodadasRestantes === null || botCountdownState.rodadasRestantes <= 0) {
             botCountdownState.rodadasRestantes = rodadasParaEsperar;
@@ -1012,7 +1016,7 @@ function verificarGatilhosParaApostar(numero) {
         if (botState.apostaAtiva) return;
 
         if (botCountdownState.rodadasRestantes > 0) {
-            console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
+            console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial (${botState.nomeEstrategiaSelecionada})...`);
             
             // Enviar rodadas aguardando para o servidor
             const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando' : 'Aguardando';
@@ -1024,20 +1028,25 @@ function verificarGatilhosParaApostar(numero) {
                 estrategia: botState.nomeEstrategiaSelecionada
             }).catch(() => {});
             
-            return;
-        }
+            // Se tivermos gatilhos normais habilitados, não retornamos aqui para permitir que sejam processados no próximo bloco
+            const temGatilhosNormais = botState.gatilhos.some(g => g.ativo !== false && !gatilhosDinamicos.includes(g));
+            if (!temGatilhosNormais) return;
+        } else {
+            // Chegou a ZERO: Disparar apostas dinâmicas
+            console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
+            
+            gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
+            
+            // Limpar rodadas aguardando no servidor após um delay para dar tempo de ver
+            setTimeout(() => {
+                const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
+                enviarRodadasAguardandoParaServidor(0, statusBot);
+            }, 3000); // 3 segundos de delay
 
-        // Chegou a ZERO: Disparar apostas dinâmicas
-        console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
-        
-        gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
-        
-        // Limpar rodadas aguardando no servidor após um delay para dar tempo de ver
-        setTimeout(() => {
-            const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
-            enviarRodadasAguardandoParaServidor(0, statusBot);
-        }, 3000); // 3 segundos de delay
-        return; 
+            // Se disparou as dinâmicas e não tem normais, retornamos para não passar pro próximo bloco sem necessidade
+            const temGatilhosNormais = botState.gatilhos.some(g => g.ativo !== false && !gatilhosDinamicos.includes(g));
+            if (!temGatilhosNormais) return;
+        }
     }
 
     // 2. Verificar gatilhos normais (Manuais/Sequências/Vizinhos da C2)
@@ -1575,7 +1584,7 @@ function verificarResultado(numeroSaiu) {
             // Enviar para o Telegram com delay de 2s para o saldo atualizar
             setTimeout(() => {
                 const saldoAtual = modoSimulacaoAtivo ? placarSimulacao.saldo : (botState.saldo || 0);
-                enviarMensagemTelegram(`❌ RED - ${tipoFinal}\n💰 Saldo: R$ ${saldoAtual.toFixed(2)}\n📊 Placar: ${placarW}W / ${placarL}L`);
+                sendTelegramMessageBG(`❌ RED - ${tipoFinal}\n💰 Saldo: R$ ${saldoAtual.toFixed(2)}\n📊 Placar: ${placarW}W / ${placarL}L`);
             }, 2000);
             
             // Registrar no histórico
@@ -1774,6 +1783,35 @@ function verificarResultado(numeroSaiu) {
         apostaAtiva: botState.apostaAtiva
     });
 }
+
+// Sincronizar estado entre Sidepanel e Background
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local') {
+        if (changes.rouletteState) {
+            const newState = changes.rouletteState.newValue;
+            if (newState) {
+                // Sincronizar propriedades críticas
+                botState.gatilhos = newState.gatilhos || [];
+                botState.legendas = newState.legendas || [];
+                botState.stopWin = newState.stopWin || 0;
+                botState.stopLoss = newState.stopLoss || 0;
+                botState.valorFicha = newState.valorFicha || 1.00;
+                botState.nomeEstrategiaSelecionada = newState.nomeEstrategiaSelecionada || '';
+                botState.stopAtivado = newState.stopAtivado !== undefined ? newState.stopAtivado : botState.stopAtivado;
+                botState.pauseWinAtivo = newState.pauseWinAtivo !== undefined ? newState.pauseWinAtivo : botState.pauseWinAtivo;
+                
+                console.log('🔄 [BACKGROUND] Configurações sincronizadas via Storage. Gatilhos:', botState.gatilhos.length);
+            }
+        }
+        if (changes.botCountdownState) {
+            const newCountdown = changes.botCountdownState.newValue;
+            if (newCountdown) {
+                botCountdownState.rodadasRestantes = newCountdown.rodadasRestantes;
+                console.log('🔄 [BACKGROUND] Contador sincronizado:', botCountdownState.rodadasRestantes);
+            }
+        }
+    }
+});
 
 // HANDLER DE MENSAGENS
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
