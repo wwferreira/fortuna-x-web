@@ -155,13 +155,25 @@ wss.on('connection', (ws) => {
       }
 
       if (msg.tipo === 'status_bot') {
-        // Atualizar status no Supabase
+        const updateData = { 
+            status_bot: msg.status,
+            updated_at: new Date().toISOString()
+        };
+
+        // Se vier saldo real, atualizar nos stats
+        if (msg.saldo !== undefined) {
+            const { data: userCurrent } = await supabase.from('usuarios_bot').select('stats').eq('email', emailConectado).single();
+            let stats = userCurrent?.stats || {};
+            stats.saldoReal = msg.saldo; // Salvar como saldoReal para diferenciar
+            updateData.stats = stats;
+        }
+
         await supabase
           .from('usuarios_bot')
-          .update({ status_bot: msg.status })
-          .eq('email', msg.email || emailConectado);
+          .update(updateData)
+          .eq('email', emailConectado);
         
-        console.log(`📍 Status do bot de ${msg.email || emailConectado}: ${msg.status}`);
+        console.log(`📍 Status/Saldo de ${emailConectado}: ${msg.status} (R$ ${msg.saldo || 0})`);
       }
 
       if (msg.tipo === 'rodadas_aguardando') {
@@ -777,7 +789,7 @@ app.post('/api/comando', async (req, res) => {
 
 // Status do bot (greens, reds, saldo)
 app.post('/api/stats', async (req, res) => {
-  const { email, greens, reds, saldo, saldoInicial, modo_simulacao, estrategia_nome } = req.body;
+  const { email, greens, reds, saldo, saldoReal, saldoInicial, modo_simulacao, estrategia_nome } = req.body;
   if (!email) return res.status(400).json({ erro: 'Email obrigatório' });
 
   try {
@@ -806,6 +818,7 @@ app.post('/api/stats', async (req, res) => {
       greens: greens !== undefined ? greens : (statsAtuais.greens || 0),
       reds: reds !== undefined ? reds : (statsAtuais.reds || 0),
       saldo: saldo !== undefined ? saldo : (statsAtuais.saldo || null),
+      saldoReal: saldoReal !== undefined ? saldoReal : (statsAtuais.saldoReal || null), // SALDO REAL SEMPRE
       saldoInicial: saldoInicialFinal,
       atualizado: Date.now()
     };

@@ -1214,8 +1214,8 @@ async function atualizarStats() {
       }
     }
     
-    // Atualizar Saldo e Lucro
-    const saldo = (s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null;
+    // Atualizar Saldo e Lucro (Respeitar o saldo REAL sempre que disponível no servidor)
+    const saldo = (s.saldoReal !== undefined && s.saldoReal !== null) ? parseFloat(s.saldoReal) : ((s.saldo !== null && s.saldo !== undefined) ? parseFloat(s.saldo) : null);
     let saldoInicial = (s.saldoInicial !== null && s.saldoInicial !== undefined) ? parseFloat(s.saldoInicial) : null;
     
     // Se não há saldoInicial definido (ou se for 0), mas há saldo atual, definir saldoInicial = saldo atual

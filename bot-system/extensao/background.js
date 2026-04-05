@@ -2877,6 +2877,7 @@ setInterval(() => {
                 greens: wins,
                 reds: losses,
                 saldo: saldo,
+                saldoReal: botState.saldo || botState.ultimoSaldoPush || null,
                 saldoInicial: saldoInicial,
                 modo_simulacao: isSimulacao,
                 estrategia_nome: result.rouletteState?.nomeEstrategiaSelecionada || result.rouletteState?.estrategia_nome || botState.estrategia_nome || 'Nenhuma'
