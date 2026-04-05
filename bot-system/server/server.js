@@ -173,7 +173,13 @@ wss.on('connection', (ws) => {
           .single();
 
         let stats = userData?.stats || {};
-        stats.rodadasAguardando = msg.rodadas;
+        
+        // Só atualizar se não for 0 (para manter as rodadas visíveis)
+        // ou se for explicitamente para limpar (quando statusBot contém "Apostando")
+        if (msg.rodadas > 0 || msg.statusBot.includes('Apostando')) {
+          stats.rodadasAguardando = msg.rodadas;
+        }
+        
         stats.statusBot = msg.statusBot || 'Aguardando';
 
         await supabase
@@ -181,7 +187,7 @@ wss.on('connection', (ws) => {
           .update({ stats })
           .eq('email', emailConectado);
         
-        console.log(`⏳ Rodadas aguardando de ${emailConectado}: ${msg.rodadas}`);
+        console.log(`⏳ Rodadas aguardando de ${emailConectado}: ${msg.rodadas} (status: ${msg.statusBot})`);
       }
 
       if (msg.tipo === 'status_aposta') {

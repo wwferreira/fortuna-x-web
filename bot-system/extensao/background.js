@@ -969,11 +969,62 @@ function calcularScoreAssertividade(gatilho, historico) {
 function verificarGatilhosParaApostar(numero) {
     if (botState.pauseWinAtivo || botState.stopAtivado) return;
 
-    // 1. Verificar se existe estratégia de IA ativa
+    // 1. PRIMEIRO: Verificar gatilhos normais (Manuais/Sequências/Vizinhos da C2)
+    // Esses NÃO precisam aguardar 5 rodadas, são baseados em legendas e repetições
+    // DEVEM TER PRIORIDADE sobre estratégias dinâmicas
+    if (!botState.stopAtivado && !botState.aguardandoProximaRodada && !botState.apostaAtiva) {
+        const gatilhosCandidatos = botState.gatilhos.filter(gatilho => {
+            if (gatilho.ativo === false) return false;
+            
+            // Filtrar apenas gatilhos que NÃO são dinâmicos (não têm FUNCIONARIO_MES, QUENTES, FRIOS, AMBOS)
+            const isDinamico = gatilho.apostaEm && Array.isArray(gatilho.apostaEm) && 
+                gatilho.apostaEm.some(a => ['FUNCIONARIO_MES', 'QUENTES', 'FRIOS', 'AMBOS'].includes(a));
+            if (isDinamico) return false;
+            
+            // Também filtrar IA
+            if (gatilho.configEspecial && (gatilho.configEspecial.tipo === 'IA_ENGINE' || gatilho.configEspecial.tipo === 'IA_PLENO')) return false;
+            
+            return verificarGatilhoEmJanela(gatilho, botState.sequenciaAtual);
+        });
+
+        if (gatilhosCandidatos.length > 0) {
+            console.log(`🎯 [GATILHOS-NORMAIS] ${gatilhosCandidatos.length} gatilho(s) de legenda detectado(s). Apostando IMEDIATAMENTE (sem esperar rodadas).`);
+            
+            // Se houver mais de um gatilho ativo, escolher o melhor baseado no histórico recente
+            let gatilhoEscolhido = gatilhosCandidatos[0];
+            
+            if (gatilhosCandidatos.length > 1) {
+                console.log(`⚖️ [DECISÃO] Múltiplos gatilhos detectados (${gatilhosCandidatos.length}). Calculando assertividade...`);
+                
+                const gatilhosComScore = gatilhosCandidatos.map(g => ({
+                    gatilho: g,
+                    score: calcularScoreAssertividade(g, botState.sequenciaAtual)
+                }));
+                
+                // Ordenar por score descendente
+                gatilhosComScore.sort((a, b) => b.score - a.score);
+                
+                gatilhoEscolhido = gatilhosComScore[0].gatilho;
+                const melhorScore = (gatilhosComScore[0].score * 100).toFixed(1);
+                
+                console.log(`🎯 [DECISÃO] Gatilho "${gatilhoEscolhido.nome || gatilhoEscolhido.legenda}" escolhido com ${melhorScore}% de assertividade recente.`);
+                
+                // Logar os outros para debug
+                gatilhosComScore.slice(1).forEach(item => {
+                    console.log(`   - Descartado: "${item.gatilho.nome || item.gatilho.legenda}" com ${(item.score * 100).toFixed(1)}%`);
+                });
+            }
+            
+            enviarApostaParaMesa(gatilhoEscolhido, numero, gatilhoEscolhido.cicloAtual || 0);
+            return; // IMPORTANTE: Sair aqui para não processar estratégias dinâmicas
+        }
+    }
+
+    // 2. Verificar se existe estratégia de IA ativa
     const gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
     if (gatilhoIA) {
         if (botState.stopAtivado) {
-            console.log('🛑 [BACKGROUND-IA] Bot em STOP, ignorando motor de IA.');
+            console.log('� [BACKGROUND-IA] Bot em STOP, ignorando motor de IA.');
             return;
         }
         if (gatilhoIA.configEspecial.tipo === 'IA_ENGINE') {
@@ -984,7 +1035,7 @@ function verificarGatilhosParaApostar(numero) {
         return;
     }
 
-    // 2. Filtrar gatilhos da estratégia atual que são dinâmicos/autônomos (FUNCIONARIO_MES, QUENTES, FRIOS, AMBOS)
+    // 3. Filtrar gatilhos da estratégia atual que são dinâmicos/autônomos (FUNCIONARIO_MES, QUENTES, FRIOS, AMBOS)
     // Esses precisam aguardar as 5 rodadas de análise
     const gatilhosDinamicos = botState.gatilhos.filter(g => 
         (g.apostaEm && Array.isArray(g.apostaEm) && g.apostaEm.some(a => 
@@ -1012,9 +1063,9 @@ function verificarGatilhosParaApostar(numero) {
         if (botState.apostaAtiva) return;
 
         if (botCountdownState.rodadasRestantes > 0) {
-            console.log(`⏳ [BACKGROUND] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
+            console.log(`⏳ [BACKGROUND-DINAMICO] Aguardando ${botCountdownState.rodadasRestantes} rodadas para estratégia especial...`);
             
-            // Enviar rodadas aguardando para o servidor
+            // Enviar rodadas aguardando para o servidor (SEM delay para sumir)
             const statusBot = modoSimulacaoAtivo ? 'Simulando - Aguardando' : 'Aguardando';
             enviarRodadasAguardandoParaServidor(botCountdownState.rodadasRestantes, statusBot);
             
@@ -1028,55 +1079,15 @@ function verificarGatilhosParaApostar(numero) {
         }
 
         // Chegou a ZERO: Disparar apostas dinâmicas
-        console.log(`🚀 [BACKGROUND] Ciclo de análise finalizado. Disparando apostas automáticas.`);
+        console.log(`🚀 [BACKGROUND-DINAMICO] Ciclo de análise finalizado. Disparando apostas automáticas.`);
         
         gatilhosDinamicos.forEach(g => enviarApostaParaMesa(g, numero, g.cicloAtual || 0));
         
-        // Limpar rodadas aguardando no servidor após um delay para dar tempo de ver
-        setTimeout(() => {
-            const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
-            enviarRodadasAguardandoParaServidor(0, statusBot);
-        }, 3000); // 3 segundos de delay
+        // Limpar rodadas aguardando no servidor (sem delay para estratégias dinâmicas)
+        const statusBot = modoSimulacaoAtivo ? 'Simulando - Apostando' : 'Apostando';
+        enviarRodadasAguardandoParaServidor(0, statusBot);
         return; 
     }
-
-    // 2. Verificar gatilhos normais (Manuais/Sequências/Vizinhos da C2)
-    // Esses NÃO precisam aguardar 5 rodadas, são baseados em legendas e repetições
-    if (botState.stopAtivado || botState.aguardandoProximaRodada || botState.apostaAtiva) return;
-
-    const gatilhosCandidatos = botState.gatilhos.filter(gatilho => {
-        if (gatilho.ativo === false) return false;
-        return verificarGatilhoEmJanela(gatilho, botState.sequenciaAtual);
-    });
-
-    if (gatilhosCandidatos.length === 0) return;
-
-    // Se houver mais de um gatilho ativo, escolher o melhor baseado no histórico recente
-    let gatilhoEscolhido = gatilhosCandidatos[0];
-    
-    if (gatilhosCandidatos.length > 1) {
-        console.log(`⚖️ [DECISÃO] Múltiplos gatilhos detectados (${gatilhosCandidatos.length}). Calculando assertividade...`);
-        
-        const gatilhosComScore = gatilhosCandidatos.map(g => ({
-            gatilho: g,
-            score: calcularScoreAssertividade(g, botState.sequenciaAtual)
-        }));
-        
-        // Ordenar por score descendente
-        gatilhosComScore.sort((a, b) => b.score - a.score);
-        
-        gatilhoEscolhido = gatilhosComScore[0].gatilho;
-        const melhorScore = (gatilhosComScore[0].score * 100).toFixed(1);
-        
-        console.log(`🎯 [DECISÃO] Gatilho "${gatilhoEscolhido.nome || gatilhoEscolhido.legenda}" escolhido com ${melhorScore}% de assertividade recente.`);
-        
-        // Logar os outros para debug
-        gatilhosComScore.slice(1).forEach(item => {
-            console.log(`   - Descartado: "${item.gatilho.nome || item.gatilho.legenda}" com ${(item.score * 100).toFixed(1)}%`);
-        });
-    }
-
-    enviarApostaParaMesa(gatilhoEscolhido, numero, gatilhoEscolhido.cicloAtual || 0);
 }
 
 // --- MOTOR DE IA PLENO (Straight Up) ---
