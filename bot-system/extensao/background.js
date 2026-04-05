@@ -1152,6 +1152,19 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
 
     if (!melhorCandidato) return;
 
+    // --- BLOQUEIO ABSOLUTO DE SESSÃO (PROTEÇÃO CONTRA APOSTAS SEGUIDAS) ---
+    const ultimaAposta = botState.iaUltimaRodadaApostada || 0;
+    const rodadasDesdeUltima = botState.iaRodadasSessao - ultimaAposta;
+    const cooldownMinimo = 5; 
+
+    if (ultimaAposta > 0 && rodadasDesdeUltima < cooldownMinimo) {
+        chrome.runtime.sendMessage({
+            tipo: 'status_ia_atualizar',
+            texto: `🛡️ Pausa de Segurança: ${cooldownMinimo - rodadasDesdeUltima} rod. (${scoreAtual}%)`
+        }).catch(() => {});
+        return;
+    }
+
     // 3. Definir Alvos de Confiança (%) por Modo
     let gatilhoAposta = 75; 
     if (modo === 'moderado') gatilhoAposta = 90; // Aposta apenas a partir de 90% de confiança
@@ -1227,6 +1240,10 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
             tipo: 'status_ia_atualizar',
             texto: `🔥 IA: Apostando com ${scoreAtual}% confiança...`
         }).catch(() => {});
+
+        // Salvar a rodada em que a aposta foi feita para o bloqueio de sessão (Proteção Anti-Vício)
+        botState.iaUltimaRodadaApostada = botState.iaRodadasSessao;
+        chrome.storage.local.set({ rouletteState: botState });
 
         enviarApostaParaMesa(gatilhoTemp, numero);
     } else {

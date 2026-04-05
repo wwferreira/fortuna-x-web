@@ -598,11 +598,8 @@ async function startHeartbeat(user, clientInstanceId) {
       // 2. Atualizar pulsação
       const now = new Date().toISOString();
       
-      // Tentar atualizar metadata do usuário
+      // Tentar atualizar metadata do usuário (Silencioso para evitar warnings no DevTools)
       const metaResult = await supabase.auth.updateUserMetadata({ active_updated_at: now });
-      if (metaResult.error) {
-        console.warn('⚠️ Erro ao atualizar metadata do usuário:', metaResult.error);
-      }
       
       // Tentar atualizar tabela de usuários
       const updateResult = await supabase.from('usuarios').update({ active_updated_at: now }).eq('id', user.id);
