@@ -1183,22 +1183,32 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
 
     // 4. LÓGICA DE DECISÃO: IA DECIDE QUANDO APOSTAR PELO SCORE
     if (scoreAtual >= gatilhoAposta) {
-        let qtdPivos = 4; 
-        if (modo === 'moderado') qtdPivos = 6;
-        if (modo === 'intermediario') qtdPivos = 9;
-        if (modo === 'agressivo') qtdPivos = 15;
+        // Reduzi DRASTICAMENTE a quantidade de bases para ser cirúrgico
+        let qtdPivos = 3; 
+        if (modo === 'moderado') qtdPivos = 2; // Apenas as 2 melhores bases
+        if (modo === 'intermediario') qtdPivos = 4;
+        if (modo === 'agressivo') qtdPivos = 6;
 
         const pivosSelecionados = candidatos.slice(0, qtdPivos).map(c => c.num);
         
+        // --- ADICIONAR PAUSA OBRIGATÓRIA AUTOMÁTICA APÓS APOSTA ---
+        // Forçar 5 rodadas de espera para não ficar "desesperado" uma após a outra
+        botCountdownState.rodadasRestantes = 5;
+        chrome.storage.local.set({ botCountdownState });
+
         let numerosApostar = [];
         pivosSelecionados.forEach(pivo => {
             const idx = RACETRACK.indexOf(pivo);
             if (idx !== -1) {
                 numerosApostar.push(pivo);
-                let idxDir = (idx + 1) % RACETRACK.length;
-                numerosApostar.push(RACETRACK[idxDir]);
-                let idxEsq = (idx - 1 + RACETRACK.length) % RACETRACK.length;
-                numerosApostar.push(RACETRACK[idxEsq]);
+                // Vizinhos (1 de cada lado para ser certeiro)
+                const qtdVizinhos = botState.vizinhos || 1;
+                for (let i = 1; i <= qtdVizinhos; i++) {
+                    const vizinhoEsq = RACETRACK[(idx - i + 37) % 37];
+                    const vizinhoDir = RACETRACK[(idx + i) % 37];
+                    if (!numerosApostar.includes(vizinhoEsq)) numerosApostar.push(vizinhoEsq);
+                    if (!numerosApostar.includes(vizinhoDir)) numerosApostar.push(vizinhoDir);
+                }
             }
         });
         numerosApostar = [...new Set(numerosApostar)];
@@ -1207,15 +1217,15 @@ async function processarMotorIAPleno(gatilhoIA, numero) {
             ...gatilhoIA,
             apostaEm: numerosApostar.map(n => `PLENO ${n}`),
             numeros: numerosApostar,
-            nome: `I.A Fortuna X (${modo.toUpperCase()}): ${pivosSelecionados.length} Bases`,
+            nome: `I.A Fortuna X (${modo.toUpperCase()}): ${scoreAtual}% Confiança`,
             tipo: 'IA_PLENO_ENGINE'
         };
         
-        console.log(`🎯 [IA-DEBUG] ENTRADA! Score: ${scoreAtual} (Alvo: ${gatilhoAposta})`);
+        console.log(`🚀 [IA-PLENO] DISPARANDO APOSTA! Confiança: ${scoreAtual}% | Bases: ${pivosSelecionados.join(',')}`);
         
         chrome.runtime.sendMessage({
             tipo: 'status_ia_atualizar',
-            texto: `🚀 I.A Fortuna X: Apostando em ${pivosSelecionados.length} Bases...`
+            texto: `🔥 IA: Apostando com ${scoreAtual}% confiança...`
         }).catch(() => {});
 
         enviarApostaParaMesa(gatilhoTemp, numero);
