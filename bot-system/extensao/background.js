@@ -972,6 +972,8 @@ async function verificarGatilhosParaApostar(numero) {
                            (botState.nomeEstrategiaSelecionada.toLowerCase().includes('fortuna') || 
                             botState.nomeEstrategiaSelecionada.toLowerCase().includes('forttuna'));
 
+    let gatilhoIA = botState.gatilhos.find(g => g.configEspecial && (g.configEspecial.tipo === 'IA_ENGINE' || g.configEspecial.tipo === 'IA_PLENO'));
+
     // Se não achou na lista mas o nome diz que é IA, criamos um gatilho virtual para o motor rodar
     if (!gatilhoIA && isEstrategiaIA) {
         gatilhoIA = { nome: botState.nomeEstrategiaSelecionada, ativo: true, configEspecial: { tipo: 'IA_PLENO' } };
