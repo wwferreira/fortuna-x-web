@@ -4,6 +4,7 @@ console.log('🖼️ É iframe?', window !== window.top);
 console.log('⏰ Timestamp:', new Date().toLocaleTimeString());
 
 let ultimoNumeroEnviado = null;
+let ultimaSequenciaHash = ""; // Hash das últimas rodadas para detectar repetições legítimas
 let numerosJaApostados = new Set();
 let ultimaApostaTimestamp = 0;
 
@@ -429,10 +430,28 @@ function encontrarUltimoNumeroNoDOM(documento) {
     return null;
 }
 
+// Função para gerar um hash único das últimas rodadas (detectar repetições)
+function gerarHashHistorico(doc) {
+    const seletores = [
+        '.history-item-value__text--H6oCX',
+        '.history-item-value__text--n5cYB',
+        '[class*="history-item-value__text"]'
+    ];
+    for (const seletor of seletores) {
+        const elementos = doc.querySelectorAll(seletor);
+        if (elementos.length >= 2) {
+            // Pegar os 4 primeiros para formar um "ID" único do momento da mesa
+            return Array.from(elementos).slice(0, 4).map(el => el.textContent.trim()).join('|');
+        }
+    }
+    return "";
+}
+
 function processarDeteccaoNumeros() {
     try {
         // 1. Procurar no documento atual
         let numeroDetectado = encontrarUltimoNumeroNoDOM(document);
+        let hashAtual = gerarHashHistorico(document);
 
         // 2. Se não achou, procurar em todos os iframes acessíveis
         if (numeroDetectado === null) {
@@ -441,18 +460,23 @@ function processarDeteccaoNumeros() {
                 try {
                     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                     numeroDetectado = encontrarUltimoNumeroNoDOM(iframeDoc);
-                    if (numeroDetectado !== null) break;
-                } catch (e) {
-                    // Cross-origin iframe, ignorar
-                }
+                    if (numeroDetectado !== null) {
+                       hashAtual = gerarHashHistorico(iframeDoc);
+                       break;
+                    }
+                } catch (e) { }
             }
         }
 
-        // 3. Se detectou um número e ele é novo, enviar
-        if (numeroDetectado !== null && numeroDetectado !== ultimoNumeroEnviado) {
-            console.log('🎰 [FORTUNA X] NOVO NÚMERO DETECTADO:', numeroDetectado);
+        // 3. Lógica de detecção: NOVO NÚMERO ou REPETIÇÃO (Hash mudou)
+        const isNovoNumero = (numeroDetectado !== null && numeroDetectado !== ultimoNumeroEnviado);
+        const isRepeticaoLegitima = (numeroDetectado !== null && numeroDetectado === ultimoNumeroEnviado && hashAtual !== "" && hashAtual !== ultimaSequenciaHash);
+
+        if (isNovoNumero || isRepeticaoLegitima) {
+            console.log('🎰 [FORTUNA X] NOVO EVENTO RECONHECIDO:', isRepeticaoLegitima ? `REPETIÇÃO DO ${numeroDetectado}` : `NOVO NÚMERO ${numeroDetectado}`);
             
             ultimoNumeroEnviado = numeroDetectado;
+            ultimaSequenciaHash = hashAtual;
             
             if (chrome.runtime && chrome.runtime.id) {
                 // Notificar usuário na página (apenas se autorizado)
